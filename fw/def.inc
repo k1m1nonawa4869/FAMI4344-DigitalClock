@@ -130,5 +130,5 @@
 # 11. HẰNG SỐ MÃ KÝ TỰ BẢNG TRA ROM (CHAR ROM LOOKUP CONSTANTS)
 # ----------------------------------------------------------------------------
         .eqv  CHAR_BLANK        0x1A            # Mã ký tự khoảng trắng (Tắt hết các đoạn LED)
-        .eqv  CHAR_DASH         0x10            # Mã ký tự dấu gạch ngang '-' (Đoạn g)
+        .eqv  CHAR_DASH         0x19            # Mã ký tự dấu gạch ngang '-' (Đoạn g, 0x19)
         .eqv  CHAR_DP           0x80            # Mặt nạ bật dấu chấm thập phân (bit 7)
