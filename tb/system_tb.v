@@ -1,20 +1,19 @@
-// system_tb.v — (fw: fw/main.s) gói C8: kịch bản 1–7 của plan §10 trên soc_top G1 + firmware main.s, G_N = 50, G_BIT = 8.
-// Code do Claude viết theo yêu cầu Long (03/10/2026); chủ gói (TV3) đọc hiểu để vấn đáp.
-//
-// Cách nhìn: tb đọc thẳng Display RAM (dut.u_disp.disp, DISP7 ở [63:56]) và BLINK_MASK. "Khung" = lúc firmware ghi
-// DISP7 (flush ghi DISP0 → DISP7), nên khung luôn là 1 lần vẽ trọn. Giá trị mong đợi tính bằng hàm fA/fB/fD/fT/fAL/fDT;
-// sys_0 kiểm chính các hàm đó với tb/vectors/fmt_*.txt + date.txt (người kiểm cũng phải đúng spec).
-// Màn ảo (gói D7, 26/10): screen_dump nhìn CHÂN an/seg/dp → work/screen_system.log (xem: python tools/screen.py). Mỗi vòng
-// quét 8 khe mà Display RAM, BLINK_MASK, pha nháy, BRIGHT không đổi suốt vòng: ảnh từ chân phải = RAM qua bảng seg7.txt
-// (chữ số tắt do nháy / BRIGHT 0 → không sáng). Kết hợp với kiểm RAM = fmt_*.txt ở các kịch bản → chân = fmt_*.txt.
-// Nút: tb tạo cạnh có rung (rung trong 1 ms đầu và lúc nhả, khóa của buttons là 10 ms).
-// Hai kỹ thuật chỉ có trong tb (ghi rõ trong báo cáo):
-//   - "Tua giờ": gán thẳng dut.u_rtc.ms/day/dow để nhảy tới 06:59:59.990 thay vì mô phỏng hàng giờ (G_N = 50 vẫn
-//     tốn ~15 000 chu kỳ/giây thật của máy). Báo thức vẫn phải tự khớp ở tick kế tiếp như bình thường.
-//   - "Đóng băng": force en của bộ chia ms (RTC) / tick của timer = 0 để firmware vẽ xong 1 khung trong lúc giá trị đứng
-//     yên. Ở G_N = 50 CPU (D = 2) chỉ chạy 25 lệnh/ms nên 1 khung mất ~10 ms; chip thật (G_N = 50 000) thì không cần.
-// Kịch bản 7 (gói E6, 26/10): tb đóng vai PC trên chân UART — ubyte/usend phát câu vào uart_rx, khối "urx_mon" gom từng
-// dòng chip phát ra ở uart_tx vào lns[]. Câu chip trả lời được so đúng từng byte với câu tb tự dựng (checksum tính lại).
+// (fw: fw/main.s)
+// ============================================================================
+// HỌC PHẦN:       MI4344 / IT3283 – Kiến trúc Máy tính (HUST - SAMI/SoICT)
+// TÊN MODULE:     tb/system_tb.v — Testbench Tích Hợp Toàn Hệ Thống SoC (7 Kịch Bản)
+// CHUYÊN ĐỀ KTMT: Tích hợp hệ thống SoC, Đồng thiết kế Phần cứng / Phần mềm (HW/SW Co-design)
+// VAI TRÒ:        Chạy mô phỏng toàn diện chip WatchChip cùng firmware thật (fw/main.s).
+//                 Kiểm chứng tự động 7 kịch bản hoạt động chính:
+//                 - Kịch bản 0 (sys_0): Hàm golden model định dạng hiển thị LED.
+//                 - Kịch bản 1 (sys_1): Chế độ TIME (nửa đêm, 12h/24h, giây.ms, ngày/tháng).
+//                 - Kịch bản 2 (sys_2): Chế độ STOPWATCH (chạy/dừng, đo 1234 ms).
+//                 - Kịch bản 3 (sys_3): Khóa phần cứng chốt 8 Lap tức thì (0-ns capture).
+//                 - Kịch bản 4 (sys_4): Chế độ TIMER đếm lùi về 0, còi báo, đếm quá giờ âm.
+//                 - Kịch bản 5 (sys_5): Chế độ ALARM 4 kênh, Snooze +5 phút, Hourly Chime.
+//                 - Kịch bản 6 (sys_6): Chế độ SET chỉnh giờ nhấp nháy 2 Hz, kẹp ngày hợp lệ.
+//                 - Kịch bản 7 (sys_7): Đồng bộ UART NTP ($Z, $T, $Q/$R) và hiệu chỉnh CAL ppm.
+// ============================================================================
 `timescale 1ns/1ps
 module system_tb;
     reg  clk = 0, rst_in = 1;

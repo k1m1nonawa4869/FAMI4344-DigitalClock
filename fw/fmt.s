@@ -1,6 +1,13 @@
-# fmt.s — 3 cách đổi ms trong ngày → màn TIME 24 h "__HH.MM.SS" (DISP7…0, display-spec §8), đo chi phí cho plan §8.1.
-# Gói B7 · bản đầu 26/10/2026, Claude viết theo yêu cầu Long; TV2 đọc hiểu để vấn đáp.
-#   fmt_div: chỉ div (6 lần)          fmt_bcd: 3 div + 2 mul + 1 bcd          fmt_hw: đọc RTC_BCD, chỉ dịch + mặt nạ
+# ============================================================================
+# HỌC PHẦN:       MI4344 / IT3283 – Kiến trúc Máy tính (HUST - SAMI/SoICT)
+# TỆP NGUỒN:      fw/fmt.s — Benchmark 3 Giải Thuật Định Dạng Hiển Thị LED 7 Đoạn
+# CHUYÊN ĐỀ KTMT: Chương 1 (Hiệu năng CPU & Định luật Amdahl), Chương 3 (Số học máy tính)
+# VAI TRÒ:        Đo đạc chu kỳ CPU cần thiết khi đổi ms trong ngày -> "__HH.MM.SS"
+#                 So sánh 3 cách tiếp cận:
+#                 1) fmt_div: Thuần phần mềm (6 phép chia restoring 32 chu kỳ)
+#                 2) fmt_bcd: Kết hợp phần cứng (3 div + 2 mul + 1 bcd Double-Dabble)
+#                 3) fmt_hw:  Thuần phần cứng (Đọc trực tiếp RTC_BCD, chỉ dịch bit & mặt nạ)
+# ============================================================================
 # Cả 3: vào $a0 = ms (fmt_hw bỏ qua $a0, lấy giờ từ RTC_BCD), ghi thẳng DISP0…DISP7 (DISP7 cuối = 1 khung), chỉ dùng
 # $t0–$t4, không gọi hàm khác, không đụng $a0/$s*.
 # Chạy như chương trình (bench): nạp RTC_BCD = 12:34:56.789, rồi đo ΔCYCLE_COUNT quanh từng lần gọi → DMEM RES…;

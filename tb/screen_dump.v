@@ -1,10 +1,12 @@
-// screen_dump.v — "màn hình ảo" thay board (gói D7, display-spec / goi-viec D7).
-// Chỉ nhìn CHÂN anode + đoạn (không đọc thanh ghi). Sau mỗi vòng quét 8 khe, nếu ảnh khác lần trước
-// thì ghi 1 dòng vào file:   t_ms  S7 S6 … S0  LIT
-//   Si  = {dp, gfedcba} của chữ số i lúc anode i sáng (hex), 00 nếu cả vòng không sáng
-//   LIT = bit i = 1 nếu chữ số i có sáng trong vòng đó (0 = đang tắt do nháy / BRIGHT = 0)
-// Xem ảnh: python tools/screen.py <file log>
-// Code do Claude viết theo yêu cầu Long (02/10/2026).
+// ============================================================================
+// HỌC PHẦN:       MI4344 / IT3283 – Kiến trúc Máy tính (HUST - SAMI/SoICT)
+// TÊN MODULE:     tb/screen_dump.v — Màn hình ảo chụp tín hiệu quét LED 7 đoạn
+// CHUYÊN ĐỀ KTMT: Chương 5 (Hệ thống I/O & Ngoại vi hiển thị)
+// VAI TRÒ:        Giám sát trực tiếp các chân vật lý Anode (an) và Cathode (seg, dp)
+//                 tại ngõ ra của SoC mà không can thiệp vào thanh ghi MMIO.
+//                 Tái tạo lại chính xác hình ảnh hiển thị của đồng hồ LED 7 thanh
+//                 sau mỗi chu kỳ quét 8 khe và ghi vết ra file log (screen.log).
+// ============================================================================
 module screen_dump #(
     parameter G_DIGITS = 8,
     parameter G_SLOT   = 40,
