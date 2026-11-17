@@ -1,17 +1,10 @@
-"""asm.py — assembler WatchChip (gói B1 · chủ: TV2 · spec: isa-spec.md §2, §3, §7).
-Bản đầu 03/10/2026 do Claude viết (ngoại lệ KE-HOACH §4b); chủ gói vẫn qua cổng vấn đáp.
+"""asm.py — Assembler cho WatchChip SoC (MI4344 / IT3283).
+Trình dịch hợp ngữ MIPS 32-bit (2-pass), hỗ trợ đầy đủ 28 lệnh cốt lõi,
+lệnh giả (pseudo-instructions), chỉ thị bộ nhớ và chỉ thị .include / .eqv.
 
   python tools/asm.py fw/main.s                      # → fw/main.hex + fw/main.lst
   python tools/asm.py fw/main.s -o work/main.hex     # → work/main.hex + work/main.lst (+ work/main.dmem.hex nếu có .data)
   python tools/asm.py x.s -o x.hex --aw 11           # IMEM 2048 lệnh
-
-- Cú pháp MARS: nhãn `ten:`, chú thích `#`, thanh ghi tên (`$t0`) hoặc số (`$8`), số thập phân / hex (`0x`), số âm.
-- Chỉ thị: `.text`, `.data`, `.word`, `.space` (byte, bội của 4), `.org <địa chỉ>`, `.eqv TEN giá_trị`.
-  `.data` bắt đầu ở địa chỉ DMEM 0 (Harvard: nhãn dữ liệu là địa chỉ DMEM).
-- 28 lệnh (isa-spec §3) + lệnh giả `nop`, `move`, `li`, `la`, `b`. `la` luôn = `lui $at` + `ori` (2 lệnh),
-  `b` = `beq $0,$0` — **khác MARS** (MARS dùng `addi`/`bgez`, không thuộc 28 lệnh; isa-spec §7).
-- Đầu ra `.hex` đủ 2^aw dòng (thiếu thì 0), `.lst` (địa chỉ, mã, dòng nguồn). Lỗi: in `tệp:dòng: lỗi …`
-  cho **mọi** lỗi tìm được, mã thoát 1, không ghi file nào. Cảnh báo khi chương trình > 900 lệnh mỗi 1024 ô IMEM (aw 11: > 1800).
 """
 import os
 import re
@@ -31,7 +24,7 @@ JMP = {"j": 0x02, "jal": 0x03}                                                  
 INSTR = (set(R3) | set(SHIFT) | set(IMM_S) | set(IMM_U) | set(MEM) | set(BR) | set(JMP)
          | {"jr", "div", "mfhi", "mflo", "lui", "mul", "bcd", "mfc0", "mtc0", "eret"})
 PSEUDO = {"nop", "move", "li", "la", "b"}
-DIRECTIVES = {".text", ".data", ".word", ".space", ".org", ".eqv"}
+DIRECTIVES = {".text", ".data", ".word", ".space", ".org", ".eqv", ".include"}
 WARN_WORDS = 900
 LABEL_RE = re.compile(r"^([A-Za-z_][\w.]*)\s*:")
 NUM_RE = re.compile(r"^[+-]?(0[xX][0-9a-fA-F]+|\d+)$")
@@ -229,9 +222,44 @@ def _encode(mn, ops, pc, labels):
     raise _LineErr("lenh khong co trong 28 lenh + lenh gia: '%s'" % mn)
 
 
+def _expand_includes(text, base_dir, visited=None):
+    if visited is None:
+        visited = set()
+    lines = []
+    for line in text.splitlines():
+        m = re.match(r'^\s*\.include\s+["<]([^">]+)[">]', line)
+        if m:
+            inc_name = m.group(1).strip()
+            candidates = [
+                os.path.normpath(os.path.join(base_dir, inc_name)),
+                os.path.normpath(os.path.join(base_dir, "..", "fw", inc_name)),
+                os.path.normpath(os.path.join(os.getcwd(), inc_name)),
+                os.path.normpath(os.path.join(os.getcwd(), "fw", inc_name)),
+            ]
+            found = None
+            for c in candidates:
+                if os.path.isfile(c):
+                    found = c
+                    break
+            if found:
+                if found not in visited:
+                    visited.add(found)
+                    with open(found, "r", encoding="utf-8") as f:
+                        inc_text = f.read()
+                    expanded = _expand_includes(inc_text, os.path.dirname(found), visited)
+                    lines.extend(expanded.splitlines())
+            else:
+                lines.append(line)
+        else:
+            lines.append(line)
+    return "\n".join(lines)
+
+
 def assemble(text, fname="<src>", aw=10):
     """→ dict: imem (list 2^aw word), dmem (list 1024 word hoặc None), lst (list dòng), nwords, labels, warnings.
     Lỗi → AsmError(errors) với errors = ['tệp:dòng: lỗi ...', ...]."""
+    base_dir = os.path.dirname(os.path.abspath(fname)) if os.path.isfile(fname) else os.getcwd()
+    text = _expand_includes(text, base_dir)
     errors, warnings = [], []
     eqv = {}
     labels, label_line = {}, {}
@@ -273,6 +301,8 @@ def assemble(text, fname="<src>", aw=10):
                         raise _LineErr(".eqv can: .eqv TEN gia_tri")
                     eqv[m.group(1)] = subst(m.group(2))
                     continue
+                if mn == ".include":
+                    raise _LineErr("khong tim thay tep include: %s" % rest.strip())
                 ops = _split_ops(subst(rest))
                 if mn in (".text", ".data"):
                     seg = mn[1:]
