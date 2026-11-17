@@ -1,91 +1,142 @@
-// muldiv.v — mul (tổ hợp) + div có dấu kiểu restoring 32 bước, giữ HI/LO
-// Gói A2 · chủ: TV1 · spec: isa-spec.md §3 (#10, #24), §4; control-table.md §5; pipeline-policy.md §6
-// Code do Claude viết theo yêu cầu Long (01/10/2026); chủ gói đọc hiểu để vấn đáp.
-//
-// Thời gian (đếm theo chu kỳ có ce = 1, tức chu kỳ CPU):
-//   chu kỳ 1      : start = 1 → chốt toán hạng (đổi a, b sau đó không ảnh hưởng)
-//   chu kỳ 2..33  : 32 bước chia, busy = 1; chu kỳ 33 có done = 1, HI/LO ghi ở cạnh cuối chu kỳ đó
-//   chia cho 0    : done = 1 ngay ở chu kỳ 1 (LO = 0, HI = a, DZ = 1), không chạy 32 bước
-// done là tổ hợp: CPU giữ lệnh khi (multi != 0 && !done), lệnh rời EX ở chu kỳ done.
-//
-// ĐỌC NHANH:
-//   - Nhân (mul): một phép nhân tổ hợp, có ngay kết quả (lấy 32 bit thấp).
-//   - Chia (div): làm như chia tay trên giấy, mỗi chu kỳ ra 1 bit của thương, đủ 32 bit nên mất 32 chu kỳ.
-//     Mỗi bước: (1) dịch số dư sang trái 1 bit và kéo thêm 1 bit của số bị chia vào;
-//               (2) thử trừ số chia; trừ được (không âm) thì giữ hiệu và bit thương = 1;
-//               (3) trừ không được thì "khôi phục" = giữ nguyên số dư cũ, bit thương = 0.
-//     Chia số dương cho số dương rồi mới sửa dấu: thương âm khi 2 số khác dấu, số dư cùng dấu số bị chia.
-//   - Kết quả nằm ở 2 thanh ghi riêng: LO = thương, HI = số dư (lấy ra bằng lệnh mflo/mfhi).
-//   - Trong lúc busy = 1 CPU phải đứng chờ, nên lệnh mflo ngay sau div vẫn đúng.
+// ============================================================================
+// HỌC PHẦN:       MI4344 / IT3283 – Kiến trúc Máy tính (HUST - SAMI/SoICT)
+// TÊN MODULE:     muldiv.v — Đơn vị Nhân / Chia Số Học (Multiplier & 32-Step Divider)
+// CHUYÊN ĐỀ KTMT: Chương 03: Số học máy tính (Thuật toán chia Restoring 32 chu kỳ)
+// VAI TRÒ:        Khối Xử Lý Phép Tính Nhân & Chia Phần Cứng
+// MÔ TẢ:          - Phép nhân (mul): Mạch nhân tổ hợp 1 chu kỳ, lấy 32 bit thấp.
+//                 - Phép chia (div): Thuật toán chia khôi phục số dư (Restoring Division)
+//                   32 bước tuần tự trên cặp thanh ghi [A, Q], quản lý cờ busy/done và
+//                   cập nhật cặp thanh ghi đặc biệt HI (số dư) / LO (thương số).
+// ============================================================================
+
+`timescale 1ns/1ps
+
 module muldiv (
-    input  wire        clk,
-    input  wire        rst,
-    input  wire        ce,      // bước 1 lần mỗi chu kỳ CPU (G1: cạnh pha A; G2: cpu_ce)
-    input  wire        start,   // xung 1 chu kỳ CPU, chỉ có tác dụng khi ce = 1 và không bận
-    input  wire [31:0] a,       // rs
-    input  wire [31:0] b,       // rt
-    output wire [31:0] mul_y,   // 32 bit thấp của a × b (có dấu hay không dấu đều như nhau)
-    output wire        busy,
-    output wire        done,
-    output reg  [31:0] lo,
-    output reg  [31:0] hi,
-    output reg         dz       // lệnh div gần nhất chia cho 0
+    // ------------------------------------------------------------------------
+    // CÁC CỔNG GIAO TIẾP (PORTS & INTERFACES)
+    // ------------------------------------------------------------------------
+    input  wire        clk,     // Xung nhịp hệ thống (System Clock)
+    input  wire        rst,     // Tín hiệu Reset đồng bộ mức cao (Active-high Reset)
+    input  wire        ce,      // Clock Enable (1 chu kỳ CPU: G1 theo cạnh pha A; G2 theo cpu_ce)
+    input  wire        start,   // Xung khởi động phép chia (1 chu kỳ CPU khi ce = 1 và không busy)
+    input  wire [31:0] a,       // Số bị chia (Dividend) - lấy từ thanh ghi rs
+    input  wire [31:0] b,       // Số chia (Divisor) - lấy từ thanh ghi rt
+    output wire [31:0] mul_y,   // Kết quả phép nhân 32 bit thấp của a * b
+    output wire        busy,    // Báo trạng thái bộ chia đang bận tính toán 32 chu kỳ (Pipeline stall)
+    output wire        done,    // Báo kết quả phép chia đã hoàn tất, sẵn sàng ghi vào HI/LO
+    output reg  [31:0] lo,      // Thanh ghi LO: Lưu trữ Thương số (Quotient)
+    output reg  [31:0] hi,      // Thanh ghi HI: Lưu trữ Số dư (Remainder)
+    output reg         dz       // Cờ báo lỗi chia cho số 0 (Divide-by-Zero Flag)
 );
+
+    // ------------------------------------------------------------------------
+    // 1. PHÉP NHÂN TỔ HỢP 32-BIT (COMBINATIONAL MULTIPLIER)
+    // ------------------------------------------------------------------------
+    // Trong kiến trúc MIPS, lệnh `mul` lấy 32 bit thấp của tích a * b.
+    // Đối với 32 bit thấp, phép nhân số có dấu và không dấu cho ra cùng chuỗi bit nhị phân.
     assign mul_y = a * b;
 
-    reg        run;
-    reg [4:0]  cnt;
-    reg [31:0] rem;    // phần dư đang tính (luôn < dvs)
-    reg [31:0] quo;    // dịch dần số bị chia ra, dịch bit thương vào
-    reg [31:0] dvs;    // |b|
-    reg        neg_q;  // thương âm khi a, b khác dấu
-    reg        neg_r;  // dư cùng dấu số bị chia
+    // ------------------------------------------------------------------------
+    // 2. NGUYÊN LÝ THUẬT TOÁN CHIA KHÔI PHỤC SỐ DƯ (RESTORING DIVISION ALGORITHM)
+    // ------------------------------------------------------------------------
+    // Thuật toán chia phần cứng mô phỏng tương tự phép chia đặt tính trên giấy:
+    // Cặp thanh ghi ghép đôi 64-bit [A, Q]:
+    //   - A (rem): Thanh ghi Số dư 32-bit (khởi đầu = 0).
+    //   - Q (quo): Thanh ghi chứa Số bị chia (khởi đầu = |a|).
+    //   - M (dvs): Thanh ghi Số chia 32-bit = |b|.
+    //
+    // Mỗi bước trong 32 chu kỳ thực hiện 3 thao tác:
+    //   Bước 1: Dịch trái toàn bộ cặp [A, Q] đi 1 bit:
+    //           Bit cao nhất của Q (quo[31]) được đẩy vào bit thấp nhất của A.
+    //   Bước 2: Thử trừ: trial = A - M.
+    //   Bước 3: Kiểm tra dấu:
+    //           - Nếu trial >= 0 (fits = 1, phép trừ thành công):
+    //             A nhận giá trị mới (A = trial), gán bit thương số Q[0] = 1.
+    //           - Nếu trial < 0 (fits = 0, phép trừ thất bại):
+    //             Khôi phục (Restore) lại số dư cũ: A giữ nguyên, gán bit thương số Q[0] = 0.
+    //
+    // Sau đúng 32 chu kỳ, Q chứa giá trị tuyệt đối của thương số, A chứa giá trị tuyệt đối của số dư.
+    // Quy tắc phục hồi dấu (Sign Correction) chuẩn MIPS:
+    //   - Thương số âm nếu a và b khác dấu: neg_q = a[31] ^ b[31].
+    //   - Số dư luôn mang cùng dấu với số bị chia a: neg_r = a[31].
+    // ------------------------------------------------------------------------
 
-    wire [32:0] rem_sh = {rem, quo[31]};            // bước (1): dịch dư trái 1 bit, kéo bit cao nhất của quo vào
-    wire [32:0] trial  = rem_sh - {1'b0, dvs};      // bước (2): thử trừ (33 bit để thấy được bit âm)
-    wire        fits   = ~trial[32];                // trừ không âm = chia "vừa" → bit thương = 1
-    wire [31:0] rem_n  = fits ? trial[31:0] : rem_sh[31:0];   // vừa thì lấy hiệu, không vừa thì khôi phục số cũ
-    wire [31:0] quo_n  = {quo[30:0], fits};         // đẩy bit thương mới vào bên phải
+    reg        run;    // Cờ trạng thái FSM: 1 = đang chạy vòng lặp 32 chu kỳ
+    reg [4:0]  cnt;    // Bộ đếm chu kỳ: từ 0 đến 31 (đủ 32 bước)
+    reg [31:0] rem;    // Thanh ghi Số dư A (Remainder)
+    reg [31:0] quo;    // Thanh ghi Thương số/Số bị chia Q (Quotient)
+    reg [31:0] dvs;    // Thanh ghi Số chia M (Divisor: |b|)
+    reg        neg_q;  // Cờ nhớ dấu của thương số
+    reg        neg_r;  // Cờ nhớ dấu của số dư
 
+    // Dịch trái cặp [rem, quo] đi 1 bit (ghép thành 33 bit để thử trừ không mất dấu)
+    wire [32:0] rem_sh = {rem, quo[31]};
+    // Phép thử trừ với số chia: trial = rem_sh - dvs (33 bit có dấu)
+    wire [32:0] trial  = rem_sh - {1'b0, dvs};
+    // Nếu bit thứ 32 bằng 0 nghĩa là trial không âm (phép trừ thành công)
+    wire        fits   = ~trial[32];
+    // Khôi phục số dư: nếu fits=1 thì lấy hiệu, nếu không thì giữ nguyên số dư cũ
+    wire [31:0] rem_n  = fits ? trial[31:0] : rem_sh[31:0];
+    // Đẩy bit thương mới vào hàng đơn vị của quo
+    wire [31:0] quo_n  = {quo[30:0], fits};
+
+    // Kiểm tra trường hợp đặc biệt: Chia cho 0 (Divide-by-zero)
     wire div0  = (b == 32'd0);
-    wire last  = run && (cnt == 5'd31);             // đang ở bước thứ 32 (bước cuối)
+    // Bước cuối cùng của thuật toán chia (bước 31)
+    wire last  = run && (cnt == 5'd31);
 
+    // Tín hiệu bận: CPU phải stall giữ nguyên trạng thái pipeline khi busy = 1
     assign busy = run;
+    // Tín hiệu hoàn thành: Bật ở chu kỳ chia cho 0 hoặc chu kỳ bước thứ 32 kết thúc
     assign done = ce && ((start && !run && div0) || last);
 
+    // ------------------------------------------------------------------------
+    // MÁY TRẠNG THÁI TUẦN TỰ (SEQUENTIAL CONTROL LOGIC)
+    // ------------------------------------------------------------------------
     always @(posedge clk) begin
         if (rst) begin
-            run <= 1'b0;  cnt <= 5'd0;
-            rem <= 32'd0; quo <= 32'd0; dvs <= 32'd0;
-            neg_q <= 1'b0; neg_r <= 1'b0;
-            lo <= 32'd0;  hi <= 32'd0;  dz <= 1'b0;
+            run   <= 1'b0;
+            cnt   <= 5'd0;
+            rem   <= 32'd0;
+            quo   <= 32'd0;
+            dvs   <= 32'd0;
+            neg_q <= 1'b0;
+            neg_r <= 1'b0;
+            lo    <= 32'd0;
+            hi    <= 32'd0;
+            dz    <= 1'b0;
         end else if (ce) begin
             if (start && !run) begin
                 if (div0) begin
-                    // chia cho 0: quy ước của nhóm (isa-spec §4), không chạy 32 bước
-                    lo <= 32'd0;  hi <= a;  dz <= 1'b1;
+                    // Ngoại lệ chia cho 0: Xử lý ngay lập tức trong 1 chu kỳ clock, không chạy 32 bước
+                    lo <= 32'd0;
+                    hi <= a;
+                    dz <= 1'b1;
                 end else begin
-                    // bắt đầu chia: chốt toán hạng dạng trị tuyệt đối, nhớ dấu để sửa ở cuối
+                    // Khởi động phép chia: Lấy trị tuyệt đối toán hạng và ghi nhớ dấu ban đầu
                     run   <= 1'b1;
                     cnt   <= 5'd0;
                     rem   <= 32'd0;
-                    quo   <= a[31] ? -a : a;   // |0x80000000| = 2^31 vẫn đúng khi hiểu không dấu
-                    dvs   <= b[31] ? -b : b;
-                    neg_q <= a[31] ^ b[31];
-                    neg_r <= a[31];
+                    quo   <= a[31] ? -a : a;  // |a| (trường hợp đặc biệt 0x80000000 vẫn giữ đúng độ lớn)
+                    dvs   <= b[31] ? -b : b;  // |b|
+                    neg_q <= a[31] ^ b[31];   // Thương âm nếu hai số khác dấu
+                    neg_r <= a[31];           // Dư mang cùng dấu với số bị chia a
                 end
             end else if (run) begin
+                // Cập nhật kết quả bước chia hiện tại
                 rem <= rem_n;
                 quo <= quo_n;
                 cnt <= cnt + 5'd1;
+
                 if (last) begin
-                    // xong bước 32: sửa dấu rồi ghi LO/HI
+                    // Đã xong chu kỳ thứ 32: Hoàn tất thuật toán, hiệu chỉnh dấu và nạp HI / LO
                     run <= 1'b0;
-                    lo  <= neg_q ? -quo_n : quo_n;
-                    hi  <= neg_r ? -rem_n : rem_n;
+                    lo  <= neg_q ? -quo_n : quo_n; // Hiệu chỉnh dấu thương số
+                    hi  <= neg_r ? -rem_n : rem_n; // Hiệu chỉnh dấu số dư
                     dz  <= 1'b0;
                 end
             end
         end
     end
+
 endmodule
