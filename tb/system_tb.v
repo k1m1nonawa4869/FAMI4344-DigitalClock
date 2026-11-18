@@ -547,6 +547,33 @@ module system_tb;
         press(B_C);
         checkf(fr, fD(dut.u_sw.val), "C lan 4: ve gia tri dang dung");
         $display("  lap: %0d %0d %0d, dung o %0d ms", lapv[0], lapv[1], lapv[2], dut.u_sw.val);
+
+        // Kiểm tra SET STOPWATCH Option A (09L/99L) & Option B (SPLIT/GAP)
+        press(B_MODE);                                   // -> Mode 3 (TIMER)
+        press(B_MODE);                                   // -> Mode 4 (SET p0: RTC)
+        press(B_MODE);                                   // -> SET p1 (ALARM)
+        press(B_MODE);                                   // -> SET p2 (STOPWATCH)
+        frame2;
+        check(dut.u_disp.blink_mask == 8'h00, "SET Stopwatch: khong nhay (doc ro 2 option)");
+        check(fr == 64'h0009111a1a161411, "SET Stopwatch ban dau: 09L  SPL");
+        press(B_A);                                      // Toggle Option A -> 99L
+        frame2;
+        check(fr == 64'h0909111a1a161411, "SET Stopwatch Option A: 99L  SPL");
+        press(B_B);                                      // Toggle Option B -> GAP
+        frame2;
+        check(fr == 64'h0909111a1a060a14, "SET Stopwatch Option B: 99L  GAP");
+        press(B_C);                                      // Lưu cấu hình & thoát về STOPWATCH (Mode 2)
+        frame2;
+        check(dut.u_cpu.dmem[12'h400 >> 2] == 2, "Luu SET Stopwatch: ve STOPWATCH mode");
+        check(dut.u_cpu.dmem[12'h7d0 >> 2] == 1, "V_SW_MODE = 1 (99 Laps)");
+        check(dut.u_cpu.dmem[12'h790 >> 2] == 1, "V_SW_GAP = 1 (GAP mode)");
+        // Đặt lại về 09L & SPLIT trước khi sang sys_4
+        press(B_MODE); press(B_MODE); press(B_MODE); press(B_MODE); // -> SET p2
+        press(B_A);                                      // 99L -> 09L
+        press(B_B);                                      // GAP -> SPL
+        press(B_C);                                      // Lưu và về lại STOPWATCH
+        frame2;
+        check(dut.u_cpu.dmem[12'h7d0 >> 2] == 0 && dut.u_cpu.dmem[12'h790 >> 2] == 0, "Tra ve 09L & SPLIT");
         done(3, "lap x3 dung thu tu");
 
         // ---- sys_4: timer 00:02.000 → về 0 đúng ms, chuông, −00:00.500 ở 2,5 s

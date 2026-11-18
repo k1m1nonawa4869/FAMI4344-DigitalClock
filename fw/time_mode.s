@@ -46,18 +46,14 @@ tm_btn: addiu $t1, $zero, 1
         # Xóa cờ EN (bit 31) ở cả 4 kênh báo thức phần cứng REG_ALARM0..3
         lui   $t1, 0x7fff
         ori   $t1, $t1, 0xffff
-        lw    $t0, REG_ALARM0($zero)
+        addiu $t2, $zero, REG_ALARM0
+        addiu $t3, $zero, -192
+tm_alm_loop:
+        lw    $t0, 0($t2)
         and   $t0, $t0, $t1
-        sw    $t0, REG_ALARM0($zero)
-        lw    $t0, REG_ALARM1($zero)
-        and   $t0, $t0, $t1
-        sw    $t0, REG_ALARM1($zero)
-        lw    $t0, REG_ALARM2($zero)
-        and   $t0, $t0, $t1
-        sw    $t0, REG_ALARM2($zero)
-        lw    $t0, REG_ALARM3($zero)
-        and   $t0, $t0, $t1
-        sw    $t0, REG_ALARM3($zero)
+        sw    $t0, 0($t2)
+        addiu $t2, $t2, 4
+        bne   $t2, $t3, tm_alm_loop
         jr    $ra
 
 tm_a_first:

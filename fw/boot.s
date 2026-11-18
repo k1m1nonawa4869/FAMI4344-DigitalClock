@@ -32,6 +32,7 @@ b_pre:  sw    $t0, V_PRE($zero)         # Lưu vào biến DMEM
         sw    $t0, V_TMR_SNAP($zero)    # Khởi tạo snapshot với mốc timer ban đầu
         sw    $zero, V_TPAUSED($zero)   # Xóa cờ tạm dừng
         sw    $zero, V_SW_MODE($zero)   # Mặc định chế độ Stopwatch 9 Laps @ 1 ms
+        sw    $zero, V_SW_GAP($zero)    # Mặc định hiển thị SPLIT mốc thời gian tuyệt đối
         sw    $zero, V_TMR_SUBMODE($zero) # Mặc định chế độ đếm lùi Đơn (Single Timer)
         sw    $zero, V_CHESS_ACT($zero) # Trạng thái cờ vua mặc định: Dừng/Chờ
         lui   $t0, 4

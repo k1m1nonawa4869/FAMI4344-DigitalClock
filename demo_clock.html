@@ -1175,10 +1175,11 @@ t = 0 ms
       globalAlarmOff: false,
       brightness: 15, // 15, 9, 3
 
-      // Stopwatch (TASK-18: Hỗ trợ 2 chế độ 9 Lap 1-ms & 99 Lap 10-ms)
+      // Stopwatch (TASK-18: Hỗ trợ 2 chế độ 9 Lap 1-ms & 99 Lap 10-ms; Option B: SPLIT vs GAP)
       swRunning: false,
       swElapsedMs: 0,
       swMode: '9lap', // '9lap' (1 ms, S7=1..9) hoặc '99lap' (10 ms, S7..S6=01..99)
+      swLapDisplay: 'split', // 'split' (mốc tuyệt đối) hoặc 'gap' (khoảng cách giữa các vòng + tắt 0 đầu)
       laps: [],
       swLapIdx: -1, // -1: xem giờ chạy trực tiếp, 0..N-1: xem Lap đã lưu
 
@@ -1448,6 +1449,9 @@ t = 0 ms
         if (STATE.tPage === 1) { // SET ALARM: AL k  HH.MM
           document.getElementById('col-d4').classList.add('sep-after');
           document.getElementById('col-d2').classList.add('sep-after');
+        } else if (STATE.tPage === 2) { // SET STOPWATCH: 09L  SPL
+          document.getElementById('col-d5').classList.add('sep-after');
+          document.getElementById('col-d3').classList.add('sep-after');
         } else if (STATE.tPage === 3) { // SET TIMER: t1/t2 HH.MM.SS
           document.getElementById('col-d6').classList.add('sep-after');
           document.getElementById('col-d4').classList.add('sep-after');
@@ -1525,17 +1529,27 @@ t = 0 ms
         }
       } else if (m === 2) { // STOPWATCH
         const isLap = STATE.swLapIdx >= 0;
-        if (STATE.swMode === '99lap') {
-          const lapStr = isLap ? 'L' + String(STATE.swLapIdx + 1).padStart(2, '0') : 'LIVE';
+        if (!isLap) {
+          // LIVE RUNNING: Luôn 3 chữ số mili-giây
           html = `
-            <div class="sub-label-cell" style="width:122px; margin-right:22px; color:#e3b341;">[S7..S6: ${lapStr}]</div>
+            <div class="sub-label-cell" style="width:54px; margin-right:22px; color:#e3b341;">[S7: LIVE]</div>
+            <div class="sub-label-cell" style="width:122px; margin-right:22px;">[S6..S5: PHÚT (MM)]</div>
+            <div class="sub-label-cell" style="width:122px; margin-right:22px;">[S4..S3: GIÂY (SS)]</div>
+            <div class="sub-label-cell" style="width:190px; color:#39ff14;">[S2..S0: MILI-GIÂY (ms)]</div>
+          `;
+        } else if (STATE.swMode === '99lap') {
+          const lapStr = 'L' + String(STATE.swLapIdx + 1).padStart(2, '0');
+          const isGap = STATE.swLapDisplay === 'gap';
+          html = `
+            <div class="sub-label-cell" style="width:122px; margin-right:22px; color:#e3b341;">[S7..S6: ${lapStr} (${isGap ? 'GAP' : 'SPLIT'})]</div>
             <div class="sub-label-cell" style="width:122px; margin-right:22px;">[S5..S4: PHÚT (MM)]</div>
             <div class="sub-label-cell" style="width:122px; margin-right:22px;">[S3..S2: GIÂY (SS)]</div>
             <div class="sub-label-cell" style="width:122px; color:#39ff14;">[S1..S0: CENTI (cs)]</div>
           `;
         } else {
+          const isGap = STATE.swLapDisplay === 'gap';
           html = `
-            <div class="sub-label-cell" style="width:54px; margin-right:22px; color:#e3b341;">[S7: ${isLap ? 'L' + ((STATE.swLapIdx % 9) + 1) : 'LIVE'}]</div>
+            <div class="sub-label-cell" style="width:54px; margin-right:22px; color:#e3b341;">[S7: L${(STATE.swLapIdx % 9) + 1} (${isGap ? 'GAP' : 'SPL'})]</div>
             <div class="sub-label-cell" style="width:122px; margin-right:22px;">[S6..S5: PHÚT (MM)]</div>
             <div class="sub-label-cell" style="width:122px; margin-right:22px;">[S4..S3: GIÂY (SS)]</div>
             <div class="sub-label-cell" style="width:190px; color:#39ff14;">[S2..S0: MILI-GIÂY (ms)]</div>
@@ -1585,10 +1599,10 @@ t = 0 ms
             <div class="sub-label-cell" style="width:122px; margin-right:22px; ${STATE.setField === 1 ? 'color:#58a6ff; font-weight:bold;' : ''}">[S3..S2: GIỜ (HH)]</div>
             <div class="sub-label-cell" style="width:122px; ${STATE.setField === 2 ? 'color:#58a6ff; font-weight:bold;' : ''}">[S1..S0: PHÚT (MM)]</div>
           `;
-        } else if (STATE.tPage === 2) { // SET STOPWATCH: SP 09LA / 99LA
+        } else if (STATE.tPage === 2) { // SET STOPWATCH: 09L  SPL / 99L  GAP
           html = `
-            <div class="sub-label-cell" style="width:122px; margin-right:22px; color:#e3b341;">[S7..S6: SET STPW]</div>
-            <div class="sub-label-cell" style="width:122px; margin-right:22px; color:#39ff14; font-weight:bold;">[S3..S0: ${STATE.swMode === '9lap' ? '09 LAPS (1 ms)' : '99 LAPS (10 ms)'}]</div>
+            <div class="sub-label-cell" style="width:190px; margin-right:22px; color:#39ff14; font-weight:bold;">[S7..S5: OPTION A: ${STATE.swMode === '9lap' ? '09 LAPS' : '99 LAPS'}] (Nút A)</div>
+            <div class="sub-label-cell" style="width:190px; color:#58a6ff; font-weight:bold;">[S2..S0: OPTION B: ${STATE.swLapDisplay.toUpperCase()}] (Nút B)</div>
           `;
         } else if (STATE.tPage === 3) { // SET TIMER: t1/t2 HH.MM.SS
           html = `
@@ -1733,37 +1747,15 @@ t = 0 ms
         }
       }
 
-      // 3. CHẾ ĐỘ 2: STOPWATCH (Hỗ trợ 2 chế độ 9 Lap 1-ms & 99 Lap 10-ms)
+      // 3. CHẾ ĐỘ 2: STOPWATCH (Live running 3 chữ số ms; Lap view 9L @ 1ms hoặc 99L @ 10ms; Option GAP + Tắt 0 đầu)
       else if (m === 2) {
-        const t = Math.floor(STATE.swElapsedMs);
-        let curT = t;
-        if (STATE.swLapIdx >= 0 && STATE.laps[STATE.swLapIdx] !== undefined) {
-          curT = Math.floor(STATE.laps[STATE.swLapIdx]);
-        }
-        if (STATE.swMode === '99lap') { // 99 Laps @ 10 ms (LL MM.SS.cc)
-          const min = Math.floor(curT / 60000) % 60;
-          const sec = Math.floor((curT % 60000) / 1000);
-          const cs = Math.floor((curT % 1000) / 10); // 0..99 centiseconds
-          if (STATE.swLapIdx >= 0) {
-            const lNum = ((STATE.swLapIdx % 99) + 1);
-            chars[7] = Math.floor(lNum / 10).toString();
-            chars[6] = (lNum % 10).toString();
-          } else {
-            chars[7] = ' '; chars[6] = ' ';
-          }
-          chars[5] = Math.floor(min / 10).toString();
-          chars[4] = (min % 10).toString();
-          dps[4] = true;
-          chars[3] = Math.floor(sec / 10).toString();
-          chars[2] = (sec % 10).toString();
-          dps[2] = true;
-          chars[1] = Math.floor(cs / 10).toString();
-          chars[0] = (cs % 10).toString();
-        } else { // 9 Laps @ 1 ms (L MM.SS.mmm)
+        if (STATE.swLapIdx < 0) {
+          // LIVE RUNNING: Luôn hiển thị 3 chữ số mili-giây (_MM.SS.mmm) cho cả 9L và 99L!
+          const curT = Math.floor(STATE.swElapsedMs);
           const min = Math.floor(curT / 60000) % 60;
           const sec = Math.floor((curT % 60000) / 1000);
           const ms = curT % 1000;
-          chars[7] = STATE.swLapIdx >= 0 ? (((STATE.swLapIdx % 9) + 1)).toString() : ' ';
+          chars[7] = ' ';
           chars[6] = Math.floor(min / 10).toString();
           chars[5] = (min % 10).toString();
           dps[5] = true;
@@ -1773,6 +1765,72 @@ t = 0 ms
           chars[2] = Math.floor(ms / 100).toString();
           chars[1] = Math.floor((ms % 100) / 10).toString();
           chars[0] = Math.floor(ms % 10).toString();
+        } else {
+          // REVIEW LAPS:
+          let curT = Math.floor(STATE.laps[STATE.swLapIdx]);
+          if (STATE.swLapDisplay === 'gap') {
+            curT = STATE.swLapIdx === 0 ? Math.floor(STATE.laps[0]) : Math.floor(STATE.laps[STATE.swLapIdx] - STATE.laps[STATE.swLapIdx - 1]);
+          }
+          if (STATE.swMode === '99lap') {
+            // 99 Laps @ 10 ms (LL MM.SS.cc)
+            const min = Math.floor(curT / 60000) % 60;
+            const sec = Math.floor((curT % 60000) / 1000);
+            const cs = Math.floor((curT % 1000) / 10);
+            const lNum = ((STATE.swLapIdx % 99) + 1);
+            chars[7] = Math.floor(lNum / 10).toString();
+            chars[6] = (lNum % 10).toString();
+            chars[5] = Math.floor(min / 10).toString();
+            chars[4] = (min % 10).toString();
+            dps[4] = true;
+            chars[3] = Math.floor(sec / 10).toString();
+            chars[2] = (sec % 10).toString();
+            dps[2] = true;
+            chars[1] = Math.floor(cs / 10).toString();
+            chars[0] = (cs % 10).toString();
+
+            if (STATE.swLapDisplay === 'gap') {
+              // Tắt các số 0 ở đầu (Leading Zero Blanking): D5, D4, D3
+              if (chars[5] === '0') {
+                chars[5] = ' ';
+                if (chars[4] === '0') {
+                  chars[4] = ' ';
+                  dps[4] = false;
+                  if (chars[3] === '0') {
+                    chars[3] = ' ';
+                  }
+                }
+              }
+            }
+          } else {
+            // 9 Laps @ 1 ms (L MM.SS.mmm)
+            const min = Math.floor(curT / 60000) % 60;
+            const sec = Math.floor((curT % 60000) / 1000);
+            const ms = curT % 1000;
+            chars[7] = (((STATE.swLapIdx % 9) + 1)).toString();
+            chars[6] = Math.floor(min / 10).toString();
+            chars[5] = (min % 10).toString();
+            dps[5] = true;
+            chars[4] = Math.floor(sec / 10).toString();
+            chars[3] = (sec % 10).toString();
+            dps[3] = true;
+            chars[2] = Math.floor(ms / 100).toString();
+            chars[1] = Math.floor((ms % 100) / 10).toString();
+            chars[0] = Math.floor(ms % 10).toString();
+
+            if (STATE.swLapDisplay === 'gap') {
+              // Tắt các số 0 ở đầu (Leading Zero Blanking): D6, D5, D4
+              if (chars[6] === '0') {
+                chars[6] = ' ';
+                if (chars[5] === '0') {
+                  chars[5] = ' ';
+                  dps[5] = false;
+                  if (chars[4] === '0') {
+                    chars[4] = ' ';
+                  }
+                }
+              }
+            }
+          }
         }
       }
 
@@ -1887,19 +1945,24 @@ t = 0 ms
               chars[7] = ' '; chars[6] = ' ';
             }
           }
-        } else if (STATE.tPage === 2) { // SET STOPWATCH: SP  09LA hoặc SP  99LA
-          chars[7] = 'S';
-          chars[6] = 'P';
-          chars[5] = ' ';
-          chars[4] = ' ';
+        } else if (STATE.tPage === 2) { // SET STOPWATCH: 09L  SPL hoặc 99L  GAP
           const is99 = STATE.swMode === '99lap';
-          chars[3] = is99 ? '9' : '0';
-          chars[2] = '9';
-          chars[1] = 'L';
-          chars[0] = 'A';
-
-          if (!STATE.blinkPhase) {
-            chars[3] = ' '; chars[2] = ' '; // Nháy 09 / 99
+          const isGap = STATE.swLapDisplay === 'gap';
+          // Option A: D7..D5 (09L hoặc 99L)
+          chars[7] = is99 ? '9' : '0';
+          chars[6] = '9';
+          chars[5] = 'L';
+          chars[4] = ' ';
+          chars[3] = ' ';
+          // Option B: D2..D0 (SPL hoặc GAP)
+          if (isGap) {
+            chars[2] = 'G';
+            chars[1] = 'A';
+            chars[0] = 'P';
+          } else {
+            chars[2] = 'S';
+            chars[1] = 'P';
+            chars[0] = 'L';
           }
         } else if (STATE.tPage === 3) { // SET TIMER: t1/t2 HH.MM.SS (Preset s1 & Chế độ)
           chars[7] = 't';
@@ -2345,10 +2408,10 @@ t = 0 ms
           } else if (STATE.setField === 2) {
             STATE.almEditM = (STATE.almEditM + 1) % 60;
           }
-        } else if (STATE.tPage === 2) { // SET STOPWATCH (9 Laps <-> 99 Laps)
+        } else if (STATE.tPage === 2) { // SET STOPWATCH: Phím A đổi Option A (09 Laps <-> 99 Laps)
           const newMode = STATE.swMode === '9lap' ? '99lap' : '9lap';
           setStopwatchMode(newMode);
-          appendStreamLog(`[SET STPW] Phím A: Đổi Chế độ sang ${newMode === '9lap' ? '9 Laps (1 ms, L MM.SS.mmm)' : '99 Laps (10 ms, LL MM.SS.cc)'}.`);
+          appendStreamLog(`[SET STPW] Phím A: Đổi Option A (Số Laps) -> ${newMode === '9lap' ? '09 Laps (1 ms)' : '99 Laps (10 ms)'}.`);
         } else if (STATE.tPage === 3) { // SET TIMER s1 (Giờ, Phút, Giây, Chế độ t1/t2)
           if (STATE.setField === 0) {
             STATE.tmrSetHr = (STATE.tmrSetHr + 1) % 100;
@@ -2517,10 +2580,9 @@ t = 0 ms
       } else if (m === 4) { // SET
         if (STATE.tPage === 1) { // SET ALARM: Đổi trường (Kênh -> Giờ -> Phút)
           STATE.setField = (STATE.setField + 1) % 3;
-        } else if (STATE.tPage === 2) { // SET STOPWATCH: Đảo 9 Laps <-> 99 Laps
-          const newMode = STATE.swMode === '9lap' ? '99lap' : '9lap';
-          setStopwatchMode(newMode);
-          appendStreamLog(`[SET STPW] Phím B: Đổi Chế độ sang ${newMode === '9lap' ? '9 Laps (1 ms)' : '99 Laps (10 ms)'}.`);
+        } else if (STATE.tPage === 2) { // SET STOPWATCH: Phím B đổi Option B (SPLIT <-> GAP)
+          STATE.swLapDisplay = STATE.swLapDisplay === 'split' ? 'gap' : 'split';
+          appendStreamLog(`[SET STPW] Phím B: Đổi Option B (Hiển thị Lap) -> ${STATE.swLapDisplay === 'gap' ? 'GAP (Khoảng cách giữa các vòng + Tắt 0 đầu)' : 'SPLIT (Mốc thời gian tuyệt đối)'}.`);
         } else if (STATE.tPage === 3) { // SET TIMER: Đổi vòng Giờ (0) -> Phút (1) -> Giây (2) -> Chế độ (3) -> 0
           STATE.setField = (STATE.setField + 1) % 4;
         } else if (STATE.tPage === 4) { // SET CHESS s2: Đổi Phút (0) <-> Giây (1)
@@ -2629,7 +2691,7 @@ t = 0 ms
           STATE.mode = 1; // Trở về ALARM
           STATE.tPage = 0;
         } else if (STATE.tPage === 2) { // Lưu Stopwatch Mode
-          appendStreamLog(`[STPW SET] Đã lưu chế độ bấm giờ: ${STATE.swMode === '9lap' ? '9 Laps (1 ms)' : '99 Laps (10 ms)'}. Thoát về STOPWATCH.`);
+          appendStreamLog(`[STPW SET] Đã lưu cấu hình: ${STATE.swMode === '9lap' ? '09 LAPS' : '99 LAPS'} | ${STATE.swLapDisplay.toUpperCase()}. Thoát về STOPWATCH.`);
           STATE.mode = 2; // Trở về STOPWATCH
           STATE.tPage = 0;
         } else if (STATE.tPage === 3) { // Lưu Timer Preset s1 & Chế độ

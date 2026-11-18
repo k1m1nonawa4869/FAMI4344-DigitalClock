@@ -135,10 +135,11 @@ st_in_chess_r:
 st_in_sw:
         lw    $t0, V_SW_MODE($zero)     # Đọc chế độ Stopwatch hiện tại (0: 9L, 1: 99L)
         sw    $t0, V_TPSW_MODE($zero)
+        lw    $t0, V_SW_GAP($zero)      # Đọc chế độ Lap Display hiện tại (0: SPLIT, 1: GAP)
+        sw    $t0, V_TPSW_GAP($zero)
         addu  $t4, $zero, $zero
         sw    $t4, V_SF($zero)
-        addiu $t0, $zero, 0x0c          # Nháy 2 ô DISP3, DISP2 (09 hoặc 99)
-        sw    $t0, REG_BLINK_MASK($zero)
+        sw    $zero, REG_BLINK_MASK($zero) # Không nháy để đọc rõ cả 2 tùy chọn
         jr    $s7
 
 # ----------------------------------------------------------------------------
@@ -510,16 +511,29 @@ st_alm_sv_done:
 st_btn_sw:
         addiu $t1, $zero, 3
         beq   $a0, $t1, st_sw_sv        # Nút C: Lưu Stopwatch Mode và thoát về STOPWATCH
-        # Nút A hoặc Nút B: Đảo chế độ 0 (9 Laps @ 1 ms) <-> 1 (99 Laps @ 10 ms)
+        addiu $t1, $zero, 2
+        beq   $a0, $t1, st_sw_btn_b     # Nút B: Đảo Option B (SPLIT <-> GAP)
+
+        # Nút A: Đảo Option A: 0 (9 Laps @ 1 ms) <-> 1 (99 Laps @ 10 ms)
         lw    $t0, V_TPSW_MODE($zero)
         addiu $t1, $zero, 1
         subu  $t0, $t1, $t0             # 1 - t0: đảo 0 <-> 1
         sw    $t0, V_TPSW_MODE($zero)
         jr    $s7
 
+st_sw_btn_b:
+        # Nút B: Đảo Option B: 0 (SPLIT) <-> 1 (GAP)
+        lw    $t0, V_TPSW_GAP($zero)
+        addiu $t1, $zero, 1
+        subu  $t0, $t1, $t0             # 1 - t0: đảo 0 <-> 1
+        sw    $t0, V_TPSW_GAP($zero)
+        jr    $s7
+
 st_sw_sv: # Nút C: Lưu cấu hình Stopwatch và thoát về STOPWATCH
         lw    $t0, V_TPSW_MODE($zero)
         sw    $t0, V_SW_MODE($zero)
+        lw    $t0, V_TPSW_GAP($zero)
+        sw    $t0, V_SW_GAP($zero)
         sw    $zero, REG_BLINK_MASK($zero)
         sw    $zero, V_TPAGE($zero)
         addiu $t0, $zero, MODE_STOPWATCH
@@ -731,25 +745,13 @@ dst_t_sub:
         mfhi  $t2                       # Hàng đơn vị Giờ (D4)
         ori   $t2, $t2, CHAR_DP         # Bật dấu chấm sau Giờ
         sw    $t2, D4($zero)
-        # Phút (D3, D2 có dấu chấm)
+        # Phút & Giây s1 (D3..D0)
         lw    $t0, V_TPM($zero)
-        div   $t0, $t1
-        mflo  $t2                       # Hàng chục Phút (D3)
-        sw    $t2, D3($zero)
-        mfhi  $t2                       # Hàng đơn vị Phút (D2)
-        ori   $t2, $t2, CHAR_DP         # Bật dấu chấm sau Phút
-        sw    $t2, D2($zero)
-        # Giây (D1, D0)
-        lw    $t0, V_TPS($zero)
-        div   $t0, $t1
-        mflo  $t2                       # Hàng chục Giây (D1)
-        sw    $t2, D1($zero)
-        mfhi  $t2                       # Hàng đơn vị Giây (D0)
-        sw    $t2, D0($zero)
-        j     dr_out
+        lw    $a2, V_TPS($zero)
+        j     dr_st_mmss
 
 dr_st_chess_r:
-        # Trang 2: SET CHESS s2 Đấu thủ Phải (Hiển thị "C2  MM.SS")
+        # Trang 4: SET CHESS s2 Đấu thủ Phải (Hiển thị "C2  MM.SS")
         addiu $t0, $zero, 0x0c          # Mã chữ 'C'
         sw    $t0, D7($zero)
         addiu $t0, $zero, 0x02          # Số '2'
@@ -757,18 +759,19 @@ dr_st_chess_r:
         addiu $t0, $zero, CHAR_BLANK
         sw    $t0, D5($zero)
         sw    $t0, D4($zero)
-        addiu $t1, $zero, 10
-        # Phút s2 (D3, D2 có dấu chấm)
+        # Phút & Giây s2 (D3..D0)
         lw    $t0, V_TPR_M($zero)
+        lw    $a2, V_TPR_S($zero)
+
+dr_st_mmss:
+        addiu $t1, $zero, 10
         div   $t0, $t1
         mflo  $t2                       # Hàng chục Phút (D3)
         sw    $t2, D3($zero)
         mfhi  $t2                       # Hàng đơn vị Phút (D2)
         ori   $t2, $t2, CHAR_DP         # Bật dấu chấm sau Phút
         sw    $t2, D2($zero)
-        # Giây s2 (D1, D0)
-        lw    $t0, V_TPR_S($zero)
-        div   $t0, $t1
+        div   $a2, $t1
         mflo  $t2                       # Hàng chục Giây (D1)
         sw    $t2, D1($zero)
         mfhi  $t2                       # Hàng đơn vị Giây (D0)
@@ -776,24 +779,36 @@ dr_st_chess_r:
         j     dr_out
 
 dr_st_sw:
-        # Trang 3: SET STOPWATCH (Hiển thị "SP  09LA" hoặc "SP  99LA")
-        addiu $t0, $zero, 0x16          # Mã chữ 'S' (0x16)
-        sw    $t0, D7($zero)
-        addiu $t0, $zero, 0x14          # Mã chữ 'P' (0x14)
-        sw    $t0, D6($zero)
-        addiu $t0, $zero, CHAR_BLANK
-        sw    $t0, D5($zero)
-        sw    $t0, D4($zero)
+        # Trang 2: SET STOPWATCH: "09L  SPL" hoặc "99L  GAP"
         lw    $t3, V_TPSW_MODE($zero)
-        addu  $t2, $zero, $zero         # Mặc định: '0' cho 9 Laps
-        beq   $t3, $zero, dst_sw_d3
-        addiu $t2, $zero, 9             # '9' cho 99 Laps
-dst_sw_d3:
-        sw    $t2, D3($zero)
-        addiu $t0, $zero, 9             # D2 luôn là '9' (09 hoặc 99)
+        ori   $t0, $zero, 9
+        mul   $t2, $t3, $t0             # 0 -> 0; 1 -> 9
+        sw    $t2, D7($zero)
+        sw    $t0, D6($zero)            # D6 luôn là '9' (09 hoặc 99)
+        addiu $t0, $zero, 0x11          # D5 là chữ 'L' (0x11)
+        sw    $t0, D5($zero)
+
+        addiu $t0, $zero, CHAR_BLANK    # D4, D3 là khoảng trắng
+        sw    $t0, D4($zero)
+        sw    $t0, D3($zero)
+
+        lw    $t3, V_TPSW_GAP($zero)    # 0: SPLIT ("SPL"), 1: GAP ("GAP")
+        bne   $t3, $zero, dst_sw_gap
+        # SPLIT ("SPL" -> 'S'=0x16, 'P'=0x14, 'L'=0x11)
+        addiu $t0, $zero, 0x16          # 'S'
         sw    $t0, D2($zero)
-        addiu $t0, $zero, 0x11          # Mã chữ 'L' (0x11)
+        addiu $t0, $zero, 0x14          # 'P'
         sw    $t0, D1($zero)
-        addiu $t0, $zero, 0x0a          # Mã chữ 'A' (0x0A)
+        addiu $t0, $zero, 0x11          # 'L'
+        sw    $t0, D0($zero)
+        j     dr_out
+
+dst_sw_gap:
+        # GAP ("GAP" -> 'G'=0x06, 'A'=0x0A, 'P'=0x14)
+        addiu $t0, $zero, 0x06          # 'G'
+        sw    $t0, D2($zero)
+        addiu $t0, $zero, 0x0A          # 'A'
+        sw    $t0, D1($zero)
+        addiu $t0, $zero, 0x14          # 'P'
         sw    $t0, D0($zero)
         j     dr_out

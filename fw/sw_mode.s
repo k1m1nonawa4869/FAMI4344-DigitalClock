@@ -60,20 +60,13 @@ dr_sw:  lw    $t0, REG_SW_LAP($zero)    # Rút hết các giá trị Lap từ FI
         slti  $t1, $t2, 8
         bne   $t1, $zero, sw_save       # Chưa đầy 8 Lap: Lưu bình thường vào vị trí t2
         # Đã đầy 8 Lap: Dịch trượt mảng sang trái để chốt ping mới nhất vào cuối (Sliding Window)
-        lw    $t5, 0x444($zero)
-        sw    $t5, 0x440($zero)
-        lw    $t5, 0x448($zero)
-        sw    $t5, 0x444($zero)
-        lw    $t5, 0x44c($zero)
-        sw    $t5, 0x448($zero)
-        lw    $t5, 0x450($zero)
-        sw    $t5, 0x44c($zero)
-        lw    $t5, 0x454($zero)
-        sw    $t5, 0x450($zero)
-        lw    $t5, 0x458($zero)
-        sw    $t5, 0x454($zero)
-        lw    $t5, 0x45c($zero)
-        sw    $t5, 0x458($zero)
+        addiu $t5, $zero, 0x440
+        addiu $t6, $zero, 0x45c
+sw_shift:
+        lw    $t7, 4($t5)
+        sw    $t7, 0($t5)
+        addiu $t5, $t5, 4
+        bne   $t5, $t6, sw_shift
         addiu $t2, $zero, 7             # Đặt vị trí ghi ở phần tử cuối cùng (0x45c)
 sw_save:
         lui   $t1, 0x1fff
@@ -87,28 +80,39 @@ sw_save:
         sw    $t2, V_LAPN($zero)        # Tăng biến đếm số Lap đã lưu (tối đa 8)
         j     dr_sw
 ds2:    lw    $t4, V_LAPI($zero)
-        lw    $a0, REG_SW_VALUE($zero)  # Mặc định lấy giá trị chạy trực tiếp từ phần cứng
-        beq   $t4, $zero, ds3           # Đang ở chế độ xem trực tiếp
-        sll   $t3, $t4, 2
-        addiu $t3, $t3, -4
-        lw    $a0, V_LAPV($t3)          # Lấy giá trị Lap tương ứng từ mảng
-ds3:    lw    $t0, V_SW_MODE($zero)
-        bne   $t0, $zero, dr_sw_99      # Nếu V_SW_MODE == 1: Vẽ theo định dạng 99 Laps (LL MM.SS.cc)
-        jal   fmtD                      # V_SW_MODE == 0: 9 Laps @ 1 ms (_MM.SS.mmm)
-        lw    $t4, V_LAPI($zero)
-        beq   $t4, $zero, dr_out
-        sw    $t4, D7($zero)            # Nếu đang xem Lap: Ô DISP7 hiển thị số thứ tự Lap (1..8)
+        bne   $t4, $zero, ds_lap_view
+        # Đang chạy trực tiếp (LIVE RUNNING): Luôn hiển thị 3 chữ số mili-giây (_MM.SS.mmm) cho cả 9L và 99L
+        lw    $a0, REG_SW_VALUE($zero)
+        jal   fmtD
         j     dr_out
 
+ds_lap_view:
+        # Đang duyệt xem lại mốc Lap $t4 (1..99):
+        sll   $t3, $t4, 2
+        addiu $t3, $t3, -4
+        lw    $a0, V_LAPV($t3)          # Giá trị Lap t4: T_k
+        lw    $t0, V_SW_GAP($zero)      # 0: SPLIT, 1: GAP
+        beq   $t0, $zero, ds_val_ready
+        addiu $t1, $zero, 1
+        beq   $t4, $t1, ds_val_ready    # Lap 1: chênh lệch so với mốc 0 là chính T_1
+        addiu $t3, $t3, -4
+        lw    $t2, V_LAPV($t3)          # T_{k-1}
+        subu  $a0, $a0, $t2             # Delta = T_k - T_{k-1}
+
+ds_val_ready:
+        lw    $t0, V_SW_MODE($zero)
+        bne   $t0, $zero, dr_sw_99      # Nếu V_SW_MODE == 1: 99 Laps (LL MM.SS.cc)
+
+        # ---------------- 9 LAPS @ 1 MS (L MM.SS.mmm) ----------------
+        jal   fmtD
+        sw    $t4, D7($zero)            # DISP7 hiển thị số thứ tự Lap (1..9)
+        lw    $t0, V_SW_GAP($zero)
+        beq   $t0, $zero, dr_out        # SPLIT mode: Giữ nguyên số 0 đầu
+        addiu $a1, $zero, D4
+        j     sw_blank_lead
+
 dr_sw_99:
-        # --------------------------------------------------------------------
-        # Định dạng 99 Laps @ 10 ms: "LL MM.SS.cc"
-        # $a0 = mili-giây
-        # D7..D6 = Số thứ tự Lap (01..99) nếu xem Lap, hoặc Blank nếu xem trực tiếp
-        # D5..D4 = Phút (MM, có DP tại D4)
-        # D3..D2 = Giây (SS, có DP tại D2)
-        # D1..D0 = Centisecond (cc = ms/10, 00..99)
-        # --------------------------------------------------------------------
+        # ---------------- 99 LAPS @ 10 MS (LL MM.SS.cc) ----------------
         ori   $t1, $zero, 1000
         div   $a0, $t1
         mflo  $t0                       # t0 = tổng số giây
@@ -141,18 +145,29 @@ dr_sw_99:
         ori   $t5, $t5, CHAR_DP         # Dấu chấm sau Phút tại D4
         sw    $t5, D4($zero)
 
+        # D7..D6 = Số thứ tự Lap ID (01..99)
         lw    $t4, V_LAPI($zero)
-        beq   $t4, $zero, sw99_live
-        # Đang xem Lap t4 (1..99): D7 = t4 / 10, D6 = t4 % 10
         div   $t4, $t1
         mflo  $t5                       # Hàng chục Lap ID
         sw    $t5, D7($zero)
         mfhi  $t5                       # Hàng đơn vị Lap ID
         sw    $t5, D6($zero)
-        j     dr_out
 
-sw99_live:
+        lw    $t0, V_SW_GAP($zero)
+        beq   $t0, $zero, dr_out        # SPLIT mode: Giữ nguyên số 0 đầu
+        addiu $a1, $zero, D3
+
+sw_blank_lead:
+        # Tắt các số 0 ở đầu (Leading Zero Blanking): D+8, D+4, D+0
+        lw    $t1, 8($a1)
+        bne   $t1, $zero, dr_out
         addiu $t5, $zero, CHAR_BLANK
-        sw    $t5, D7($zero)
-        sw    $t5, D6($zero)
+        sw    $t5, 8($a1)
+        lw    $t1, 4($a1)
+        andi  $t2, $t1, 0x7f
+        bne   $t2, $zero, dr_out
+        sw    $t5, 4($a1)
+        lw    $t1, 0($a1)
+        bne   $t1, $zero, dr_out
+        sw    $t5, 0($a1)
         j     dr_out

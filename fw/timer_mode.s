@@ -142,18 +142,12 @@ tb_dt_ok:
         # Reset trong Single Timer:
         lw    $t3, V_TPAUSED($zero)
         sw    $zero, V_TPAUSED($zero)   # Xóa cờ tạm dừng
-        bne   $t3, $zero, tr_b_running  # Nếu vừa dừng từ trạng thái chạy: Khôi phục mốc SNAP ban đầu
-
+        lw    $t4, V_TMR_SNAP($zero)    # Mặc định lấy mốc SNAP ban đầu
+        bne   $t3, $zero, tr_b_apply
         # Đang dừng tĩnh từ trước (NOT RUNNING & NOT PAUSED): Đặt lại về toàn số 0 (Full 0s)
-        sw    $zero, REG_TMR_VALUE($zero)
-        addiu $t0, $zero, 6             # CLR = 1, BEEP_EN = 1, RUN = 0
-        sw    $t0, REG_TMR_CTRL($zero)
+        addu  $t4, $zero, $zero
         sw    $zero, V_TMR_SNAP($zero)
-        jr    $ra
-
-tr_b_running:
-        # Khôi phục mốc trước khi bấm A, dừng và xóa cờ ZERO
-        lw    $t4, V_TMR_SNAP($zero)
+tr_b_apply:
         sw    $t4, REG_TMR_VALUE($zero)
         addiu $t0, $zero, 6             # CLR = 1, BEEP_EN = 1, RUN = 0
         sw    $t0, REG_TMR_CTRL($zero)

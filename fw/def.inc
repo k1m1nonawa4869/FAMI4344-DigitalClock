@@ -124,9 +124,11 @@
         .eqv  V_A_LAST          0x784           # Mốc ms REG_RTC_MS của lần nhấn phím A gần nhất
         .eqv  V_COLOR           0x788           # Màu LED hiển thị (0: Đỏ, 1: Xanh lá, 2: Xanh lam nhạt, 3: Vàng)
         .eqv  V_GLB_ALM_OFF     0x78c           # Cờ tắt toàn bộ báo thức (1: Global Turn Off)
+        .eqv  V_SW_GAP          0x790           # Chế độ hiển thị Lap: 0: SPLIT mốc tuyệt đối, 1: GAP khoảng cách + tắt 0 đầu
         .eqv  V_TPR_M           0x7a0           # SET: Phút tạm thời cho Clock C / Đấu thủ Phải (0..59)
         .eqv  V_TPR_S           0x7a4           # SET: Giây tạm thời cho Clock C / Đấu thủ Phải (0..59)
         .eqv  V_TPSW_MODE       0x7a8           # SET: Chế độ tạm thời cho Stopwatch (0: 9L, 1: 99L)
+        .eqv  V_TPSW_GAP        0x7ac           # SET: Chế độ hiển thị Lap tạm thời (0: SPLIT, 1: GAP)
         .eqv  V_TMR_SUBMODE     0x7b0           # Phân chế độ: 0: Đếm lùi Đơn (Single Timer), 1: Cờ vua Kép (Chess Clock)
         .eqv  V_CHESS_L         0x7b4           # Thời gian còn lại của Đấu thủ Trái (mili-giây có dấu)
         .eqv  V_CHESS_R         0x7b8           # Thời gian còn lại của Đấu thủ Phải (mili-giây có dấu)
