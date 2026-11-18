@@ -1,6 +1,13 @@
-// soc_bus_tb.v — (fw: fw/tests/soc/bus.s) bus MMIO + thanh ghi soc (C4) chạy bằng firmware tự kiểm trên soc_top.
-// Firmware bật 1 bit $v0 cho mỗi ca đúng rồi dừng ở "j ."; tb đòi $v0 = 0x7FFF, đếm lệnh lạ,
-// nhấn nút C rồi A (có rung) khi firmware chuyển stopwatch sang SRC = 1 (ca bit 13), và kiểm mỗi lw/sw vào MMIO bật bus_re/bus_we đúng 1 chu kỳ hệ thống (cả lúc D = 1526).
+// (fw: fw/tests/soc/bus.s)
+// ============================================================================
+// HỌC PHẦN:       MI4344 / IT3283 – Kiến trúc Máy tính (HUST - SAMI/SoICT)
+// TÊN TESTBENCH:  tb/soc_bus_tb.v — Kiểm thử Bus MMIO và Tích hợp Ngoại vi trên SoC
+// CHUYÊN ĐỀ KTMT: Chương 05: Hệ thống Vào/Ra & Kiến trúc Bus Hệ thống (System Bus & MMIO Architecture)
+// VAI TRÒ:        Chạy firmware tự kiểm trên hệ thống SoC để xác thực không gian địa chỉ MMIO và ghép nối ngoại vi
+// MÔ TẢ:          - Nạp firmware kiểm thử fw/tests/soc/bus.s vào bộ nhớ lệnh IMEM của chip WatchChip.
+//                 - Đọc ghi kiểm tra toàn bộ dải địa chỉ MMIO của các ngoại vi: RTC, Display, Timers, Buttons, UART.
+//                 - Xác nhận chu kỳ bus_re / bus_we tích cực đúng 1 chu kỳ xung nhịp và xử lý an toàn địa chỉ lạ.
+// ============================================================================
 `timescale 1ns/1ps
 module soc_bus_tb;
     reg  clk = 0, rst_in = 1;

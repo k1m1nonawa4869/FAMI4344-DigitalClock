@@ -1,7 +1,13 @@
-// rtc_bcd_tb.v — gói E7 (RTC BCD): 3 ca biên của goi-viec E7 + so với mô hình ms nhị phân → BCD ở mọi ranh giới giây
-// trong ngày (86 400 lần nạp, mỗi lần 2 tick qua ranh giới) và 1 000 000 tick liền từ 23:43:20.000 (qua nửa đêm).
-// (goi-viec ghi "so với RTC nhị phân 1 ngày, G_N = 50" = 4,3·10⁹ chu kỳ, quá lâu cho Icarus → đổi thành 2 phần trên,
-// vẫn phủ mọi lần nhớ của mọi hàng.) Thêm: ghi thắng tick cùng chu kỳ, chữ số sai tự về 0, địa chỉ khác đọc 0.
+// tb/rtc_bcd_tb.v — Kiểm thử Đồng hồ thời gian thực RTC BCD (BCD Real-Time Clock Testbench)
+// ============================================================================
+// HỌC PHẦN:       MI4344 / IT3283 – Kiến trúc Máy tính (HUST - SAMI/SoICT)
+// TÊN TESTBENCH:  tb/rtc_bcd_tb.v — Kiểm thử Đồng hồ Thời gian Thực Đếm BCD (BCD Real-Time Clock Testbench)
+// CHUYÊN ĐỀ KTMT: Chương 05: Hệ thống Vào/Ra & Thiết kế Khối đếm thời gian thực dạng BCD (Hardware BCD RTC)
+// VAI TRÒ:        Kiểm chứng khối RTC đếm trực tiếp mã BCD giây, phút, giờ, ngày, tháng, năm
+// MÔ TẢ:          - Kiểm thử đếm BCD trực tiếp từng mili-giây, giây, phút, giờ, ngày trong tuần, ngày trong tháng, tháng, năm.
+//                 - Xác thực việc xử lý ranh giới chuyển giao: chuyển phút (59->00), chuyển ngày (23:59:59->00:00:00).
+//                 - Kiểm tra thuật toán tính năm nhuận và chạy liên tục 1,000,000 tick qua nửa đêm đối chiếu mô hình toán học.
+// ============================================================================
 `timescale 1ns/1ps
 module rtc_bcd_tb;
     localparam A_BCD = 8'h98;

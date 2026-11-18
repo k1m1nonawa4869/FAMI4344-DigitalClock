@@ -1,6 +1,13 @@
-// soc_uart_tb.v — (fw: fw/tests/soc/uart.s) UART (D4) trên soc_top: firmware tự kiểm qua bus MMIO, tb nối uart_tx → uart_rx.
-// Firmware bật 1 bit $v0 cho mỗi ca đúng, ghi dấu xong vào −108 rồi dừng ở "j ." (chạy được G1 và `-DG2`); tb đòi $v0 = 0x3F, không lệnh lạ, và đếm đúng 6 khung trên dây
-// (0x48, 0x31…0x33, 2 × 0x41; byte thứ 3 của ca bit 5 bị bỏ). G_BIT = 8.
+// (fw: fw/tests/soc/uart.s)
+// ============================================================================
+// HỌC PHẦN:       MI4344 / IT3283 – Kiến trúc Máy tính (HUST - SAMI/SoICT)
+// TÊN TESTBENCH:  tb/soc_uart_tb.v — Kiểm thử Giao tiếp Nối tiếp UART Tích hợp trên SoC
+// CHUYÊN ĐỀ KTMT: Chương 05: Hệ thống Vào/Ra & Giao thức Truyền thông Nối tiếp Không đồng bộ (UART Protocol)
+// VAI TRÒ:        Kiểm chứng truyền nhận dữ liệu UART tự kiểm tra qua cơ chế đấu vòng loopback trên SoC
+// MÔ TẢ:          - Nạp firmware tự kiểm fw/tests/soc/uart.s điều khiển truyền nhận gói tin qua bus MMIO.
+//                 - Đấu vòng chân phát UART TX sang chân thu UART RX và kiểm tra tính toàn vẹn của chuỗi dữ liệu truyền.
+//                 - Xác thực hoạt động của bộ đệm hàng đợi FIFO UART và cờ trạng thái truyền nhận.
+// ============================================================================
 `timescale 1ns/1ps
 module soc_uart_tb;
     reg  clk = 0, rst_in = 1;

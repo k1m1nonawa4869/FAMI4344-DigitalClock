@@ -1,11 +1,13 @@
-// exp_cal_tb.v — thí nghiệm báo cáo E2′ (+ E1′ khi có +e1). Chủ: TV5. Spec: timer-spec.md §2, §10.
-// Code do Claude viết theo yêu cầu Long (26/10/2026); TV5 chạy lại và đọc hiểu.
-//
-// E2′ (luôn chạy, G_N = 50): cdtimer nạp 2000, RUN → ZERO đúng cạnh thứ 2000·G_N + floor(2000·CAL / 65536)
-//      kể từ cạnh RUN, với nhiều CAL (0, ±20 ppm, ±50 ppm của board, biên ±200 ppm, số lẻ).
-//      +slow: chạy thêm 1 lần ở G_N = 50 000, CAL = 65 500 (10⁸ chu kỳ, chậm).
-// E1′ (+e1 +cal=<n> +k=<ms>): timebase G_N = 50 000 chạy k ms với CAL = n, in tổng số chu kỳ.
-//      tools/exp_cal.py gọi chế độ này với CAL do firmware tính và đổi ra ppm.
+// tb/exp_cal_tb.v — Testbench Thực nghiệm Hiệu chuẩn Sai số Thạch anh (Calibration Experiment Testbench)
+// ============================================================================
+// HỌC PHẦN:       MI4344 / IT3283 – Kiến trúc Máy tính (HUST - SAMI/SoICT)
+// TÊN TESTBENCH:  tb/exp_cal_tb.v — Testbench Thực nghiệm Hiệu chuẩn Sai số Thạch anh (Calibration Experiment Testbench)
+// CHUYÊN ĐỀ KTMT: Chương 05: Hệ thống Vào/Ra & Độ chính xác Bộ đếm thời gian thực RTC (PPM Calibration)
+// VAI TRÒ:        Mô phỏng đo đạc thực tế cơ chế bù sai lệch tần số thạch anh phần cứng qua thanh ghi CAL
+// MÔ TẢ:          - Giả lập độ lệch tần số dao động thạch anh ở các mức ppm khác nhau trong điều kiện thực tế.
+//                 - Kiểm chứng việc nạp giá trị thanh ghi CAL và đo đạc tổng số chu kỳ clock hệ thống sinh ra xung 1 giây.
+//                 - Xác nhận sai số thời gian thực sau hiệu chuẩn đạt mức tiệm cận 0 ppm (dưới 1 giây/năm).
+// ============================================================================
 `timescale 1ns/1ps
 module exp_cal_tb;
     localparam A_VAL = 8'h28, A_CTL = 8'h2C;

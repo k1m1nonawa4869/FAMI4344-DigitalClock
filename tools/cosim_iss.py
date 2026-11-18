@@ -1,3 +1,15 @@
+# ============================================================================
+# HỌC PHẦN:       MI4344 / IT3283 – Kiến trúc Máy tính (HUST - SAMI/SoICT)
+# TÊN CÔNG CỤ:    tools/cosim_iss.py — Công cụ đồng mô phỏng RTL vs ISS (Co-simulation Engine)
+# CHUYÊN ĐỀ KTMT: Chương 06: Kiểm chứng phần cứng vi xử lý (Processor Verification & Co-simulation)
+# VAI TRÒ:        Chạy song song RTL Verilog và Bộ mô phỏng tập lệnh ISS, so khớp vết thực thi từng chu kỳ lệnh.
+# MÔ TẢ:          - Biên dịch mã nguồn kiểm thử sang mã hex bằng asm.py.
+#                 - Kích hoạt Icarus Verilog mô phỏng RTL (CPU G1 hoặc soc_top), trích xuất vết thực thi RTL trace.
+#                 - Kích hoạt ISS ở chế độ Replay MMIO tái hiện chính xác luồng đọc ghi ngoại vi và ngắt phần cứng.
+#                 - Tự động gọi cmp_trace.py so khớp từng trường (PC, lệnh, thanh ghi đích, dữ liệu, địa chỉ).
+#                 - Kiểm thử toàn diện CPU unit tests, kiểm thử ngẫu nhiên và 6 kịch bản firmware SoC tích hợp.
+# ============================================================================
+
 """cosim_iss.py — co-sim RTL G1 với ISS theo từng lệnh (B2 + B3; thay golden tạm MARS của cosim_mars.py).
 
   python tools/cosim_iss.py                    # mọi fw/tests/cpu/*.s + 8 chương trình ngẫu nhiên + firmware SoC

@@ -1,5 +1,13 @@
-// display_ctrl_tb.v — gói D2: reset (trống, BRIGHT 15), ghi DISPi qua bus → chân đoạn đúng ở khe i,
-// BRIGHT qua bus, D-4 / D-5 qua bus, đọc ra 0, ghi địa chỉ khác không ảnh hưởng. G_SLOT 40, G_BLANK 4.
+// tb/display_ctrl_tb.v — Kiểm thử Bộ điều khiển Hiển thị Đa kênh (Display Controller Testbench)
+// ============================================================================
+// HỌC PHẦN:       MI4344 / IT3283 – Kiến trúc Máy tính (HUST - SAMI/SoICT)
+// TÊN TESTBENCH:  tb/display_ctrl_tb.v — Kiểm thử Bộ Điều khiển Hiển thị LED 7 Đoạn Đa Kênh (Display Controller Testbench)
+// CHUYÊN ĐỀ KTMT: Chương 05: Hệ thống Vào/Ra & Giao tiếp ngoại vi hiển thị ghép kênh (Multiplexed Display)
+// VAI TRÒ:        Kiểm chứng giao diện MMIO điều khiển 8 LED 7 thanh, mạch giải mã ký tự và điều khiển độ sáng
+// MÔ TẢ:          - Kiểm tra các thanh ghi MMIO cấu hình ký tự hiển thị DISP0..DISP7, điểm thập phân và thanh ghi độ sáng BRIGHT.
+//                 - Xác thực chức năng nhấp nháy chữ số ở tần số 2 Hz phục vụ chế độ cài đặt thời gian.
+//                 - Kiểm tra phân phối tín hiệu Anode/Cathode chính xác tại từng khe thời gian quét đa hợp.
+// ============================================================================
 `timescale 1ns/1ps
 module display_ctrl_tb;
     localparam SLOT = 40, ND = 8, ROUND = SLOT * ND;

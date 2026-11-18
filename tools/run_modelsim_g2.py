@@ -1,3 +1,13 @@
+# ============================================================================
+# HỌC PHẦN:       MI4344 / IT3283 – Kiến trúc Máy tính (HUST - SAMI/SoICT)
+# TÊN CÔNG CỤ:    tools/run_modelsim_g2.py — Tự động hóa kiểm thử CPU Pipeline G2 trên Mentor ModelSim
+# CHUYÊN ĐỀ KTMT: Chương 04: Kiến trúc Pipeline CPU & Công cụ mô phỏng vi mạch (EDA Simulation)
+# VAI TRÒ:        Chạy mô phỏng RTL CPU 5 tầng pipeline trên phần mềm công nghiệp ModelSim và đối chuẩn với Icarus.
+# MÔ TẢ:          - Tự động biên dịch mã nguồn Verilog bằng vlog và chạy kịch bản mô phỏng vsim.
+#                 - Trích xuất và so sánh từng byte dữ liệu vết thực thi giữa ModelSim và Icarus Verilog.
+#                 - Loại trừ các lỗi tiềm ẩn phụ thuộc vào công cụ mô phỏng (simulator-specific issues).
+# ============================================================================
+
 """run_modelsim_g2.py — chạy tb/cpu_pipe_tb.v (G2) bằng ModelSim (vlog/vsim) và so trace với Icarus.
 
 Dùng: python tools/run_modelsim_g2.py [thư_mục_bin_modelsim]

@@ -1,6 +1,13 @@
-// bcd_tb.v — gói A3: bcd.txt (3 134 ca) cho bản tuần tự và bản tổ hợp; bản tuần tự kiểm số chu kỳ
-// (28 chu kỳ CPU, tràn → 1) và x đổi sau start không ảnh hưởng; bản tổ hợp thêm 10^5 số ngẫu nhiên
-// 0..99 999 999 với golden mod/÷ 10 (+full: quét hết 0..10^8−1, rất lâu). Chạy từ thư mục gốc project.
+// tb/bcd_tb.v — Kiểm thử Bộ chuyển đổi Nhị phân sang BCD (BCD Converter Testbench)
+// ============================================================================
+// HỌC PHẦN:       MI4344 / IT3283 – Kiến trúc Máy tính (HUST - SAMI/SoICT)
+// TÊN TESTBENCH:  tb/bcd_tb.v — Kiểm thử Bộ Chuyển đổi Nhị phân sang BCD (BCD Converter Testbench)
+// CHUYÊN ĐỀ KTMT: Chương 03: Số học máy tính & Thuật toán chuyển đổi cơ số (Double-Dabble / Shift-Add-3)
+// VAI TRÒ:        Kiểm chứng tính đúng đắn và số chu kỳ thực thi của khối chuyển đổi nhị phân sang BCD
+// MÔ TẢ:          - Kiểm thử 3,134 ca mẫu trong tb/vectors/bcd.txt cho cả phiên bản tuần tự (bcd.v) và tổ hợp (bcd_comb.v).
+//                 - Đo đạc chính xác số chu kỳ hoàn thành của bản tuần tự (28 chu kỳ CPU, báo busy/done).
+//                 - Kiểm thử bổ sung 100,000 số nguyên ngẫu nhiên đối chiếu hàm chia dư tiêu chuẩn.
+// ============================================================================
 `timescale 1ns/1ps
 module bcd_tb;
     reg         clk = 0, rst = 1, start = 0;

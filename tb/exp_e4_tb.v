@@ -1,15 +1,13 @@
-// exp_e4_tb.v — thí nghiệm E4′ (chủ TV4): bóng ma LED 7 đoạn quanh ranh giới khe, 3 G_SLOT × có/không G_BLANK.
-// Code do Claude viết theo yêu cầu Long (26/10/2026); TV4 chạy lại và đọc hiểu.
-//
-// RTL đổi anode và đoạn ở CÙNG cạnh clock → mô phỏng thuần không có bóng ma. Bóng ma thật do transistor kéo anode
-// tắt chậm: anode cũ còn dẫn T_OFF chu kỳ sau khi tín hiệu về 0, lúc đó chân đoạn đã mang mẫu của chữ số mới.
-// Mô hình: anode_vl[i] = 1 khi an[i] = 1 hoặc an[i] vừa tắt < T_OFF chu kỳ (giả định, không đo từ board).
-// Đo 200 000 chu kỳ (+slow: 800 000 = 2 khung của G_SLOT = 50 000): on = số (chu kỳ × chữ số) anode vật lý dẫn; ghost = số chu kỳ trong đó có đoạn
-// sáng mà chữ số đang dẫn không có (seg & ~mẫu đúng ≠ 0). Tỉ lệ ghost / on ≈ độ sáng bóng ma so với đoạn thật.
-// KẾT QUẢ 26/10 (RTL cũ, đoạn đổi ở c = 0): bóng ma mỗi ranh giới = T_OFF − gap, gap = G_SLOT − G_BLANK − 15·G_STEP
-// (phần dư PWM cuối khe, 5–10 chu kỳ) → G_BLANK KHÔNG chống được, vì khoảng tắt chỉ làm anode MỚI bật muộn.
-// SỬA 27/10 (Long chọn A): đoạn đổi ở c = G_BLANK → bóng ma = max(0, T_OFF − gap − G_BLANK). tb kiểm công thức này.
-// +csv=<file>: ghi dạng sóng quanh ranh giới khe 0 → 1 của G_SLOT = 3 125, T_OFF = 50 (vẽ bằng tools/exp_e4.py).
+// tb/exp_e4_tb.v — Testbench Thực nghiệm Chống bóng ma LED 7 đoạn (Anti-ghosting Experiment Testbench)
+// ============================================================================
+// HỌC PHẦN:       MI4344 / IT3283 – Kiến trúc Máy tính (HUST - SAMI/SoICT)
+// TÊN TESTBENCH:  tb/exp_e4_tb.v — Testbench Thực nghiệm Chống Bóng Ma LED 7 Đoạn (Anti-ghosting Experiment Testbench)
+// CHUYÊN ĐỀ KTMT: Chương 05: Hệ thống Vào/Ra & Kỹ thuật chuyển mạch đa hợp thời gian (Time-Division Multiplexing)
+// VAI TRÒ:        Thu thập dữ liệu dạng sóng Anode và Cathode để chứng minh hiệu quả của khoảng ngắt trống Blanking
+// MÔ TẢ:          - Mô phỏng chi tiết quá trình quét đa hợp 8 LED 7 đoạn ở các tham số G_SLOT và G_BLANK khác nhau.
+//                 - Xuất dữ liệu logic chuyển đổi mức điện áp ra file CSV phục vụ công cụ exp_e4.py vẽ đồ thị dạng sóng.
+//                 - Xác nhận việc triệt tiêu hiện tượng bóng mờ (ghosting) khi các chân Anode chuyển trạng thái đóng/ngắt.
+// ============================================================================
 `timescale 1ns/1ps
 module ghost_meter #(parameter G_SLOT = 50000, parameter G_BLANK = 0, parameter T_OFF = 50) (
     input  wire clk,

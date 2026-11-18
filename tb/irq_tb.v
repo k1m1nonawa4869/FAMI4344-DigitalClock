@@ -1,4 +1,13 @@
-// irq_tb.v — gói C5 (phần irq_ctrl): IRQ-1…4 (mmio-map §6) + đọc lại ENABLE, giữ bus_rdata, địa chỉ lạ → 0.
+// tb/irq_tb.v — Kiểm thử Bộ điều khiển Ngắt tập trung (Interrupt Controller Testbench)
+// ============================================================================
+// HỌC PHẦN:       MI4344 / IT3283 – Kiến trúc Máy tính (HUST - SAMI/SoICT)
+// TÊN TESTBENCH:  tb/irq_tb.v — Kiểm thử Bộ Điều khiển Ngắt Tập Trung (Interrupt Controller Testbench)
+// CHUYÊN ĐỀ KTMT: Chương 05: Hệ thống Vào/Ra & Kiến trúc Ngắt phần cứng (Interrupt Architecture & Handling)
+// VAI TRÒ:        Kiểm chứng khối điều khiển ngắt tập trung xử lý 4 nguồn ngắt ngoại vi trong hệ thống SoC
+// MÔ TẢ:          - Kiểm tra 4 nguồn ngắt độc lập: Timer 1s (bit 0), Báo thức (bit 1), Nút bấm (bit 2), UART (bit 3).
+//                 - Xác thực hoạt động của các thanh ghi ENABLE (cho phép), PENDING (chờ xử lý) và cơ chế ghi xóa ACK.
+//                 - Kiểm tra việc sinh tín hiệu ngắt tổng irq_out gửi tới bộ vi xử lý CPU.
+// ============================================================================
 `timescale 1ns/1ps
 module irq_tb;
     localparam A_EN = 8'h44, A_PEND = 8'h48, A_STAMP = 8'h4C;

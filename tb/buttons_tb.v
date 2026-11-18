@@ -1,6 +1,13 @@
-// buttons_tb.v — gói E4 (nút): BTN-1…BTN-4 (timer-spec §10) + 2 nút cùng lúc, G_ACTIVE_LOW, đọc FIFO rỗng.
-// G_N = 50 → 1 ms = 50 chu kỳ; xung nhiễu "1 µs" của BTN-4 co lại thành 1 chu kỳ (vẫn qua được đồng bộ).
-// Cuối tb (chỉ khi +slow, PLUSARGS=+slow bash tools/run_unit.sh buttons): bản tỉ lệ thật dut_r (G_N = 50 000, clock 50 MHz như chip): BTN-1 rung 0,3/0,5/1,2/1,5 ms, BTN-4 nhiễu đúng 1 µs.
+// tb/buttons_tb.v — Kiểm thử Bộ xử lý Nút bấm & Hàng đợi FIFO (Button Debounce & FIFO Testbench)
+// ============================================================================
+// HỌC PHẦN:       MI4344 / IT3283 – Kiến trúc Máy tính (HUST - SAMI/SoICT)
+// TÊN TESTBENCH:  tb/buttons_tb.v — Kiểm thử Bộ Xử lý Nút Bấm Khử Rung & FIFO Sự Kiện (Buttons & FIFO Testbench)
+// CHUYÊN ĐỀ KTMT: Chương 05: Hệ thống Vào/Ra & Giao tiếp nút nhấn, Khử rung phím (Debounce & Edge Detection)
+// VAI TRÒ:        Kiểm chứng mạch đồng bộ 2 tầng, bộ lọc rung phím, bộ bắt cạnh xung và hàng đợi FIFO sự kiện
+// MÔ TẢ:          - Giả lập các chuỗi xung rung phím cơ học (0.3 ms đến 1.5 ms) và kiểm tra khả năng khử rung ổn định.
+//                 - Xác thực khả năng phân biệt bấm nhả 4 nút độc lập và xử lý trường hợp bấm nhiều nút đồng thời.
+//                 - Kiểm tra hàng đợi FIFO sự kiện phím, phát tín hiệu ngắt btn_irq và đọc dữ liệu qua MMIO.
+// ============================================================================
 `timescale 1ns/1ps
 module buttons_tb;
     localparam A_EVT = 8'h40;

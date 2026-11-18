@@ -1,3 +1,13 @@
+# ============================================================================
+# HỌC PHẦN:       MI4344 / IT3283 – Kiến trúc Máy tính (HUST - SAMI/SoICT)
+# TÊN CÔNG CỤ:    tools/cmp_trace.py — So khớp vết thực thi lệnh (Execution Trace Comparator)
+# CHUYÊN ĐỀ KTMT: Chương 06: Kiểm chứng phần cứng & Kiến trúc vi xử lý (Trace Verification Engine)
+# VAI TRÒ:        So sánh từng chu kỳ lệnh giữa vết thực thi RTL phần cứng và vết thực thi mô phỏng ISS.
+# MÔ TẢ:          - Đọc và phân tích file vết thực thi định dạng CSV theo chuẩn ISA specification.
+#                 - Đối chiếu từng trường dữ liệu: địa chỉ lệnh (PC), mã máy, thanh ghi đích, giá trị ghi, địa chỉ bộ nhớ.
+#                 - Báo cáo chính xác dòng sai lệch đầu tiên và chi tiết giá trị không khớp giữa RTL và Golden model.
+# ============================================================================
+
 """cmp_trace.py — so 2 trace isa-spec §8 (gói B3 · chủ: TV2). Bản đầu 03/10/2026 do Claude viết (KE-HOACH §4b).
 
   python tools/cmp_trace.py rtl.csv iss.csv                       # so 2 file có sẵn

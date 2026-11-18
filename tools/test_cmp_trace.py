@@ -1,3 +1,13 @@
+# ============================================================================
+# HỌC PHẦN:       MI4344 / IT3283 – Kiến trúc Máy tính (HUST - SAMI/SoICT)
+# TÊN CÔNG CỤ:    tools/test_cmp_trace.py — Bộ kiểm thử cho công cụ so khớp vết thực thi (Trace Unit Tests)
+# CHUYÊN ĐỀ KTMT: Chương 06: Kiểm thử & Đánh giá vi xử lý (Verification Tooling Quality)
+# VAI TRÒ:        Kiểm tra độ chính xác và khả năng phát hiện lỗi của công cụ so khớp vết thực thi cmp_trace.py.
+# MÔ TẢ:          - Kiểm thử trường hợp vết hoàn toàn trùng khớp (PASS).
+#                 - Kiểm thử phát hiện sai lệch PC, sai lệch giá trị ghi thanh ghi, sai lệch địa chỉ bộ nhớ.
+#                 - Kiểm thử trường hợp độ dài vết thực thi không bằng nhau (file thừa/thiếu dòng).
+# ============================================================================
+
 """test_cmp_trace.py — test gói B3 (goi-viec.md B3). Chạy: python -m pytest -q tools/test_cmp_trace.py"""
 import os
 import sys

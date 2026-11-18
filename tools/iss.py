@@ -1,3 +1,15 @@
+# ============================================================================
+# HỌC PHẦN:       MI4344 / IT3283 – Kiến trúc Máy tính (HUST - SAMI/SoICT)
+# TÊN CÔNG CỤ:    tools/iss.py — Bộ mô phỏng tập lệnh MIPS 32-bit (Instruction Set Simulator - Golden Model)
+# CHUYÊN ĐỀ KTMT: Chương 04: Kiến trúc tập lệnh (ISA) & Chương 06: Kiểm thử & Đánh giá vi xử lý
+# VAI TRÒ:        Mô hình tham chiếu chuẩn (Golden Reference Model) mức kiến trúc cho CPU và ngoại vi MMIO.
+# MÔ TẢ:          - Mô phỏng chính xác từng chu kỳ lệnh (PC, 32 thanh ghi, CP0 Status/Cause/EPC, bộ nhớ IMEM/DMEM).
+#                 - Hỗ trợ mô phỏng ngắt phần cứng, bẫy ngoại lệ và phục hồi với eret.
+#                 - Tích hợp mô hình ngoại vi MMIO tối thiểu (RTC, Timer, Button, Seg7, Beeper).
+#                 - Hỗ trợ 2 chế độ: Chạy độc lập (Standalone) và Tái hiện MMIO theo vết phần cứng (Replay MMIO).
+#                 - Xuất vết thực thi lệnh (trace CSV) phục vụ đồng mô phỏng đối chuẩn với RTL Verilog.
+# ============================================================================
+
 """iss.py — ISS WatchChip (gói B2 · chủ: TV2 · spec: isa-spec.md toàn bộ: §1 bộ nhớ, §3 28 lệnh, §4 div, §5 CP0 + ngắt, §8 trace).
 Bản đầu 03/10/2026 do Claude viết (ngoại lệ KE-HOACH §4b); chủ gói vẫn qua cổng vấn đáp.
 

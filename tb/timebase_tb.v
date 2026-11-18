@@ -1,6 +1,13 @@
-// timebase_tb.v — gói E1: TB-1…5 (timer-spec.md §2). Chạy từ thư mục gốc project.
-// Mặc định: G_N = 50 cho mọi dòng; dòng G_N = 50 000 của timebase_len chạy luôn (20 ms/dòng).
-// +slow: chạy thêm TB-3 với G_N = 50 000, CAL = 163 840, 1 000 ms (5·10⁷ chu kỳ, chậm).
+// tb/timebase_tb.v — Kiểm thử Khối phân tần cơ sở thời gian (Timebase Generator Testbench)
+// ============================================================================
+// HỌC PHẦN:       MI4344 / IT3283 – Kiến trúc Máy tính (HUST - SAMI/SoICT)
+// TÊN TESTBENCH:  tb/timebase_tb.v — Kiểm thử Khối Phân Tần Cơ Sở Thời Gian (Timebase Generator Testbench)
+// CHUYÊN ĐỀ KTMT: Chương 02: Thiết kế logic số & Chương 05: Mạch phân chia tần số xung nhịp (Clock Dividers)
+// VAI TRÒ:        Kiểm chứng mạch phân tần từ xung dao động 50 MHz sang các nhịp thời gian cơ sở tick_ms và tick_1s
+// MÔ TẢ:          - Xác thực mạch chia tần số tạo xung chuẩn 1 kHz (tick_ms) và xung 1 Hz (tick_1s).
+//                 - Kiểm tra cơ chế bù sai lệch tần số ppm qua giá trị thanh ghi CAL.
+//                 - Kiểm thử độ ổn định và chu kỳ phân tần chính xác ở các hệ số chia mô phỏng (G_N = 50 và G_N = 50,000).
+// ============================================================================
 `timescale 1ns/1ps
 module timebase_tb;
     reg                clk = 0, rst = 1, clr = 0, en = 1;

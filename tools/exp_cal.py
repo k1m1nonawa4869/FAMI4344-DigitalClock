@@ -1,3 +1,13 @@
+# ============================================================================
+# HỌC PHẦN:       MI4344 / IT3283 – Kiến trúc Máy tính (HUST - SAMI/SoICT)
+# TÊN CÔNG CỤ:    tools/exp_cal.py — Phân tích thực nghiệm hiệu chuẩn sai số thạch anh (Crystal Calibration)
+# CHUYÊN ĐỀ KTMT: Chương 05: Hệ thống Vào/Ra (I/O) & Bộ đếm thời gian thực chính xác cao (Precision RTC)
+# VAI TRÒ:        Mô phỏng và kiểm chứng cơ chế bù sai lệch tần số thạch anh (±100 ppm) bằng thanh ghi CAL.
+# MÔ TẢ:          - Giả lập độ lệch tần số thạch anh thực tế theo ppm qua các khoảng thời gian I (ms).
+#                 - Firmware tính toán giá trị hiệu chuẩn thanh ghi CAL dựa trên giao thức đồng bộ thời gian.
+#                 - Mô phỏng khối timebase phần cứng với giá trị CAL tính được để xác nhận độ lệch còn lại ~0 ppm.
+# ============================================================================
+
 """Thí nghiệm E1′ (báo cáo 2.4, chủ TV5): thạch anh lệch p ppm → firmware tính CAL → ppm còn lại sau hiệu chỉnh.
 
     python tools/exp_cal.py            # bảng Markdown ra stdout (cần work/exp_cal_tb.vvp: bash tools/run_unit.sh exp_cal)

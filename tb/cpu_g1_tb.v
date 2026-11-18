@@ -1,17 +1,13 @@
-// cpu_g1_tb.v — gói C3 (cosim): chạy 1 chương trình trên cpu_g1, dump trạng thái cuối để so với MARS
-// (tools/cosim_mars.py gọi file này cho từng chương trình trong fw/tests/cpu/).
-//   +imem=<file.hex>  chương trình (bắt buộc)      +end=<hex>   dừng khi PC = end (rơi khỏi chương trình)
-//   +dump=<file>      ghi R/HI/LO/M/IC ra file     +trace=<csv> trace isa-spec §8
-//   +maxcyc=<n>       giới hạn chu kỳ (mặc định 2 000 000)
-//   +cediv=<k>        cpu_ce = 1 ở 1 trong k chu kỳ (mặc định 1; mô phỏng CPU_CLK_DIV lớn, mmio-map §1)
-// Kiểm luôn trong tb (mọi chương trình):
-//   - mỗi lệnh div đứng đúng 33 chu kỳ CPU (chia 0: 1); bcd tuần tự 28 (tràn: 1)  [C3-3]
-//   - mỗi lệnh div/bcd chỉ phát đúng 1 xung start                                [C3-3]
-//   - mỗi lệnh lw/sw vào MMIO bật bus_re/bus_we đúng 1 chu kỳ hệ thống           [mmio-map §2]
-// MMIO trong tb: 64 word RAM đơn giản (đọc có thanh ghi), đủ để thử đường bus; riêng
-//   0x44/0x48/0x4C (−188/−184/−180) = irq_ctrl thật (C5);
-//   0xF0 (−16, chỉ có trong tb) = máy phát sự kiện ngắt: sw {trễ[23:8], bit[7:0]} → sau `trễ` chu kỳ hệ thống
-//   bật xung ev = bit[7:0] (trễ 0 = chu kỳ ngay sau cạnh ghi). Dùng cho fw/tests/cpu/irq_*.s.
+// (cosim) tb/cpu_g1_tb.v — Kiểm thử CPU MIPS Đa chu kỳ G1 (CPU G1 Co-simulation Testbench)
+// ============================================================================
+// HỌC PHẦN:       MI4344 / IT3283 – Kiến trúc Máy tính (HUST - SAMI/SoICT)
+// TÊN TESTBENCH:  tb/cpu_g1_tb.v — Kiểm thử CPU MIPS Đa Chu kỳ G1 (CPU G1 Co-simulation Testbench)
+// CHUYÊN ĐỀ KTMT: Chương 04: Thiết kế Vi xử lý MIPS Đa chu kỳ & Chương 06: Kiểm chứng phần cứng
+// VAI TRÒ:        Mô phỏng thực thi chương trình hợp ngữ trên CPU G1 và kết xuất trạng thái thanh ghi/bộ nhớ
+// MÔ TẢ:          - Nạp mã máy nhị phân (.hex) vào bộ nhớ lệnh IMEM và chạy mô phỏng cho tới điểm kết thúc chương trình.
+//                 - Kết xuất toàn bộ trạng thái 32 thanh ghi (GPR), thanh ghi HI/LO, bộ nhớ DMEM và số chu kỳ.
+//                 - Phục vụ kịch bản đồng mô phỏng tự động so sánh độc lập với kết quả của trình mô phỏng MARS/ISS.
+// ============================================================================
 `timescale 1ns/1ps
 module cpu_g1_tb;
     reg         clk = 0, rst = 1;

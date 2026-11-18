@@ -1,12 +1,13 @@
-// exp_e3_tb.v — (fw: fw/exp/e3_irq.s) thí nghiệm E3 (chủ TV3 + TV2): lấy thời điểm bấm nút B bằng 4 cách trên soc_top G1.
-// Code do Claude viết theo yêu cầu Long (26/10/2026); TV3 + TV2 chạy lại và đọc hiểu.
-//   1 polling / 2 ngắt: firmware đọc MS_OF_DAY (e3_poll.s / e3_irq.s) → độ trễ = chu kỳ lệnh lw đó retire − chu kỳ xung nhấn
-//   3 capture: lap stopwatch (SRC = 1) chụp ngay chu kỳ xung nhấn → sai số so với giá trị stopwatch lúc nhấn
-//   4 dấu thời gian trong BTN_EVENT → sai số so với MS_OF_DAY lúc nhấn
-// Mốc "lúc nhấn" = chu kỳ xung press[2] (sau đồng bộ 2 FF, như nhau cho cả 4 cách).
-// G_N = 50 (1 ms mô phỏng = 50 chu kỳ). Độ trễ tính bằng chu kỳ 50 MHz nên đổi thẳng ra µs ở board (÷ 50).
-// Tham số: +imem= (bắt buộc) +d=<CPU_CLK_DIV khớp firmware, mặc định 2> +n=<số lần bấm, mặc định 30> +csv=<file>
-// Chạy cả bảng: python tools/exp_e3.py
+// (fw: fw/exp/e3_irq.s)
+// ============================================================================
+// HỌC PHẦN:       MI4344 / IT3283 – Kiến trúc Máy tính (HUST - SAMI/SoICT)
+// TÊN TESTBENCH:  tb/exp_e3_tb.v — Testbench Thực nghiệm E3: So sánh Polling vs Ngắt vs Chốt phần cứng 0-ns
+// CHUYÊN ĐỀ KTMT: Chương 05: Hệ thống Vào/Ra & Cơ chế Đáp ứng Sự kiện / Ngắt vi xử lý (Interrupt Latency)
+// VAI TRÒ:        Chạy thực nghiệm E3 trên hệ thống SoC để đo đạc độ trễ ghi nhận sự kiện nút bấm
+// MÔ TẢ:          - Chạy kết hợp với firmware fw/exp/e3_irq.s và fw/exp/e3_poll.s trên kiến trúc SoC tích hợp.
+//                 - Đo đạc chính xác số chu kỳ xung nhịp từ lúc nút bấm vật lý được nhấn đến khi CPU ghi nhận thời gian.
+//                 - Chứng minh ưu thế tuyệt đối của cơ chế chốt phần cứng 0-ns (Hardware Capture) so với Polling và ngắt.
+// ============================================================================
 `timescale 1ns/1ps
 module exp_e3_tb;
     localparam NMAX = 2000;

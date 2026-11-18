@@ -1,7 +1,13 @@
-// hazard_tb.v — gói B5: tb đơn vị hazard.v. Đưa tổ hợp ngẫu nhiên (thanh ghi 0..3 để trùng nhiều hơn)
-// và so với mô hình tham chiếu viết lại theo bảng chân lý của pipeline-policy §3–§5 (không sao chép RTL).
-// Kiểm thêm: mọi tổ hợp đầy đủ của các cờ nhỏ (valid, uses, mem_read, reg_write) × so sánh thanh ghi.
-// Dòng cuối: PASS hazard_tb <n> hoặc FAIL.
+// tb/hazard_tb.v — Kiểm thử Đơn vị Xử lý Xung đột Pipeline (Hazard Detection Unit Testbench)
+// ============================================================================
+// HỌC PHẦN:       MI4344 / IT3283 – Kiến trúc Máy tính (HUST - SAMI/SoICT)
+// TÊN TESTBENCH:  tb/hazard_tb.v — Kiểm thử Đơn vị Xử lý Xung đột Pipeline (Hazard Detection Unit Testbench)
+// CHUYÊN ĐỀ KTMT: Chương 04: Kiến trúc Pipeline CPU & Kỹ thuật Xử lý Xung đột Dữ liệu / Điều khiển
+// VAI TRÒ:        Kiểm chứng hoạt động của khối phát hiện xung đột dữ liệu và điều khiển chuyển tiếp tín hiệu
+// MÔ TẢ:          - Đưa vào các tổ hợp lệnh ngẫu nhiên và trường hợp biên kích hoạt xung đột ghi-sau-đọc (RAW).
+//                 - Xác thực việc tạo tín hiệu chuyển tiếp (Forwarding A/B) từ tầng EX/MEM và MEM/WB về tầng EX.
+//                 - Kiểm tra việc phát hiện xung đột Load-Use để chèn bọt trễ (Stall) và xử lý xóa lệnh rẽ nhánh (Flush).
+// ============================================================================
 `timescale 1ns/1ps
 module hazard_tb;
     reg        ifid_valid = 0, ifid_uses_rs = 0, ifid_uses_rt = 0, idex_mem_read = 0;

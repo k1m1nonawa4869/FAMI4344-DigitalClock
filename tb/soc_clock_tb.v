@@ -1,13 +1,13 @@
-// soc_clock_tb.v — (fw: fw/demo/clock.s) đồng hồ chạy bằng firmware thật trên CPU G1 trong soc_top.
-// run_unit.sh dịch fw/demo/clock.s → work/soc_clock.hex rồi chạy với +imem=work/soc_clock.hex.
-// G_N = 50 (1 ms = 50 chu kỳ). Firmware đặt 23:59:55 ngày 02/10/2026 (Thứ Sáu), bật ngắt TICK_1S,
-// mỗi ngắt đọc MS_OF_DAY và ghi 8 ô DISP (div + mul + bcd). Chạy qua nửa đêm tới 00:00:05.
-// Kiểm:
-//   - giữa mỗi giây (ms % 1000 = 500): Display RAM == "__HH.MM.SS" của giờ RTC             [B7/C8 rút gọn]
-//   - số lần vào handler == số xung TICK_1S sau khi bật ngắt; không lệnh lạ
-//   - độ trễ ngắt: CYCLE_COUNT lúc vào handler − IRQ_STAMP (C5-5, D = 2), in min/max
-//   - màn ảo (chỉ đọc chân) cuối cùng khớp DISP qua ROM ký tự (seg7.txt); RTC qua nửa đêm: 03/10, Thứ Bảy
-// Xem ảnh: python tools/screen.py work/screen_soc_clock.log
+// (fw: fw/demo/clock.s)
+// ============================================================================
+// HỌC PHẦN:       MI4344 / IT3283 – Kiến trúc Máy tính (HUST - SAMI/SoICT)
+// TÊN TESTBENCH:  tb/soc_clock_tb.v — Kiểm thử Hệ thống Đồng hồ Số Hoàn chỉnh trên SoC
+// CHUYÊN ĐỀ KTMT: Chương 05: Thiết kế Hệ thống Nhúng SoC & Đồng thiết kế Phần cứng / Phần mềm (HW/SW Co-design)
+// VAI TRÒ:        Mô phỏng toàn diện chip SoC WatchChip chạy ứng dụng firmware đồng hồ số thực tế
+// MÔ TẢ:          - Nạp firmware fw/demo/clock.s điều khiển toàn bộ quá trình vận hành của chip SoC.
+//                 - Xác thực quá trình khởi tạo cấu hình giờ ban đầu, kích hoạt ngắt định thời 1 giây TICK_1S.
+//                 - Kiểm tra chu trình cập nhật hiển thị LED 7 đoạn theo thời gian thực và xử lý sự kiện nút bấm.
+// ============================================================================
 `timescale 1ns/1ps
 module soc_clock_tb;
     reg  clk = 0, rst_in = 1;

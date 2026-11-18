@@ -1,9 +1,14 @@
-// fmt_bench_tb.v — (fw: fw/fmt.s) B7 fmt_div / fmt_bcd / fmt_hw trên soc_top (G_BCD_RTC = 1) + số đo plan §8.1.
-// tb chụp 7 khung (mỗi lần firmware ghi DISP7): div/bcd ở 0, 12:34:56.789, 23:59:59.999 rồi hw (RTC_BCD nạp 12:34:56.789)
-// và so với bố cục TIME 24 h; in ΔCYCLE_COUNT (chu kỳ hệ thống 50 MHz) từng hàm, đã trừ chi phí gọi hàm rỗng.
-// G_N = 50 000 (thật): cả bench < 1 ms nên RTC_BCD không kịp sang giây kế (nạp ở .789).
-// Biến thể (chạy tay, ghi evidence): -DG2 (lõi pipeline), -DBCD_COMB (bcd tổ hợp 1 chu kỳ, G_BCD_COMB = 1),
-// -DSLOW (firmware đặt CPU_CLK_DIV = 1526 ≈ 32,77 kHz trước khi đo; bench ≈ 50 ms nên RTC_BCD vẫn chưa sang giây).
+// (fw: fw/fmt.s)
+// ============================================================================
+// HỌC PHẦN:       MI4344 / IT3283 – Kiến trúc Máy tính (HUST - SAMI/SoICT)
+// TÊN TESTBENCH:  tb/fmt_bench_tb.v — Đo đạc Hiệu năng Thuật toán Định dạng Thời gian (Format Benchmark Testbench)
+// CHUYÊN ĐỀ KTMT: Chương 01: Đánh giá hiệu năng máy tính & Chương 04: Tối ưu hóa phần mềm hợp ngữ MIPS
+// VAI TRÒ:        Đo đạc chính xác số chu kỳ CPU tiêu tốn cho 3 thuật toán chuyển đổi thời gian sang chữ số
+// MÔ TẢ:          - Chạy firmware fw/fmt.s trên hệ thống SoC đo đạc chu kỳ thực tế qua thanh ghi CYCLE_COUNT.
+//                 - So sánh 3 phương pháp: Thuật toán chia phần mềm (fmt_div), Thuật toán BCD phần mềm (fmt_bcd),
+//                   và Cơ chế tăng tốc đọc trực tiếp từ RTC BCD phần cứng (fmt_hw).
+//                 - Cung cấp số liệu định lượng phục vụ bảng phân tích không gian thiết kế (DSE Table).
+// ============================================================================
 `timescale 1ns/1ps
 module fmt_bench_tb;
     reg  clk = 0, rst_in = 1;

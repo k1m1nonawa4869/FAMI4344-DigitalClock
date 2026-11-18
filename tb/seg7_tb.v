@@ -1,6 +1,13 @@
-// seg7_tb.v — gói D1: D-1 (char_rom vs seg7.txt), D-2 (thứ tự anode + khoảng tắt), D-3 (BRIGHT 0/1/15),
-// D-6 (đảo mức active-low); thêm nháy (D-4/D-5 ở mức module, bản đầy đủ thuộc D2).
-// Mô phỏng: G_SLOT = 40, G_BLANK = 4 → G_STEP = 2. Chạy từ thư mục gốc project.
+// tb/seg7_tb.v — Kiểm thử Khối giải mã và Quét hiển thị LED 7 đoạn (7-Segment Scanning Testbench)
+// ============================================================================
+// HỌC PHẦN:       MI4344 / IT3283 – Kiến trúc Máy tính (HUST - SAMI/SoICT)
+// TÊN TESTBENCH:  tb/seg7_tb.v — Kiểm thử Khối Giải mã và Quét Đa hợp LED 7 Đoạn (7-Segment Scanning Testbench)
+// CHUYÊN ĐỀ KTMT: Chương 05: Hệ thống Vào/Ra & Mạch giải mã hiển thị ghép kênh (Time-Multiplexed 7-Segment Display)
+// VAI TRÒ:        Kiểm chứng khối giải mã ký tự ROM và mạch quét phân chia thời gian điều khiển 8 LED 7 thanh
+// MÔ TẢ:          - Đối chiếu bảng giải mã mẫu đoạn LED 7 thanh trong tb/vectors/seg7.txt cho toàn bộ tập ký tự.
+//                 - Xác thực thứ tự kích hoạt chân Anode từ cực trái sang cực phải (khe 0 đến khe 7).
+//                 - Kiểm tra tính năng điều khiển độ sáng bằng điều chế PWM và khoảng ngắt trống (Blanking interval).
+// ============================================================================
 `timescale 1ns/1ps
 module seg7_tb;
     localparam SLOT = 40, BLANK = 4, STEP = 2, ND = 8;

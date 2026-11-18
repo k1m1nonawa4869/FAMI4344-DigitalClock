@@ -1,3 +1,15 @@
+# ============================================================================
+# HỌC PHẦN:       MI4344 / IT3283 – Kiến trúc Máy tính (HUST - SAMI/SoICT)
+# TÊN CÔNG CỤ:    tb/vectors/gen_vectors.py — Bộ phát sinh vector kiểm thử tự động (Test Vector Generator)
+# CHUYÊN ĐỀ KTMT: Chương 02: Thiết kế logic số & Chương 03: Số học máy tính & Chương 06: Kiểm chứng phần cứng
+# VAI TRÒ:        Tự động tính toán và tạo các tập vector kiểm thử mẫu kèm kết quả chuẩn (Golden vectors).
+# MÔ TẢ:          - Sinh 4,200 ca kiểm thử cho ALU (alu.txt) bao quát đầy đủ 8 mã ctl và các trường hợp biên.
+#                 - Sinh 825 ca phép nhân (mul.txt) và 830 ca phép chia (div.txt) với số có dấu và không dấu.
+#                 - Sinh 3,134 ca chuyển đổi BCD (bcd.txt) kiểm tra mọi giá trị nhị phân 16-bit.
+#                 - Sinh tập kiểm tra bảng giải mã Control Unit (control.txt) và giải mã LED 7 đoạn (seg7.txt).
+#                 - Mọi kết quả golden đều được tính bằng 2 thuật toán độc lập và kiểm tra khớp nhau trước khi lưu.
+# ============================================================================
+
 """Sinh test vector + golden cho WatchChip.
 
 Claude viết 01/10/2026 theo luật KE-HOACH §4b ("AI được sinh test vector").

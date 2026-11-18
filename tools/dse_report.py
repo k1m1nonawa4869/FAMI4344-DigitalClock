@@ -1,3 +1,13 @@
+# ============================================================================
+# HỌC PHẦN:       MI4344 / IT3283 – Kiến trúc Máy tính (HUST - SAMI/SoICT)
+# TÊN CÔNG CỤ:    tools/dse_report.py — Khám phá không gian thiết kế phần cứng (Design Space Exploration)
+# CHUYÊN ĐỀ KTMT: Chương 01: Tối ưu hóa kiến trúc & Chương 02: Thiết kế logic số FPGA/ASIC
+# VAI TRÒ:        Tự động hóa tổng hợp logic (Yosys synth_xilinx) để đo đạc diện tích và tài nguyên của từng khối.
+# MÔ TẢ:          - Tổng hợp từng module: ALU, BCD, RTC, Timebase, Display Controller, UART, CPU, SoC.
+#                 - Thống kê chi tiết tài nguyên FPGA Xilinx 7-series: LUT, FF, BRAM, LUTRAM, DSP, CARRY4.
+#                 - Xuất bảng so sánh đánh đổi diện tích (Area) và chu kỳ thực thi (Cycles) định dạng Markdown.
+# ============================================================================
+
 """Bảng tài nguyên cho plan §8.1–8.2: Yosys synth_xilinx từng khối → LUT / FF / BRAM / LUTRAM / DSP / CARRY4.
 
 Chạy từ gốc project (sau `source tools/env.sh`):

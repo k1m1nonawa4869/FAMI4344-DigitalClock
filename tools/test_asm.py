@@ -1,3 +1,13 @@
+# ============================================================================
+# HỌC PHẦN:       MI4344 / IT3283 – Kiến trúc Máy tính (HUST - SAMI/SoICT)
+# TÊN CÔNG CỤ:    tools/test_asm.py — Bộ kiểm thử tự động cho Trình dịch hợp ngữ (Assembler Unit Tests)
+# CHUYÊN ĐỀ KTMT: Chương 04: Kiến trúc tập lệnh ISA & Công cụ dịch hợp ngữ (Toolchain Testing)
+# VAI TRÒ:        Kiểm tra toàn diện tính đúng đắn và độ tin cậy của trình dịch hợp ngữ asm.py.
+# MÔ TẢ:          - Kiểm thử 28 lệnh cơ bản, lệnh mở rộng mul, bcd, mfc0, mtc0, eret và các lệnh giả.
+#                 - So khớp từng từ mã máy hex được sinh ra bởi asm.py với mã máy chuẩn sinh bởi MARS 4.5.
+#                 - Kiểm tra phân giải nhãn, các chỉ thị bộ nhớ (.text, .data, .space) và phát hiện lỗi cú pháp.
+# ============================================================================
+
 """test_asm.py — test gói B1 (goi-viec.md B1-1…B1-4). Chạy: python -m pytest -q tools/test_asm.py"""
 import glob
 import os

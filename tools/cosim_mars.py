@@ -1,3 +1,13 @@
+# ============================================================================
+# HỌC PHẦN:       MI4344 / IT3283 – Kiến trúc Máy tính (HUST - SAMI/SoICT)
+# TÊN CÔNG CỤ:    tools/cosim_mars.py — Đồng mô phỏng CPU với MARS MIPS Simulator (MARS Co-simulation)
+# CHUYÊN ĐỀ KTMT: Chương 04: Kiến trúc tập lệnh MIPS & Chương 06: Kiểm chứng vi xử lý
+# VAI TRÒ:        Sử dụng công cụ MARS 4.5 làm mô hình đối chuẩn độc lập để kiểm chứng kiến trúc CPU G1.
+# MÔ TẢ:          - Dịch chương trình MIPS bằng MARS sang file hex nạp vào bộ nhớ lệnh.
+#                 - Chạy mô phỏng RTL trên Icarus Verilog và xuất trạng thái kết thúc (GPR, HI, LO, DMEM).
+#                 - So sánh kết quả thực thi của phần cứng với kết quả của bộ mô phỏng MARS 4.5.
+# ============================================================================
+
 """Co-sim tạm cho CPU G1 (gói C3): MARS 4.5 làm golden khi chưa có ISS (B2) / asm.py (B1).
 
   python tools/cosim_mars.py                 # mọi fw/tests/cpu/*.s + 8 chương trình ngẫu nhiên

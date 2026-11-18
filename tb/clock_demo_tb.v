@@ -1,8 +1,13 @@
-// clock_demo_tb.v — đồng hồ phần cứng thuần, CHƯA có CPU (bước đệm trước tầng 1).
-// timebase (G_N = 50) → rtc → [tb đóng vai firmware qua bus MMIO] → display_ctrl → screen_dump (màn ảo).
-// Kịch bản: đặt 23:59:55 ngày 02/10/2026 (day 9771, Thứ Sáu) → nháy giờ 1,2 s như chế độ SET → chạy qua
-// nửa đêm tới 00:00:05 ngày 03/10 (Thứ Bảy). Xem ảnh: python tools/screen.py work/screen_clock.log
-// Phần "firmware" ở đây là mã tb tạm; khi có CPU G1 thì fw/main.s làm việc này (B7).
+// tb/clock_demo_tb.v — Kiểm thử Đồng hồ phần cứng thuần túy (Hardware-only Clock Demo Testbench)
+// ============================================================================
+// HỌC PHẦN:       MI4344 / IT3283 – Kiến trúc Máy tính (HUST - SAMI/SoICT)
+// TÊN TESTBENCH:  tb/clock_demo_tb.v — Kiểm thử Hệ thống Đồng hồ Phần cứng Thuần (Hardware Clock Demo Testbench)
+// CHUYÊN ĐỀ KTMT: Chương 05: Hệ thống Vào/Ra & Tích hợp Ngoại vi Đồng hồ số (Peripherals Subsystem Integration)
+// VAI TRÒ:        Mô phỏng tích hợp các ngoại vi timebase, rtc, display_ctrl và screen_dump không cần CPU
+// MÔ TẢ:          - Testbench đóng vai trò bộ điều khiển bus MMIO nạp cấu hình thời gian 23:59:55 ngày Thứ Sáu.
+//                 - Kiểm tra chuyển mạch sang ngày mới 00:00:05 ngày Thứ Bảy và hiệu ứng nháy chữ số khi cài đặt giờ.
+//                 - Xuất dữ liệu hiển thị ra file log screen_clock.log để trực quan hóa với công cụ screen.py.
+// ============================================================================
 `timescale 1ns/1ps
 module clock_demo_tb;
     localparam A_MS = 8'h04, A_SHADOW = 8'h08, A_SET_MS = 8'h0C, A_SET_DAY = 8'h10, A_CTRL = 8'h14;

@@ -1,3 +1,13 @@
+# ============================================================================
+# HỌC PHẦN:       MI4344 / IT3283 – Kiến trúc Máy tính (HUST - SAMI/SoICT)
+# TÊN CÔNG CỤ:    tools/test_iss.py — Bộ kiểm thử tự động cho Bộ mô phỏng tập lệnh (ISS Unit Tests)
+# CHUYÊN ĐỀ KTMT: Chương 04: Kiến trúc tập lệnh ISA & Chương 06: Kiểm chứng vi xử lý
+# VAI TRÒ:        Kiểm tra chức năng toàn diện của bộ mô phỏng tập lệnh iss.py trước khi làm Golden model.
+# MÔ TẢ:          - Kiểm thử toàn bộ các nhóm lệnh số học, logic, dịch bit, rẽ nhánh, nhảy và truy xuất bộ nhớ.
+#                 - Kiểm thử cơ chế ngoại lệ, bẫy lỗi và ngắt phần cứng CP0 (Status, Cause, EPC, eret).
+#                 - Kiểm thử tương tác với các thanh ghi ngoại vi MMIO và hàm phần mềm định dạng hiển thị.
+# ============================================================================
+
 """test_iss.py — test gói B2 (goi-viec.md B2-1…B2-4). Chạy: python -m pytest -q tools/test_iss.py
 B2-4: thay cho khung `fmt_test.s`, Python gọi thẳng từng hàm (đặt PC = nhãn, $a0, $ra = địa chỉ canh) của `fw/fmt.s`
 và `draw` của `fw/main.s` với biến DMEM + giá trị MMIO dựng sẵn → so DISP7…0 với `fmt_*.txt`, `date.txt`.

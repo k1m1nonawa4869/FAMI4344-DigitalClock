@@ -1,3 +1,13 @@
+# ============================================================================
+# HỌC PHẦN:       MI4344 / IT3283 – Kiến trúc Máy tính (HUST - SAMI/SoICT)
+# TÊN CÔNG CỤ:    tools/plot_h9.py — Vẽ đồ thị đánh đổi không gian thiết kế phần cứng (DSE Trade-off Plot)
+# CHUYÊN ĐỀ KTMT: Chương 01: Đánh giá hiệu năng & Phân tích Đánh đổi Kiến trúc (Architecture Trade-offs)
+# VAI TRÒ:        Trực quan hóa sự đánh đổi giữa tài nguyên phần cứng (LUT) và số chu kỳ CPU cho các giải pháp RTC.
+# MÔ TẢ:          - Trích xuất dữ liệu chu kỳ đo đạc thực tế từ fmt_bench và số lượng LUT từ Yosys synthesis.
+#                 - Lập biểu đồ phân tán (Scatter Plot) so sánh 4 giải pháp: Phần mềm, BCD phần mềm, Chia phần cứng, RTC BCD.
+#                 - Xuất file hình ảnh đồ thị chất lượng cao (report/h9_dse.png) phục vụ báo cáo môn học.
+# ============================================================================
+
 """Hình H9 (plan §8.1): chu kỳ CPU mỗi lần đổi ms → chữ số so với LUT thêm, 4 cách. → report/h9_dse.png
 
     python tools/plot_h9.py

@@ -1,5 +1,13 @@
-// alarm_tb.v — gói E4 (báo thức ×4): AL-1…AL-5 (timer-spec §10) + AL-6 (goi-viec E4) + đọc lại, MINUTE ≥ 1440.
-// Dùng timebase + rtc thật (G_N = 50) để có ms/dow/loading đúng như trong soc.
+// tb/alarm_tb.v — Kiểm thử khối Báo thức 4 kênh (Alarm Subsystem Testbench)
+// ============================================================================
+// HỌC PHẦN:       MI4344 / IT3283 – Kiến trúc Máy tính (HUST - SAMI/SoICT)
+// TÊN TESTBENCH:  tb/alarm_tb.v — Kiểm thử Khối Báo thức 4 Kênh Độc lập (Alarm Subsystem Testbench)
+// CHUYÊN ĐỀ KTMT: Chương 05: Hệ thống Vào/Ra (I/O) & Báo thức thời gian thực (Real-Time Alarms)
+// VAI TRÒ:        Kiểm chứng hoạt động của 4 kênh báo thức độc lập, cơ chế so khớp thời gian và ngắt báo thức
+// MÔ TẢ:          - Kiểm thử 4 kênh báo thức ALARM[0..3] cấu hình độc lập phút trong ngày (0..1439) và bit cờ kích hoạt.
+//                 - Xác thực cơ chế so khớp với thời gian thực tế từ RTC và kích hoạt còi báo, tín hiệu ngắt.
+//                 - Kiểm thử chức năng tạm hoãn báo thức Snooze (+5 phút) và kiểm tra đọc lại thanh ghi MMIO.
+// ============================================================================
 `timescale 1ns/1ps
 module alarm_tb;
     localparam A_SET_MS = 8'h0C, A_SET_DAY = 8'h10, A_CTRL = 8'h14, A_AL0 = 8'h30, A_AL1 = 8'h34, A_AL2 = 8'h38;

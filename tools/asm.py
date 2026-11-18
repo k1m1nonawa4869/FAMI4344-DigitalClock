@@ -1,3 +1,16 @@
+# ============================================================================
+# HỌC PHẦN:       MI4344 / IT3283 – Kiến trúc Máy tính (HUST - SAMI/SoICT)
+# TÊN CÔNG CỤ:    tools/asm.py — Trình dịch hợp ngữ MIPS 32-bit (Two-Pass Assembler)
+# CHUYÊN ĐỀ KTMT: Chương 04: Kiến trúc tập lệnh (ISA) & Công cụ phát triển phần mềm (Toolchain)
+# VAI TRÒ:        Chuyển đổi mã nguồn hợp ngữ MIPS (.s) sang mã máy nhị phân 32-bit (.hex)
+#                 nạp vào bộ nhớ lệnh (IMEM/ROM) và bộ nhớ dữ liệu (DMEM/RAM).
+# MÔ TẢ:          - Hỗ trợ đầy đủ tập lệnh MIPS rút gọn: 28 lệnh cơ bản + mở rộng mul, bcd, mfc0, mtc0, eret.
+#                 - Hỗ trợ các lệnh giả (li, la, nop, move, not, bgtz, bltz, beqz, bnez, v.v.).
+#                 - Quản lý bảng ký hiệu (Symbol Table) qua thuật toán 2-pass (Pass 1: Nhãn, Pass 2: Mã máy).
+#                 - Xử lý các chỉ thị hợp ngữ (.text, .data, .word, .space, .globl, .eqv, .include).
+#                 - Xuất file hex định dạng 32-bit word ($readmemh) và file listing (.lst) để đối chiếu.
+# ============================================================================
+
 """asm.py — Assembler cho WatchChip SoC (MI4344 / IT3283).
 Trình dịch hợp ngữ MIPS 32-bit (2-pass), hỗ trợ đầy đủ 28 lệnh cốt lõi,
 lệnh giả (pseudo-instructions), chỉ thị bộ nhớ và chỉ thị .include / .eqv.

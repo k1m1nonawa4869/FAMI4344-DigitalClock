@@ -1,5 +1,13 @@
-// beeper_tb.v — gói D3 (bộ tạo âm): BP-1…BP-3 (display-spec §9) + reset 12 500, FREQ = 0 im, ghi 0 tắt ngay, pha sóng bắt đầu lại mỗi lần kêu,
-// hw_trig trùng chu kỳ CPU ghi mẫu → hw thắng. G_N = 50 → 1 khe 64 ms = 3 200 chu kỳ.
+// tb/beeper_tb.v — Kiểm thử Bộ điều khiển Còi bíp PWM (Beeper / PWM Buzzer Testbench)
+// ============================================================================
+// HỌC PHẦN:       MI4344 / IT3283 – Kiến trúc Máy tính (HUST - SAMI/SoICT)
+// TÊN TESTBENCH:  tb/beeper_tb.v — Kiểm thử Bộ Điều khiển Còi Bíp PWM (Beeper / PWM Buzzer Testbench)
+// CHUYÊN ĐỀ KTMT: Chương 05: Hệ thống Vào/Ra & Điều chế độ rộng xung âm thanh (Audio PWM Generation)
+// VAI TRÒ:        Kiểm thử mạch tạo xung âm thanh, điều khiển tần số và chu kỳ phát âm cảnh báo
+// MÔ TẢ:          - Kiểm tra tạo tần số âm thanh từ ước lượng phân tần clock 50 MHz (kêu tần số chuẩn 2 kHz, 4 kHz, v.v.).
+//                 - Xác thực cơ chế kích hoạt còi bằng phần cứng (hw_trig) và bằng thanh ghi MMIO qua CPU.
+//                 - Kiểm tra tính năng ngắt còi tức thì khi xóa cờ và tính toàn vẹn pha sóng khi khởi động lại.
+// ============================================================================
 `timescale 1ns/1ps
 module beeper_tb;
     localparam A_FREQ = 8'h84, A_PAT = 8'h88, SLOT = 64 * 50;

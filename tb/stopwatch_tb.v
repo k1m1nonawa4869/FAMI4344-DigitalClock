@@ -1,5 +1,13 @@
-// stopwatch_tb.v — gói E3 (stopwatch): SW-1…SW-6 (timer-spec §10), G_N = 50, CAL = 0.
-// Nút có rung đi qua buttons.v thật (SW-3, SW-4), nên kiểm luôn đường xung nhấn A/B → stopwatch.
+// tb/stopwatch_tb.v — Kiểm thử Bộ đếm bấm giờ thể thao (Stopwatch Testbench)
+// ============================================================================
+// HỌC PHẦN:       MI4344 / IT3283 – Kiến trúc Máy tính (HUST - SAMI/SoICT)
+// TÊN TESTBENCH:  tb/stopwatch_tb.v — Kiểm thử Bộ Đếm Bấm Giờ Thể Thao (Stopwatch Subsystem Testbench)
+// CHUYÊN ĐỀ KTMT: Chương 05: Hệ thống Vào/Ra & Thiết kế Khối bấm giờ độ chính xác mili-giây
+// VAI TRÒ:        Kiểm chứng các chế độ chạy, dừng, đặt lại và chức năng chốt 8 vòng chạy thể thao
+// MÔ TẢ:          - Kiểm thử các chức năng điều khiển cơ bản: Bắt đầu đếm (Start), Tạm dừng (Stop), Đặt lại về 0 (Reset).
+//                 - Xác thực cơ chế chốt 8 vòng thời gian chạy (Lap 0 đến Lap 7) với độ chính xác tuyệt đối 0-ns.
+//                 - Kiểm tra tương tác với nút nhấn phần cứng có rung phím đi qua bộ xử lý buttons.v.
+// ============================================================================
 `timescale 1ns/1ps
 module stopwatch_tb;
     localparam A_CTRL = 8'h1C, A_VAL = 8'h20, A_LAP = 8'h24;

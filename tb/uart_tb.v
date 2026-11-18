@@ -1,5 +1,13 @@
-// uart_tb.v — gói D4 (UART): U-1…U-5 (display-spec §9) + U-6 (goi-viec D4) + reset, nhiễu ngắn không thành byte,
-// đọc FIFO rỗng, xóa cờ dính (sự kiện thắng lệnh xóa cùng chu kỳ), 2 byte phát liền cách đúng 10 bit, địa chỉ lạ đọc 0, đếm xung rx_ev/tx_ev. G_BIT = 8 → 1 bit = 8 chu kỳ = 160 ns.
+// tb/uart_tb.v — Kiểm thử Khối truyền nhận nối tiếp UART (UART Controller Testbench)
+// ============================================================================
+// HỌC PHẦN:       MI4344 / IT3283 – Kiến trúc Máy tính (HUST - SAMI/SoICT)
+// TÊN TESTBENCH:  tb/uart_tb.v — Kiểm thử Khối Truyền Nhận Nối Tiếp Không Đồng Bộ (UART Controller Testbench)
+// CHUYÊN ĐỀ KTMT: Chương 05: Hệ thống Vào/Ra & Giao diện Truyền thông Nối tiếp UART (Serial Communication)
+// VAI TRÒ:        Kiểm chứng chi tiết khối truyền TX, khối nhận RX, bộ lấy mẫu 16x và hàng đợi đệm FIFO
+// MÔ TẢ:          - Kiểm tra phát và thu từng khung ký tự 8-N-1 (8 bit dữ liệu, không parity, 1 bit stop) ở tốc độ 115,200 baud.
+//                 - Xác thực bộ lấy mẫu tín hiệu 16x (oversampling) lọc nhiễu đường truyền và phát hiện xung start.
+//                 - Kiểm tra hàng đợi FIFO phát/thu, cờ báo ngắt đệm đầy/rỗng và cơ chế xóa cờ trạng thái.
+// ============================================================================
 `timescale 1ns/1ps
 module uart_tb;
     localparam A_STATUS = 8'h50, A_RX = 8'h54, A_TX = 8'h58, B = 8;

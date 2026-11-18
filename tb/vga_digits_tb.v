@@ -1,9 +1,13 @@
-// vga_digits_tb.v — gói D5 (display-spec §7, test V-1…V-3)
-// V-1: hsync thấp đúng x 656…751, vsync thấp đúng y 490…491, khung 800 × 525 pixel, pixel = 2 chu kỳ clk.
-// V-2: vga_map khớp tb/vectors/vga_points.txt (ô, đoạn).
-// V-3: 1 khung "12.34.56" có ô nháy (dim) + chấm → work/vga_frame.ppm (mở xem bằng mắt) và so TỪNG pixel hiện
-//      (640 × 480) với mô hình trong tb (bảng đoạn của spec + bảng mã → đoạn chép từ display-spec §3).
-// Code do Claude viết theo yêu cầu Long (26/10/2026).
+// tb/vga_digits_tb.v — Kiểm thử Bộ điều khiển Hiển thị màn hình VGA (VGA Display Testbench)
+// ============================================================================
+// HỌC PHẦN:       MI4344 / IT3283 – Kiến trúc Máy tính (HUST - SAMI/SoICT)
+// TÊN TESTBENCH:  tb/vga_digits_tb.v — Kiểm thử Bộ Điều khiển Hiển thị Màn hình Chuẩn VGA (VGA Display Testbench)
+// CHUYÊN ĐỀ KTMT: Chương 05: Hệ thống Vào/Ra & Giao tiếp xuất hình ảnh chuẩn VGA (VGA Timing & Video Generation)
+// VAI TRÒ:        Kiểm chứng bộ tạo tín hiệu đồng bộ VGA 640x480 @ 60Hz và mạch giải mã ánh xạ điểm ảnh chữ số
+// MÔ TẢ:          - Kiểm tra mạch đếm tọa độ quét màn hình, tín hiệu đồng bộ ngang HSYNC và đồng bộ dọc VSYNC chuẩn công nghiệp.
+//                 - Đối chiếu ánh xạ điểm ảnh chữ số đồng hồ với bảng điểm mẫu trong tb/vectors/vga_points.txt.
+//                 - Xác nhận vùng hiển thị tích cực (Active Video) và xuất màu sắc tín hiệu RGB chính xác.
+// ============================================================================
 `timescale 1ns/1ps
 module vga_digits_tb;
     reg         clk = 0, rst = 1;

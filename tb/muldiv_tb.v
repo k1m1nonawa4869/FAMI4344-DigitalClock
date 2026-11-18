@@ -1,5 +1,13 @@
-// muldiv_tb.v — gói A2: mul.txt (825), div.txt (830), toán hạng đổi sau start, số chu kỳ busy,
-// chạy lại div.txt với ce = 1 mỗi 2 chu kỳ (như G1, D = 2). Chạy từ thư mục gốc project.
+// tb/muldiv_tb.v — Kiểm thử Bộ Nhân & Chia phần cứng 32-bit (Multiplier & Divider Testbench)
+// ============================================================================
+// HỌC PHẦN:       MI4344 / IT3283 – Kiến trúc Máy tính (HUST - SAMI/SoICT)
+// TÊN TESTBENCH:  tb/muldiv_tb.v — Kiểm thử Bộ Nhân & Chia Phần cứng 32-bit (Multiplier & Divider Testbench)
+// CHUYÊN ĐỀ KTMT: Chương 03: Số học máy tính & Thiết kế Mạch nhân tuần hoàn, Mạch chia khôi phục số dư
+// VAI TRÒ:        Kiểm thử toàn diện khối nhân và chia số học 32-bit đối chiếu tập vector mẫu chuẩn
+// MÔ TẢ:          - Đối chiếu 825 ca phép nhân trong tb/vectors/mul.txt và 830 ca phép chia trong tb/vectors/div.txt.
+//                 - Kiểm tra xử lý số nguyên có dấu bù 2 và các trường hợp đặc biệt: chia cho 0, số âm lớn nhất.
+//                 - Xác thực số chu kỳ bận (busy cycles) và cơ chế chốt kết quả vào thanh ghi nội tại HI/LO.
+// ============================================================================
 `timescale 1ns/1ps
 module muldiv_tb;
     reg         clk = 0, rst = 1, ce = 1, start = 0;

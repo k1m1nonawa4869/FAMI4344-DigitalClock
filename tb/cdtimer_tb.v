@@ -1,4 +1,13 @@
-// cdtimer_tb.v — gói E3 (timer đếm ngược sang âm): TM-1…TM-5 (timer-spec §10), G_N = 50, CAL = 0.
+// tb/cdtimer_tb.v — Kiểm thử Bộ đếm ngược Countdown Timer (Countdown Timer Testbench)
+// ============================================================================
+// HỌC PHẦN:       MI4344 / IT3283 – Kiến trúc Máy tính (HUST - SAMI/SoICT)
+// TÊN TESTBENCH:  tb/cdtimer_tb.v — Kiểm thử Bộ Đếm Ngược Countdown Timer (Countdown Timer Testbench)
+// CHUYÊN ĐỀ KTMT: Chương 05: Hệ thống Vào/Ra & Thiết kế Bộ đếm khoảng thời gian (Interval Timer/Counter)
+// VAI TRÒ:        Kiểm chứng bộ đếm lùi thời gian, phát hiện chạm mốc 0, đếm quá giờ âm và sinh ngắt
+// MÔ TẢ:          - Kiểm thử nạp giá trị ban đầu và đếm lùi thời gian theo từng mili-giây và từng giây chuẩn xác.
+//                 - Xác thực việc chuyển trạng thái đếm sang giá trị âm (Overtime Counter) khi thời gian chạm 0.
+//                 - Kiểm tra kích hoạt cờ quá hạn, phát tín hiệu còi bíp cảnh báo và gửi yêu cầu ngắt tới CPU.
+// ============================================================================
 `timescale 1ns/1ps
 module cdtimer_tb;
     localparam A_VAL = 8'h28, A_CTL = 8'h2C;

@@ -1,4 +1,13 @@
-// rtc_tb.v — gói E2: RTC-1…7 (timer-spec.md §10, goi-viec.md E2) qua bus MMIO. tick_ms do tb phát.
+// tb/rtc_tb.v — Kiểm thử Đồng hồ thời gian thực RTC cơ bản (Real-Time Clock Testbench)
+// ============================================================================
+// HỌC PHẦN:       MI4344 / IT3283 – Kiến trúc Máy tính (HUST - SAMI/SoICT)
+// TÊN TESTBENCH:  tb/rtc_tb.v — Kiểm thử Khối Đồng hồ Thời gian Thực RTC Cơ bản (Real-Time Clock Testbench)
+// CHUYÊN ĐỀ KTMT: Chương 05: Hệ thống Vào/Ra & Thiết kế Bộ đếm thời gian thực (RTC Architecture)
+// VAI TRÒ:        Kiểm chứng mạch đếm thời gian thực nhị phân qua xung nhịp mili-giây và giao diện bus MMIO
+// MÔ TẢ:          - Kiểm tra cấu hình và đọc thời gian mili-giây trong ngày (MS_OF_DAY) và số ngày từ mốc chuẩn (DAYS).
+//                 - Xác thực cơ chế chốt bóng (Shadow Registers) giúp đọc dữ liệu thời gian nguyên tử không bị rách mẫu.
+//                 - Kiểm tra việc nạp lại giờ qua các thanh ghi SET_MS và SET_DAY bảo đảm độ chính xác.
+// ============================================================================
 `timescale 1ns/1ps
 module rtc_tb;
     localparam A_MS = 8'h04, A_SHADOW = 8'h08, A_SET_MS = 8'h0C, A_SET_DAY = 8'h10, A_CTRL = 8'h14;

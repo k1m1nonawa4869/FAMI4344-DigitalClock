@@ -1,4 +1,13 @@
-// regfile_tb.v — gói C1: reset = 0, $0 luôn 0, bypass bật/tắt, 1 000 thao tác ngẫu nhiên so mô hình.
+// tb/regfile_tb.v — Kiểm thử Tập thanh ghi MIPS 32 thanh ghi (Register File Testbench)
+// ============================================================================
+// HỌC PHẦN:       MI4344 / IT3283 – Kiến trúc Máy tính (HUST - SAMI/SoICT)
+// TÊN TESTBENCH:  tb/regfile_tb.v — Kiểm thử Tập Thanh ghi MIPS 32x32-bit (Register File Testbench)
+// CHUYÊN ĐỀ KTMT: Chương 04: Kiến trúc tập lệnh ISA & Thiết kế Tập thanh ghi Vi xử lý (Register File)
+// VAI TRÒ:        Kiểm chứng tập 32 thanh ghi đa năng 32-bit với 2 cổng đọc bất đồng bộ và 1 cổng ghi đồng bộ
+// MÔ TẢ:          - Xác thực giá trị thanh ghi $0 (zero) luôn luôn bằng 0 trong mọi điều kiện ghi.
+//                 - Kiểm tra cơ chế đường truyền tắt nội tại (Internal Write-Before-Read Bypass/Forwarding).
+//                 - Chạy 1,000 chu kỳ truy xuất ngẫu nhiên đồng thời cả 2 cổng đọc và cổng ghi đối chiếu mô hình tham chiếu.
+// ============================================================================
 `timescale 1ns/1ps
 module regfile_tb;
     reg         clk = 0, rst = 1, we = 0;

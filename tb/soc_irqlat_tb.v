@@ -1,7 +1,13 @@
-// soc_irqlat_tb.v — (fw: fw/tests/soc/irq_lat.s) C5-5: độ trễ ngắt ở D = 1526 trên soc_top, chỉ bật TICK_1S.
-// Độ trễ = CYCLE_COUNT lúc lệnh đầu handler xong (pha A) − IRQ_STAMP. Lý thuyết (vòng 1 lệnh, không stall):
-// ngắt nhận ở cạnh pha A kế tiếp (chờ ≤ D) + lệnh đầu handler (D) → (D, 2D] cộng hằng nhỏ như ở D = 2 (= 3).
-// Vòng có div: ngắt bị chặn khi stall → chờ tới khi div xong (≤ 33 chu kỳ CPU) → in để ghi báo cáo (plan §8).
+// (fw: fw/tests/soc/irq_lat.s)
+// ============================================================================
+// HỌC PHẦN:       MI4344 / IT3283 – Kiến trúc Máy tính (HUST - SAMI/SoICT)
+// TÊN TESTBENCH:  tb/soc_irqlat_tb.v — Đo đạc Độ trễ Đáp ứng Ngắt trên SoC (Interrupt Latency Benchmark)
+// CHUYÊN ĐỀ KTMT: Chương 05: Hệ thống Vào/Ra & Cơ chế Đáp ứng Ngắt Vi xử lý (Interrupt Response Time)
+// VAI TRÒ:        Chạy firmware đo đạc số chu kỳ trễ từ khi phát sinh ngắt phần cứng đến khi thực thi ISR
+// MÔ TẢ:          - Nạp firmware fw/tests/soc/irq_lat.s chạy trên nền vi xử lý MIPS tích hợp trong soc_top.
+//                 - Đo đạc chính xác số chu kỳ xung nhịp từ lúc tín hiệu ngắt TICK_1S kích hoạt đến lệnh đầu tiên của ISR.
+//                 - Đối chiếu số liệu đo đạc thực tế với mô hình lý thuyết hàng đợi lệnh và độ trễ phân tần xung clock.
+// ============================================================================
 `timescale 1ns/1ps
 module soc_irqlat_tb;
     localparam D = 1526;

@@ -1,3 +1,13 @@
+# ============================================================================
+# HỌC PHẦN:       MI4344 / IT3283 – Kiến trúc Máy tính (HUST - SAMI/SoICT)
+# TÊN CÔNG CỤ:    tools/mars_crosscheck.py — Kiểm tra chéo phép tính số học ALU/Mul/Div với MARS 4.5
+# CHUYÊN ĐỀ KTMT: Chương 03: Số học máy tính & Thiết kế khối xử lý số học (Arithmetic Verification)
+# VAI TRÒ:        Đối chiếu độc lập kết quả tính toán số học giữa file vector kiểm thử và trình mô phỏng MARS 4.5.
+# MÔ TẢ:          - Lấy mẫu các ca kiểm thử từ tập vector alu.txt, mul.txt, div.txt bao gồm các ca biên đặc biệt.
+#                 - Tự động sinh chương trình hợp ngữ MIPS tính toán và in kết quả qua MARS syscall 34.
+#                 - So sánh từng dòng kết quả để đảm bảo thuật toán phần cứng hoàn toàn chuẩn xác với định nghĩa MIPS ISA.
+# ============================================================================
+
 """Đối chiếu độc lập golden alu/mul/div với MARS 4.5 (goi-viec.md §0.2).
 
 Lấy 50 ca mỗi file (alu: bước 83 dòng để phủ đủ 8 mã ctl; mul: bước 16; div: bỏ chia 0,

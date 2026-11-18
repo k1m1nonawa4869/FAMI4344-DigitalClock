@@ -1,6 +1,13 @@
-// control_tb.v — gói C2: so control với tb/vectors/control.txt (84 ca 28 lệnh + 5 mã lạ ra toàn 0).
-// Chạy 2 bản: bcd tuần tự (multi = 10, đúng file) và bcd tổ hợp (G_BCD_COMB = 1 → dòng bcd ra multi = 00).
-// Thêm: valid = 1 đúng ở 84 dòng lệnh thật; 100 000 lệnh ngẫu nhiên — valid = 0 thì mọi tín hiệu = 0.
+// tb/control_tb.v — Kiểm thử Khối điều khiển CPU (Control Unit Testbench)
+// ============================================================================
+// HỌC PHẦN:       MI4344 / IT3283 – Kiến trúc Máy tính (HUST - SAMI/SoICT)
+// TÊN TESTBENCH:  tb/control_tb.v — Kiểm thử Khối Điều khiển Trung tâm CPU (Control Unit Testbench)
+// CHUYÊN ĐỀ KTMT: Chương 04: Kiến trúc tập lệnh ISA & Thiết kế Khối điều khiển Datapath MIPS
+// VAI TRÒ:        Kiểm thử giải mã 28 lệnh MIPS cốt lõi và các mã mở rộng đối chiếu bảng chân lý chuẩn
+// MÔ TẢ:          - Đối chiếu 84 trường hợp giải mã lệnh trong tb/vectors/control.txt bao gồm các lệnh R, I, J và CP0.
+//                 - Xác thực tất cả các tín hiệu điều khiển datapath: RegDst, ALUSrc, MemtoReg, RegWrite, MemRead, v.v.
+//                 - Kiểm tra an toàn: phát sinh 100,000 lệnh ngẫu nhiên lạ để xác nhận cờ valid = 0 và triệt tiêu điều khiển.
+// ============================================================================
 `timescale 1ns/1ps
 module control_tb;
     reg  [31:0] instr;

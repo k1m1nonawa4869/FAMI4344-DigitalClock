@@ -1,3 +1,13 @@
+# ============================================================================
+# HỌC PHẦN:       MI4344 / IT3283 – Kiến trúc Máy tính (HUST - SAMI/SoICT)
+# TÊN CÔNG CỤ:    tools/fw_build.py — Script tự động biên dịch firmware cho SoC WatchChip
+# CHUYÊN ĐỀ KTMT: Chương 04: Kiến trúc tập lệnh ISA & Quy trình xây dựng phần mềm nhúng (Firmware Flow)
+# VAI TRÒ:        Giao diện dòng lệnh tự động gọi asm.py chuyển đổi mã nguồn firmware (.s) sang mã máy (.hex).
+# MÔ TẢ:          - Quản lý quá trình dịch mã nguồn Assembly sang định dạng hex tương thích Verilog $readmemh.
+#                 - Hỗ trợ cờ tùy chọn biên dịch qua bộ dịch nội bộ asm.py hoặc kiểm tra chéo qua MARS 4.5.
+#                 - Tự động tạo thư mục đích (work/) và xuất file listing phục vụ gỡ lỗi mã máy.
+# ============================================================================
+
 """Dịch firmware .s → .hex cho IMEM.
 
   python tools/fw_build.py fw/demo/clock.s work/clock.hex          # asm.py (B1), mặc định từ 03/10

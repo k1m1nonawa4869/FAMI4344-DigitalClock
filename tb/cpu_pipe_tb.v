@@ -1,13 +1,13 @@
-// cpu_pipe_tb.v — gói C7 (cosim): chạy 1 chương trình trên cpu_pipe (G2), dump trạng thái cuối
-// (tools/cosim_iss.py --g2 gọi file này cho fw/tests/cpu/*.s và fw/tests/hazard/*.s; cùng định dạng dump với cpu_g1_tb).
-//   +imem=<file.hex>  chương trình (bắt buộc)      +end=<hex>   dừng khi PC (pha IF) đạt end, rồi chạy nốt lệnh đang trong ống
-//   +dump=<file>      ghi R/HI/LO/M/IO/IC ra file  +trace=<csv> trace isa-spec §8 (chỉ lệnh có PC < end)
-//   +maxcyc=<n>       giới hạn chu kỳ (mặc định 2 000 000)
-//   +cediv=<k>        cpu_ce = 1 ở 1 trong k chu kỳ (mặc định 1)
-// Kiểm trong tb:
-//   - mỗi lần khởi động div/bcd (start) đúng một lần cho mỗi lệnh hoàn tất           [C3-3 áp dụng cho G2]
-//   - mỗi lệnh lw/sw vào MMIO bật bus_re/bus_we đúng 1 chu kỳ hệ thống, kể cả lệnh bị xóa (không được có)  [mmio-map §2]
-// MMIO trong tb: RAM 64 word (đọc có thanh ghi), 0x44/0x48/0x4C = irq_ctrl (G2 nhận ngắt chính xác theo pipeline-policy §10: Cause đọc qua mfc0, ngắt qua irq).
+// (cosim) tb/cpu_pipe_tb.v — Kiểm thử CPU MIPS 5 tầng Pipeline G2 (CPU Pipeline Co-simulation Testbench)
+// ============================================================================
+// HỌC PHẦN:       MI4344 / IT3283 – Kiến trúc Máy tính (HUST - SAMI/SoICT)
+// TÊN TESTBENCH:  tb/cpu_pipe_tb.v — Kiểm thử CPU MIPS 5 Tầng Pipeline G2 (CPU Pipeline Co-simulation Testbench)
+// CHUYÊN ĐỀ KTMT: Chương 04: Kiến trúc Vi xử lý 5 tầng Pipeline (IF-ID-EX-MEM-WB) & Giải quyết Xung đột
+// VAI TRÒ:        Mô phỏng thực thi chương trình trên CPU Pipeline G2 và trích xuất vết thực thi đối chuẩn
+// MÔ TẢ:          - Chạy mô phỏng các chương trình kiểm thử vi xử lý và các chuỗi lệnh bẫy xung đột dữ liệu/điều khiển.
+//                 - Xác thực cơ chế chèn bọt trễ (Stall), chuyển tiếp dữ liệu (Forwarding) và xóa lệnh rẽ nhánh (Flush).
+//                 - Kết xuất vết thực thi lệnh (trace CSV) và trạng thái kết thúc phục vụ đồng mô phỏng đối chuẩn với ISS.
+// ============================================================================
 `timescale 1ns/1ps
 module cpu_pipe_tb;
     reg         clk = 0, rst = 1;

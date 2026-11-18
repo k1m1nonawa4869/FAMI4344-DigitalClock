@@ -1,3 +1,14 @@
+# ============================================================================
+# HỌC PHẦN:       MI4344 / IT3283 – Kiến trúc Máy tính (HUST - SAMI/SoICT)
+# TÊN CÔNG CỤ:    tools/screen.py — Bộ trực quan hóa màn hình hiển thị LED 7 đoạn & Terminal
+# CHUYÊN ĐỀ KTMT: Chương 05: Hệ thống Vào/Ra (I/O) & Ngoại vi hiển thị đa hợp (Multiplexed Display)
+# VAI TRÒ:        Đọc log quét hiển thị phần cứng từ screen_dump.v, tái tạo trực quan trạng thái đồng hồ trên terminal.
+# MÔ TẢ:          - Đọc file vết screen.log thu thập từ các chân vật lý Anode và Cathode trong mô phỏng Verilog.
+#                 - Giải mã mẫu 7 đoạn thành ký tự ASCII (0-9, A-F, ký hiệu đặc biệt) đối chiếu bảng mã seg7.
+#                 - Xuất chuỗi hiển thị theo thời gian thực (ms) hoặc vẽ chữ số 7 đoạn kích thước lớn (--big).
+#                 - Hỗ trợ xuất ảnh tĩnh PNG hoặc ảnh động GIF trực quan hóa toàn bộ quá trình vận hành đồng hồ.
+# ============================================================================
+
 """Màn hình ảo (gói D7): đọc log của tb/screen_dump.v → in ra terminal hoặc vẽ GIF/PNG.
 
   python tools/screen.py work/screen_clock.log              # mỗi ảnh 1 dòng chữ:  t=  1234 ms |   23.59.58

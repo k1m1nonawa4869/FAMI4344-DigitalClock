@@ -1,3 +1,13 @@
+# ============================================================================
+# HỌC PHẦN:       MI4344 / IT3283 – Kiến trúc Máy tính (HUST - SAMI/SoICT)
+# TÊN CÔNG CỤ:    tools/exp_e3.py — Phân tích thực nghiệm Polling vs Ngắt vs Chốt phần cứng 0-ns (Experiment E3)
+# CHUYÊN ĐỀ KTMT: Chương 05: Hệ thống Vào/Ra & Cơ chế ngắt vi xử lý (Interrupt & Hardware Timestamping)
+# VAI TRÒ:        Đo đạc độ trễ (Latency) và độ bất định (Jitter) khi ghi nhận thời điểm bấm nút bằng 4 kỹ thuật.
+# MÔ TẢ:          - Chạy song song 4 cơ chế: Polling vòng lặp, ISR ngắt thông thường, ISR tối ưu và Chốt 0-ns.
+#                 - Đo độ trễ từ thời điểm nút nhấn vật lý đổi trạng thái đến khi thời gian được ghi nhận.
+#                 - Xuất bảng phân phối xác suất và biểu đồ so sánh độ chính xác phục vụ báo cáo kỹ thuật.
+# ============================================================================
+
 """Thí nghiệm E3 (báo cáo, chủ TV3 + TV2): polling vs ngắt vs capture phần cứng khi lấy thời điểm bấm nút.
 
     python tools/exp_e3.py [--n 1000]      # bảng Markdown ra stdout; CSV từng lần bấm ở work/exp_e3/

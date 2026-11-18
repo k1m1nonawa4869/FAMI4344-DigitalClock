@@ -1,4 +1,13 @@
-// alu_tb.v — gói A1: so ALU với tb/vectors/alu.txt (4 200 ca). Chạy từ thư mục gốc project.
+// tb/alu_tb.v — Kiểm thử Đơn vị Số học và Logic 32-bit (ALU Unit Testbench)
+// ============================================================================
+// HỌC PHẦN:       MI4344 / IT3283 – Kiến trúc Máy tính (HUST - SAMI/SoICT)
+// TÊN TESTBENCH:  tb/alu_tb.v — Kiểm thử Đơn vị Số học và Logic 32-bit (ALU Unit Testbench)
+// CHUYÊN ĐỀ KTMT: Chương 03: Số học máy tính & Chương 04: Kiến trúc tập lệnh MIPS ISA
+// VAI TRÒ:        Kiểm thử toàn diện khối tính toán số học và logic 32-bit đối chiếu 4,200 vector mẫu
+// MÔ TẢ:          - Đọc và đối chiếu toàn bộ 4,200 ca kiểm thử trong tb/vectors/alu.txt sinh bởi mô hình golden.
+//                 - Kiểm tra đầy đủ 8 phép toán: ADD, SUB, AND, OR, XOR, SLT (so sánh có dấu an toàn), SLL, SRA.
+//                 - Xác thực cờ Zero phục vụ các lệnh rẽ nhánh beq và bne.
+// ============================================================================
 `timescale 1ns/1ps
 module alu_tb;
     reg  [31:0] a, b;
