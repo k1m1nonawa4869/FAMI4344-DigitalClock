@@ -118,12 +118,15 @@
         .eqv  V_RBUF            0x560           # Mảng lưu trữ câu nhận được từ UART (32 từ nhớ, 0x560..0x5DC)
 
 # ----------------------------------------------------------------------------
-# 10. BIẾN ĐỒNG HỒ CỜ VUA KÉP & KHÓA AN TOÀN TRIPLE-CLICK (0x7B0 .. 0x7DF)
+# 10. BIẾN ĐỒNG HỒ CỜ VUA KÉP & KHÓA AN TOÀN TRIPLE-CLICK (0x7A0 .. 0x7DF)
 # ----------------------------------------------------------------------------
+        .eqv  V_TPR_M           0x7a0           # SET: Phút tạm thời cho Clock C / Đấu thủ Phải (0..59)
+        .eqv  V_TPR_S           0x7a4           # SET: Giây tạm thời cho Clock C / Đấu thủ Phải (0..59)
+        .eqv  V_TPSW_MODE       0x7a8           # SET: Chế độ tạm thời cho Stopwatch (0: 9L, 1: 99L)
         .eqv  V_TMR_SUBMODE     0x7b0           # Phân chế độ: 0: Đếm lùi Đơn (Single Timer), 1: Cờ vua Kép (Chess Clock)
         .eqv  V_CHESS_L         0x7b4           # Thời gian còn lại của Đấu thủ Trái (mili-giây có dấu)
         .eqv  V_CHESS_R         0x7b8           # Thời gian còn lại của Đấu thủ Phải (mili-giây có dấu)
-        .eqv  V_CHESS_INIT      0x7bc           # Mốc nạp xuất phát (ms) dùng cho Rematch (mặc định 5m = 300.000 ms)
+        .eqv  V_CHESS_INIT      0x7bc           # Mốc nạp xuất phát Đấu thủ Trái s1 (ms, mặc định 5m = 300.000 ms)
         .eqv  V_CHESS_ACT       0x7c0           # Trạng thái cờ: 0: Dừng/Chờ, 1: Trái chạy, 2: Phải chạy
         .eqv  V_B_CNT           0x7c4           # Đếm số lần nhấn liên tiếp của phím B (0, 1, 2, 3)
         .eqv  V_B_LAST          0x7c8           # Mốc ms REG_RTC_MS của lần nhấn phím B gần nhất
@@ -131,6 +134,7 @@
         .eqv  V_SW_MODE         0x7d0           # Chế độ bấm giờ: 0: 9 Laps @ 1 ms, 1: 99 Laps @ 10 ms
         .eqv  V_TMR_SNAP        0x7d4           # Mốc thời gian trước khi nhấn A bắt đầu đếm lùi
         .eqv  V_TPAUSED         0x7d8           # Cờ trạng thái Timer đang tạm dừng (1: Paused)
+        .eqv  V_CHESS_R_INIT    0x7dc           # Mốc nạp xuất phát Đấu thủ Phải s2 (ms, mặc định 5m = 300.000 ms)
         .eqv  USE_IRQ           1               # Cấu hình ngắt: 1: Dùng ngắt UART_RX tại 0x180; 0: Polling
         .eqv  CFG_MAG           0x7e0           # Từ ma thuật kiểm tra (Magic Word): 0x534F4331 ("SOC1")
         .eqv  CFG_MS            0x7e4           # Giờ nạp cấu hình ban đầu (mili-giây trong ngày)

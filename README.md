@@ -500,7 +500,17 @@ Chế độ ALARM cung cấp khả năng quản lý 4 mốc báo thức độc l
   * **Phím A:** Tăng giá trị của trường đang chọn (+1 đơn vị, tự động quay vòng khi chạm ngưỡng; riêng giây ép về 00).
   * **Phím B:** Chuyển sang trường dữ liệu kế tiếp (xoay vòng qua 6 trường).
   * **Phím C:** Lưu toàn bộ thiết lập vào phần cứng RTC (kích hoạt cờ nguyên tử `ARM`) và quay trở lại chế độ xem giờ TIME.
-* **Cài đặt Timer Preset trong SET:** Được kích hoạt khi vào từ chế độ TIMER (bấm Phím C khi dừng), hiển thị định dạng `trHH.MM.SS` với 3 trường Giờ ($0 \dots 99$), Phút ($0 \dots 59$), Giây ($0 \dots 59$). Sử dụng Phím A để tăng (+1), Phím B để đổi vòng qua 3 trường (`Giờ` $\xrightarrow{\text{Nút B}}$ `Phút` $\xrightarrow{\text{Nút B}}$ `Giây` $\xrightarrow{\text{Nút B}}$ `Giờ`), và Phím C để lưu vào `REG_TMR_VALUE`.
+* **Hệ thống Cài đặt Toàn diện 4 Trang trong SET Mode (Điều hướng tuần hoàn qua Phím MODE/ABCD):**
+  * **Trang 0 — SET RTC (`V_TPAGE = 0`):** Chỉnh Giờ, Phút, Giây, Ngày, Tháng, Năm (2000..2099) với tần số nhấp nháy 2 Hz và thuật toán kẹp ngày năm nhuận. Phím B đổi trường (0..5), Phím A tăng giá trị (giây ép về 00), Phím C lưu vào RTC phần cứng và thoát về TIME.
+  * **Trang 1 — SET TIMER `s1` & Chế độ (`V_TPAGE = 1`):** Cài đặt thời gian đếm lùi `s1` (dùng cho Single Timer và Clock A của Cờ vua) cùng Chế độ đếm lùi (`t1`: Đơn $\leftrightarrow$ `t2`: Cờ vua Kép). Hiển thị dạng `t1/t2 HH.MM.SS`. Phím B đổi trường (Giờ $\to$ Phút $\to$ Giây $\to$ Chế độ `t1`/`t2`), Phím A tăng giá trị / đảo chế độ, Phím C lưu và thoát về TIMER.
+  * **Trang 2 — SET CHESS `s2` (`V_TPAGE = 2`):** Cài đặt thời gian độc lập `s2` cho Đấu thủ Phải (Clock C) phục vụ thi đấu chấp giờ / odds matches (ví dụ Trái 5 phút vs Phải 3 phút). Hiển thị dạng `C2  MM.SS`. Phím B đổi giữa Phút $\leftrightarrow$ Giây, Phím A tăng giá trị, Phím C lưu `s2` và thoát về TIMER.
+  * **Trang 3 — SET STOPWATCH (`V_TPAGE = 3`):** Cấu hình chế độ bấm giờ thể thao giữa 9 Laps @ 1 ms (`9L`, định dạng `_MM.SS.mmm`) và 99 Laps @ 10 ms (`99L`, định dạng `LL MM.SS.cc`). Hiển thị `SP  09LA` hoặc `SP  99LA`. Phím A/B đảo chế độ, Phím C lưu và thoát về STOPWATCH.
+  * **Điều hướng tuần hoàn mượt mà:** Nhấn phím MODE bên trong SET Mode sẽ tuần tự duyệt qua Trang 0 $\to$ Trang 1 $\to$ Trang 2 $\to$ Trang 3 $\to$ thoát về TIME (Mode 0), đảm bảo người dùng có thể cấu hình mọi tính năng và không bao giờ bị kẹt ở bất kỳ màn hình nào. Phím C tại bất kỳ trang nào cũng đóng vai trò Save & Exit về chế độ hoạt động tương ứng.
+
+* **Cải tiến Điều khiển Đồng Hồ Đếm Lùi & Cờ Vua Kép:**
+  * **Tắt chuông và Tạm dừng (Pause) tức thì trong 1 lần nhấn Phím C:** Khi đồng hồ đếm lùi quá giờ âm đang reo còi báo động, một lần bấm Phím C duy nhất sẽ đồng thời ngắt còi PWM và chuyển đồng hồ sang trạng thái Tạm dừng (Pause) ngay lập tức, loại bỏ hoàn toàn việc phải bấm 2 lần.
+  * **Định dạng hiển thị Động 4 Chữ Số Cờ Vua:** Left Clock (S7..S4) và Right Clock (S3..S0) chuyển đổi 3 cấp mượt mà: $\ge 1\text{ phút}$ hiển thị `MM.SS`, $< 1\text{ phút dương}$ hiển thị `SS.cc` (độ phân giải 0.01s), $< 0\text{ quá hạn âm}$ hiển thị `-S.cc` (kẹp tối đa -9.99s). Khắc phục triệt để hiện tượng đứng hình tại 9.99s lúc khởi động.
+  * **Tái đấu (Rematch Reset) với Khóa an toàn Triple-Click Phím B:** Nhấn nhanh 3 lần liên tiếp ($\le 600\text{ ms}$) khôi phục Clock A về mốc `s1` và Clock C về mốc `s2` độc lập đã thiết lập.
 
 ---
 
@@ -655,7 +665,7 @@ KỊCH BẢN TÍCH HỢP HỆ THỐNG TOÀN DIỆN (tb/system_tb.v):
 - sys_5: Báo thức 4 kênh, Snooze +5 phút, tự tắt sau 60s, Chime     -> PASS
 - sys_6: Chỉnh giờ SET nhấp nháy 2 Hz, kẹp ngày tháng năm nhuận      -> PASS
 - sys_7: Đồng bộ NTP UART ($Z, $T), xử lý lỗi checksum, bù trôi CAL  -> PASS
-TỔNG CỘNG: 589/589 kiểm tra đạt kết quả PASS tuyệt đối (801.371 chu kỳ mô phỏng).
+TỔNG CỘNG: 621/621 kiểm tra đạt kết quả PASS tuyệt đối (884.869 chu kỳ mô phỏng).
 ===============================================================================
 ```
 

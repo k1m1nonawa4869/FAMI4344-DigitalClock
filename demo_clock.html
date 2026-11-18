@@ -1002,10 +1002,11 @@
           <button class="timer-pill" onclick="quickFillTimer(0, 2, 0, 0)">2m</button>
           <button class="timer-pill" onclick="quickFillTimer(1, 0, 0, 0)">1h</button>
 
-          <span style="font-size:0.72rem; color:#e3b341; align-self:center; font-weight:bold; margin-left:6px;">Cờ Vua (FIDE):</span>
+          <span style="font-size:0.72rem; color:#e3b341; align-self:center; font-weight:bold; margin-left:6px;">Cờ Vua (FIDE & Chấp giờ):</span>
           <button class="timer-pill" style="border-color:#e3b341; color:#f0e6d2;" onclick="quickFillChess(3)">♟️ 3m Blitz</button>
           <button class="timer-pill" style="border-color:#e3b341; color:#f0e6d2;" onclick="quickFillChess(5)">♟️ 5m Blitz</button>
-          <button class="timer-pill" style="border-color:#e3b341; color:#f0e6d2;" onclick="quickFillChess(10)">♟️ 10m Rapid</button>
+          <button class="timer-pill" style="border-color:#e3b341; color:#f0e6d2;" onclick="quickFillChessOdds(5, 3)">⚡ Chấp: 5m vs 3m</button>
+          <button class="timer-pill" style="border-color:#e3b341; color:#f0e6d2;" onclick="quickFillChessOdds(3, 1)">⚡ Chấp: 3m vs 1m</button>
         </div>
 
         <button class="btn-load-timer" onclick="applyCustomTimerPreset()">▶️ Nạp Preset & Mở Chế Độ Timer</button>
@@ -1175,11 +1176,14 @@ t = 0 ms
       tmrOvertimeBeeping: false,
       lastOvertimeBeepSec: -1,
 
-      // Chess Double Clock (TASK-21: 2 đồng hồ 4-digit động 0.01s)
-      chessL: 300000, // 5 phút = 300.000 ms
-      chessR: 300000,
-      chessInit: 300000,
+      // Chess Double Clock (TASK-21: 2 đồng hồ 4-digit động 0.01s, chênh lệch giờ s1 và s2)
+      chessL: 300000, // s1: Clock A / Left (mặc định 5m = 300.000 ms)
+      chessR: 300000, // s2: Clock C / Right (mặc định 5m = 300.000 ms)
+      chessInit: 300000, // mốc s1 (Left)
+      chessRInit: 300000, // mốc s2 (Right)
       chessAct: 0, // 0: Dừng/Chờ, 1: Trái đang chạy, 2: Phải đang chạy
+      chessRSetMin: 5,
+      chessRSetSec: 0,
 
       // Safety Triple-Click (TASK-21: Bấm nhanh 3 lần liên tiếp <= 600 ms để Reset)
       bClickCnt: 0,
@@ -1654,9 +1658,9 @@ t = 0 ms
           // CHESS DOUBLE CLOCK (TASK-21): Định dạng 3 cấp (>= 1m: MM.SS, < 1m: SS.cc, < 0: -S.cc)
           function formatChessHalf(msVal, startIdx) {
             const isNeg = msVal < 0;
-            const absVal = Math.min(Math.abs(msVal), 9990);
             if (isNeg) {
-              // Quá giờ âm: -S.cc (tối đa -9.99s)
+              // Quá giờ âm: -S.cc (kẹp tối đa -9.99s)
+              const absVal = Math.min(Math.abs(msVal), 9990);
               const sec = Math.floor(absVal / 1000);
               const cs = Math.floor((absVal % 1000) / 10);
               chars[startIdx + 3] = '-';
@@ -1664,25 +1668,28 @@ t = 0 ms
               dps[startIdx + 2] = true;
               chars[startIdx + 1] = Math.floor(cs / 10).toString();
               chars[startIdx + 0] = (cs % 10).toString();
-            } else if (absVal < 60000) {
-              // < 1 phút dương: SS.cc (độ phân giải 0.01s centi-giây)
-              const sec = Math.floor(absVal / 1000);
-              const cs = Math.floor((absVal % 1000) / 10);
-              chars[startIdx + 3] = Math.floor(sec / 10).toString();
-              chars[startIdx + 2] = (sec % 10).toString();
-              dps[startIdx + 2] = true;
-              chars[startIdx + 1] = Math.floor(cs / 10).toString();
-              chars[startIdx + 0] = (cs % 10).toString();
             } else {
-              // >= 1 phút: MM.SS
-              const totalSec = Math.floor(absVal / 1000);
-              const min = Math.floor(totalSec / 60) % 60;
-              const sec = totalSec % 60;
-              chars[startIdx + 3] = Math.floor(min / 10).toString();
-              chars[startIdx + 2] = (min % 10).toString();
-              dps[startIdx + 2] = true;
-              chars[startIdx + 1] = Math.floor(sec / 10).toString();
-              chars[startIdx + 0] = (sec % 10).toString();
+              const absVal = Math.abs(msVal);
+              if (absVal < 60000) {
+                // < 1 phút dương: SS.cc (độ phân giải 0.01s centi-giây)
+                const sec = Math.floor(absVal / 1000);
+                const cs = Math.floor((absVal % 1000) / 10);
+                chars[startIdx + 3] = Math.floor(sec / 10).toString();
+                chars[startIdx + 2] = (sec % 10).toString();
+                dps[startIdx + 2] = true;
+                chars[startIdx + 1] = Math.floor(cs / 10).toString();
+                chars[startIdx + 0] = (cs % 10).toString();
+              } else {
+                // >= 1 phút: MM.SS
+                const totalSec = Math.floor(absVal / 1000);
+                const min = Math.floor(totalSec / 60) % 60;
+                const sec = totalSec % 60;
+                chars[startIdx + 3] = Math.floor(min / 10).toString();
+                chars[startIdx + 2] = (min % 10).toString();
+                dps[startIdx + 2] = true;
+                chars[startIdx + 1] = Math.floor(sec / 10).toString();
+                chars[startIdx + 0] = (sec % 10).toString();
+              }
             }
           }
           formatChessHalf(STATE.chessL, 4); // Left Clock: S7..S4
@@ -1759,9 +1766,9 @@ t = 0 ms
         }
       }
 
-      // 5. CHẾ ĐỘ 4: SET (TASK-17, TASK-18 & TASK-21: t1/t2 HH.MM.SS với 4 trường: Hr, Min, Sec, Submode)
+      // 5. CHẾ ĐỘ 4: SET (TASK-17, TASK-18 & TASK-21: 4 Trang Cài Đặt Toàn Diện qua phím MODE/ABCD)
       else if (m === 4) {
-        if (STATE.tPage === 1) { // SET TIMER: t1/t2 HH.MM.SS
+        if (STATE.tPage === 1) { // SET TIMER: t1/t2 HH.MM.SS (Preset s1 & Chế độ)
           chars[7] = 't';
           chars[6] = STATE.tmrSubmode === 'chess' ? '2' : '1';
           chars[5] = Math.floor(STATE.tmrSetHr / 10).toString();
@@ -1778,6 +1785,35 @@ t = 0 ms
             else if (STATE.setField === 1) { chars[3] = ' '; chars[2] = ' '; } // Nháy Phút
             else if (STATE.setField === 2) { chars[1] = ' '; chars[0] = ' '; } // Nháy Giây
             else if (STATE.setField === 3) { chars[7] = ' '; chars[6] = ' '; } // Nháy Chế độ t1/t2
+          }
+        } else if (STATE.tPage === 2) { // SET CHESS s2: C2  MM.SS (Đấu thủ Phải / Clock C)
+          chars[7] = 'C';
+          chars[6] = '2';
+          chars[5] = ' ';
+          chars[4] = ' ';
+          chars[3] = Math.floor(STATE.chessRSetMin / 10).toString();
+          chars[2] = (STATE.chessRSetMin % 10).toString();
+          dps[2] = true; // Dấu chấm sau Phút
+          chars[1] = Math.floor(STATE.chessRSetSec / 10).toString();
+          chars[0] = (STATE.chessRSetSec % 10).toString();
+
+          if (!STATE.blinkPhase) {
+            if (STATE.setField === 0) { chars[3] = ' '; chars[2] = ' '; } // Nháy Phút s2
+            else if (STATE.setField === 1) { chars[1] = ' '; chars[0] = ' '; } // Nháy Giây s2
+          }
+        } else if (STATE.tPage === 3) { // SET STOPWATCH: SP  09LA hoặc SP  99LA
+          chars[7] = 'S';
+          chars[6] = 'P';
+          chars[5] = ' ';
+          chars[4] = ' ';
+          const is99 = STATE.swMode === '99lap';
+          chars[3] = is99 ? '9' : '0';
+          chars[2] = '9';
+          chars[1] = 'L';
+          chars[0] = 'A';
+
+          if (!STATE.blinkPhase) {
+            chars[3] = ' '; chars[2] = ' '; // Nháy 09 / 99
           }
         } else { // SET RTC
           const sf = STATE.setField;
@@ -2006,11 +2042,21 @@ t = 0 ms
           dC.textContent = STATE.alarmSounding ? 'Tạm hoãn chuông Snooze (+5 phút)' : 'Vào chế độ chỉnh sửa giờ';
         }
       } else if (m === 4) { // SET
+        dMode.textContent = 'Đổi Trang Cài Đặt: SET RTC (p0) → SET TIMER s1 (p1) → SET CHESS s2 (p2) → SET STOPWATCH (p3) → Thoát TIME';
         if (STATE.tPage === 1) { // SET TIMER: t1/t2 HH.MM.SS (4 trường: Hr, Min, Sec, Submode)
           const fNames = ['Giờ (+1)', 'Phút (+1)', 'Giây (+1)', 'Chế độ (t1: Đơn ↔ t2: Cờ vua Kép)'];
           dA.textContent = STATE.setField === 3 ? 'Đổi Chế độ: t1 (Đơn) ↔ t2 (Cờ vua Kép)' : `Tăng trường: ${fNames[STATE.setField]}`;
           dB.textContent = 'Chuyển trường (Giờ → Phút → Giây → Chế độ)';
-          dC.textContent = 'Lưu Cấu Hình vào Timer & Thoát';
+          dC.textContent = 'Lưu Preset s1 & Chế độ → Thoát về TIMER';
+        } else if (STATE.tPage === 2) { // SET CHESS s2: C2  MM.SS (Đấu thủ Phải / Clock C)
+          const fNames = ['Phút s2 (+1)', 'Giây s2 (+1)'];
+          dA.textContent = `Tăng trường Clock C: ${fNames[STATE.setField]}`;
+          dB.textContent = 'Chuyển trường (Phút ↔ Giây)';
+          dC.textContent = 'Lưu Preset s2 Đấu thủ Phải → Thoát về TIMER';
+        } else if (STATE.tPage === 3) { // SET STOPWATCH: SP  09LA / 99LA
+          dA.textContent = `Đổi Chế độ: 9 Laps (1 ms) ↔ 99 Laps (10 ms) [Hiện tại: ${STATE.swMode === '9lap' ? '9 Laps' : '99 Laps'}]`;
+          dB.textContent = 'Đổi Chế độ: 9 Laps ↔ 99 Laps';
+          dC.textContent = 'Lưu Chế độ Bấm giờ → Thoát về STOPWATCH';
         } else { // SET RTC
           const fNames = ['Giờ (+1)', 'Phút (+1)', 'Giây (Đặt về 00)', 'Ngày (+1)', 'Tháng (+1)', 'Năm (+1)'];
           dA.textContent = `Tăng trường: ${fNames[STATE.setField]}`;
@@ -2024,21 +2070,50 @@ t = 0 ms
     function pressMODE() {
       playClick();
       animateBtn('btn-mode');
-      STATE.mode = (STATE.mode + 1) % 5;
-      STATE.tPage = 0; // Mặc định về SET RTC khi chuyển mode bằng nút MODE
       if (STATE.mode === 4) {
-        // Khởi tạo các giá trị SET RTC từ đồng hồ hiện tại
-        const secTotal = Math.floor(STATE.msOfDay / 1000);
-        const dt = daysToDate(STATE.days);
-        STATE.setVals = {
-          hr: Math.floor(secTotal / 3600) % 24,
-          min: Math.floor((secTotal % 3600) / 60),
-          sec: secTotal % 60,
-          day: dt.day,
-          mon: dt.mon,
-          yr: dt.yr
-        };
-        STATE.setField = 0;
+        // Đang ở SET Mode: Phím MODE chuyển giữa các trang SET (0 -> 1 -> 2 -> 3 -> Mode 0)
+        STATE.tPage = (STATE.tPage + 1) % 4;
+        if (STATE.tPage === 0) {
+          // Vòng qua hết các trang SET: Trở về chế độ TIME
+          STATE.mode = 0;
+          STATE.tPage = 0;
+          updateAnnunciators();
+          render();
+          return;
+        }
+      } else {
+        STATE.mode = (STATE.mode + 1) % 5;
+        STATE.tPage = 0;
+      }
+
+      if (STATE.mode === 4) {
+        if (STATE.tPage === 0) {
+          // Khởi tạo các giá trị SET RTC từ đồng hồ hiện tại
+          const secTotal = Math.floor(STATE.msOfDay / 1000);
+          const dt = daysToDate(STATE.days);
+          STATE.setVals = {
+            hr: Math.floor(secTotal / 3600) % 24,
+            min: Math.floor((secTotal % 3600) / 60),
+            sec: secTotal % 60,
+            day: dt.day,
+            mon: dt.mon,
+            yr: dt.yr
+          };
+          STATE.setField = 0;
+        } else if (STATE.tPage === 1) { // SET TIMER s1 & Submode
+          const totalSec = Math.floor(STATE.tmrPresetMs / 1000);
+          STATE.tmrSetHr = Math.floor(totalSec / 3600);
+          STATE.tmrSetMin = Math.floor((totalSec % 3600) / 60);
+          STATE.tmrSetSec = totalSec % 60;
+          STATE.setField = 0;
+        } else if (STATE.tPage === 2) { // SET CHESS s2 (Đấu thủ Phải / Clock C)
+          const totalSec = Math.floor((STATE.chessRInit || 300000) / 1000);
+          STATE.chessRSetMin = Math.floor((totalSec % 3600) / 60);
+          STATE.chessRSetSec = totalSec % 60;
+          STATE.setField = 0;
+        } else if (STATE.tPage === 3) { // SET STOPWATCH
+          STATE.setField = 0;
+        }
       }
       if (STATE.mode === 1) {
         STATE.swLapIdx = -1;
@@ -2106,7 +2181,7 @@ t = 0 ms
           }
         }
       } else if (m === 4) { // SET
-        if (STATE.tPage === 1) { // SET TIMER (TASK-18 & TASK-21: Giờ, Phút, Giây, Chế độ t1/t2)
+        if (STATE.tPage === 1) { // SET TIMER s1 (Giờ, Phút, Giây, Chế độ t1/t2)
           if (STATE.setField === 0) {
             STATE.tmrSetHr = (STATE.tmrSetHr + 1) % 100;
           } else if (STATE.setField === 1) {
@@ -2119,6 +2194,16 @@ t = 0 ms
             setTimerSubmode(nextMode);
             appendStreamLog(`[SET TMR] Phím A: Đổi Chế độ sang ${nextMode === 'single' ? 't1 (Đếm Lùi Đơn)' : 't2 (Đồng Hồ Cờ Vua Kép)'}.`);
           }
+        } else if (STATE.tPage === 2) { // SET CHESS s2 (Clock C / Đấu thủ Phải)
+          if (STATE.setField === 0) {
+            STATE.chessRSetMin = (STATE.chessRSetMin + 1) % 60;
+          } else {
+            STATE.chessRSetSec = (STATE.chessRSetSec + 1) % 60;
+          }
+        } else if (STATE.tPage === 3) { // SET STOPWATCH (9 Laps <-> 99 Laps)
+          const newMode = STATE.swMode === '9lap' ? '99lap' : '9lap';
+          setStopwatchMode(newMode);
+          appendStreamLog(`[SET STPW] Phím A: Đổi Chế độ sang ${newMode === '9lap' ? '9 Laps (1 ms, L MM.SS.mmm)' : '99 Laps (10 ms, LL MM.SS.cc)'}.`);
         } else { // SET RTC
           const sv = STATE.setVals;
           const sf = STATE.setField;
@@ -2206,13 +2291,13 @@ t = 0 ms
         if (toast) toast.style.display = 'none';
 
         if (STATE.tmrSubmode === 'chess') {
-          // TÁI ĐẤU (REMATCH): Reset cả hai đồng hồ về mốc ban đầu
-          STATE.chessL = STATE.chessInit;
-          STATE.chessR = STATE.chessInit;
+          // TÁI ĐẤU (REMATCH): Reset cả hai đồng hồ về mốc ban đầu (s1 cho Trái, s2 cho Phải)
+          STATE.chessL = STATE.tmrPresetMs;
+          STATE.chessR = STATE.chessRInit;
           STATE.chessAct = 0;
           playTone(1800, 0.15, 'triangle');
           setTimeout(() => playTone(2400, 0.2, 'triangle'), 100);
-          appendStreamLog(`[CHESS REMATCH] Phím B x3: Đã xác nhận Tái đấu! Cả hai đồng hồ khôi phục về ${formatTimeMs(STATE.chessInit)}. Nhấn A hoặc C để bắt đầu.`);
+          appendStreamLog(`[CHESS REMATCH] Phím B x3: Đã xác nhận Tái đấu! Clock A: ${formatTimeMs(STATE.chessL)} vs Clock C: ${formatTimeMs(STATE.chessR)}. Nhấn A hoặc C để bắt đầu.`);
         } else {
           if (STATE.tmrRunning || STATE.tmrPaused) {
             // Đang chạy/tạm dừng: Reset về mốc trước khi bấm A
@@ -2244,6 +2329,12 @@ t = 0 ms
       } else if (m === 4) { // SET
         if (STATE.tPage === 1) { // SET TIMER: Đổi vòng Giờ (0) -> Phút (1) -> Giây (2) -> Chế độ (3) -> 0
           STATE.setField = (STATE.setField + 1) % 4;
+        } else if (STATE.tPage === 2) { // SET CHESS s2: Đổi Phút (0) <-> Giây (1)
+          STATE.setField = (STATE.setField + 1) % 2;
+        } else if (STATE.tPage === 3) { // SET STOPWATCH: Đảo 9 Laps <-> 99 Laps
+          const newMode = STATE.swMode === '9lap' ? '99lap' : '9lap';
+          setStopwatchMode(newMode);
+          appendStreamLog(`[SET STPW] Phím B: Đổi Chế độ sang ${newMode === '9lap' ? '9 Laps (1 ms)' : '99 Laps (10 ms)'}.`);
         } else { // SET RTC: Đổi trường (0..5)
           STATE.setField = (STATE.setField + 1) % 6;
         }
@@ -2293,19 +2384,22 @@ t = 0 ms
           }
         } else {
           // Single Timer:
-          if (STATE.tmrOvertimeBeeping) {
-            // Nhấn Phím C để tắt chuông báo động khi đang kêu dồn dập
-            STATE.tmrOvertimeBeeping = false;
-            appendStreamLog(`[TIMER ALARM] Nhấn Phím C: Đã tắt chuông báo động quá hạn âm. Bộ đếm vẫn tiếp tục.`);
+          if (STATE.tmrRunning || STATE.tmrOvertimeBeeping) {
+            // Nhấn Phím C khi đang chạy (kể cả quá giờ âm chuông báo động):
+            // Vừa tắt chuông vừa TẠM DỪNG (Pause) ngay lập tức trong 1 lần nhấn!
+            STATE.tmrRunning = false;
+            STATE.tmrPaused = true;
+            if (STATE.tmrOvertimeBeeping) {
+              STATE.tmrOvertimeBeeping = false;
+              stopBuzzer();
+              appendStreamLog(`[TIMER] Nhấn Phím C: Đã tắt chuông báo động và TẠM DỪNG (Pause) tại ${formatTimeMs(STATE.tmrRemainMs)}. Nhấn A để tiếp tục.`);
+            } else {
+              appendStreamLog(`[TIMER] Phím C: Tạm dừng (Pause) tại ${formatTimeMs(STATE.tmrRemainMs)}. Nhấn A để tiếp tục.`);
+            }
             render();
             return;
           }
-          if (STATE.tmrRunning) {
-            // Đang chạy: Nút C tạm dừng đồng hồ (Pause)
-            STATE.tmrRunning = false;
-            STATE.tmrPaused = true;
-            appendStreamLog(`[TIMER] Phím C: Tạm dừng (Pause) tại ${formatTimeMs(STATE.tmrRemainMs)}. Nhấn A để tiếp tục.`);
-          } else if (STATE.tmrPaused) {
+          if (STATE.tmrPaused) {
             // Đang tạm dừng: Bấm C tiếp tục giữ Pause (chống bấm nhiều lần nhảy nhầm vào SET trong thi đấu)
             appendStreamLog(`[TIMER] Phím C: Vẫn đang tạm dừng (Nhấn A để tiếp tục, B x3 để reset).`);
           } else {
@@ -2337,30 +2431,42 @@ t = 0 ms
           }
         }
       } else if (m === 4) { // SET: Lưu & Thoát
-        if (STATE.tPage === 1) { // Lưu Timer Preset & Chế độ (TASK-18 & TASK-21)
+        if (STATE.tPage === 1) { // Lưu Timer Preset s1 & Chế độ
           const newPreset = ((STATE.tmrSetHr * 60 + STATE.tmrSetMin) * 60 + STATE.tmrSetSec) * 1000;
+          STATE.tmrPresetMs = newPreset;
+          STATE.chessInit = newPreset;
           if (STATE.tmrSubmode === 'chess') {
-            STATE.chessInit = newPreset;
             STATE.chessL = newPreset;
-            STATE.chessR = newPreset;
+            STATE.chessR = STATE.chessRInit || newPreset;
             STATE.chessAct = 0;
-            appendStreamLog(`[TIMER SET] Đã lưu mốc cờ vua: ${STATE.tmrSetMin}m ${STATE.tmrSetSec}s (${newPreset} ms). Chuyển sang Cờ Vua Kép.`);
+            appendStreamLog(`[TIMER SET] Đã lưu mốc Đấu thủ Trái s1: ${STATE.tmrSetMin}m ${STATE.tmrSetSec}s (${newPreset} ms). Thoát về Cờ Vua Kép.`);
           } else {
-            STATE.tmrPresetMs = newPreset;
             STATE.tmrRemainMs = newPreset;
             STATE.tmrStartVal = newPreset;
             STATE.tmrPaused = false;
             STATE.tmrRunning = false;
-            appendStreamLog(`[TIMER SET] Đã lưu preset mới: ${STATE.tmrSetHr}h ${STATE.tmrSetMin}m ${STATE.tmrSetSec}s (${newPreset} ms). Chuyển sang Đếm Lùi Đơn.`);
+            appendStreamLog(`[TIMER SET] Đã lưu preset mới: ${STATE.tmrSetHr}h ${STATE.tmrSetMin}m ${STATE.tmrSetSec}s (${newPreset} ms). Thoát về Đếm Lùi Đơn.`);
           }
           STATE.mode = 2; // Trở về TIMER
+          STATE.tPage = 0;
+        } else if (STATE.tPage === 2) { // Lưu Chess s2 (Đấu thủ Phải / Clock C)
+          const newPresetR = (STATE.chessRSetMin * 60 + STATE.chessRSetSec) * 1000;
+          STATE.chessRInit = newPresetR;
+          STATE.chessR = newPresetR;
+          appendStreamLog(`[CHESS SET] Đã lưu mốc Đấu thủ Phải s2: ${STATE.chessRSetMin}m ${STATE.chessRSetSec}s (${newPresetR} ms). Thoát về TIMER.`);
+          STATE.mode = 2; // Trở về TIMER
+          STATE.tPage = 0;
+        } else if (STATE.tPage === 3) { // Lưu Stopwatch Mode
+          appendStreamLog(`[STPW SET] Đã lưu chế độ bấm giờ: ${STATE.swMode === '9lap' ? '9 Laps (1 ms)' : '99 Laps (10 ms)'}. Thoát về STOPWATCH.`);
+          STATE.mode = 1; // Trở về STOPWATCH
           STATE.tPage = 0;
         } else { // Lưu RTC
           const sv = STATE.setVals;
           STATE.msOfDay = (sv.hr * 3600 + sv.min * 60 + sv.sec) * 1000;
           STATE.days = dateToDays(sv.day, sv.mon, sv.yr);
           STATE.mode = 0;
-          appendStreamLog(`[RTC] Da dong bo gio moi: ${sv.hr}:${sv.min}:${sv.sec} ngay ${sv.day}/${sv.mon}/${sv.yr}`);
+          STATE.tPage = 0;
+          appendStreamLog(`[RTC] Đã đồng bộ giờ mới: ${sv.hr}:${sv.min}:${sv.sec} ngày ${sv.day}/${sv.mon}/${sv.yr}`);
         }
       }
       updateAnnunciators();
@@ -2496,23 +2602,36 @@ t = 0 ms
     }
 
     function quickFillChess(minutes) {
+      quickFillChessOdds(minutes, minutes);
+    }
+
+    function quickFillChessOdds(minL, minR) {
       playClick();
       setTimerSubmode('chess');
       STATE.tmrSetHr = 0;
-      STATE.tmrSetMin = minutes;
+      STATE.tmrSetMin = minL;
       STATE.tmrSetSec = 0;
+      STATE.chessRSetMin = minR;
+      STATE.chessRSetSec = 0;
       document.getElementById('inp-tmr-hr').value = 0;
-      document.getElementById('inp-tmr-min').value = minutes;
+      document.getElementById('inp-tmr-min').value = minL;
       document.getElementById('inp-tmr-sec').value = 0;
       document.getElementById('inp-tmr-ms').value = 0;
-      const ms = minutes * 60000;
-      STATE.chessInit = ms;
-      STATE.chessL = ms;
-      STATE.chessR = ms;
+      const msL = minL * 60000;
+      const msR = minR * 60000;
+      STATE.tmrPresetMs = msL;
+      STATE.chessInit = msL;
+      STATE.chessL = msL;
+      STATE.chessRInit = msR;
+      STATE.chessR = msR;
       STATE.chessAct = 0;
       STATE.mode = 2; // Chuyển sang TIMER Mode
       STATE.tPage = 0;
-      appendStreamLog(`[CHESS] Đã cài đặt nhanh ${minutes} phút cờ chớp FIDE. Nhấn A (Trái) hoặc C (Phải) để bắt đầu!`);
+      if (minL === minR) {
+        appendStreamLog(`[CHESS] Đã cài đặt nhanh ${minL}m cờ chớp FIDE. Nhấn A (Trái) hoặc C (Phải) để bắt đầu!`);
+      } else {
+        appendStreamLog(`[CHESS CHẤP GIỜ] Đã cài đặt Đấu thủ Trái: ${minL}m vs Đấu thủ Phải: ${minR}m. Nhấn A hoặc C để đấu!`);
+      }
       updateAnnunciators();
       render();
     }
@@ -2526,11 +2645,13 @@ t = 0 ms
       const totalMs = ((h * 60 + m) * 60 + s) * 1000 + ms;
 
       if (STATE.tmrSubmode === 'chess') {
+        STATE.tmrPresetMs = totalMs;
         STATE.chessInit = totalMs;
         STATE.chessL = totalMs;
-        STATE.chessR = totalMs;
+        if (!STATE.chessRInit) STATE.chessRInit = totalMs;
+        STATE.chessR = STATE.chessRInit;
         STATE.chessAct = 0;
-        appendStreamLog(`[MMIO] Đã nạp thời gian Cờ Vua Kép: ${m}m ${s}s (${totalMs} ms). Nhấn A hoặc C để đấu!`);
+        appendStreamLog(`[CHESS] Đã nạp thời gian Clock A: ${m}m ${s}s (${totalMs} ms) & Clock C: ${formatTimeMs(STATE.chessRInit)}. Nhấn A hoặc C để đấu!`);
       } else {
         STATE.tmrPresetMs = totalMs;
         STATE.tmrRemainMs = totalMs;

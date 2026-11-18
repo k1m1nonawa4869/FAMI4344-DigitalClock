@@ -54,8 +54,17 @@ events: lw    $t0, REG_BTN_EVENT($zero) # Đọc sự kiện nút từ FIFO ph�
         addiu $t1, $zero, 3
         bne   $a0, $t1, ev_ret          # Không phải nút C: Chỉ tắt chuông
         addiu $t1, $zero, 2
-        bne   $t2, $t1, ev_ret          # Không phải chuông báo thức: Không Snooze
+        beq   $t2, $t1, ev_snz_act      # Chuông báo thức: Kích hoạt Snooze
+        addiu $t1, $zero, 1
+        bne   $t2, $t1, ev_ret          # Không phải chuông Timer: Thoát
+        # Chuông Timer và bấm C: Vừa tắt chuông vừa TẠM DỪNG (Pause) ngay lập tức trong 1 lần nhấn!
+        addiu $t3, $zero, 4             # CLR=0, BEEP_EN=1, RUN=0 (dừng timer)
+        sw    $t3, REG_TMR_CTRL($zero)
+        addiu $t3, $zero, 1
+        sw    $t3, V_TPAUSED($zero)     # Bật cờ tạm dừng
+        j     ev_ret
 
+ev_snz_act:
         # Phím C khi đang chuông báo thức: Kích hoạt chế độ Snooze (+5 phút)
         lui   $t1, 4
         ori   $t1, $t1, 0x93e0          # 300.000 ms = 5 phút
@@ -75,6 +84,23 @@ ev_norm: addiu $t1, $zero, 1
         lw    $t3, V_MODE($zero)
         bne   $a0, $zero, ev_btn        # Các nút A, B, C: Định tuyến vào chế độ hiện tại
 
+        # Nếu đang ở SET (Mode 4): Nút MODE chuyển giữa các trang SET (0 -> 1 -> 2 -> 3 -> Mode 0)
+        addiu $t1, $zero, 4
+        bne   $t3, $t1, em_mode_norm
+        lw    $t4, V_TPAGE($zero)
+        addiu $t4, $t4, 1
+        addiu $t1, $zero, 4
+        bne   $t4, $t1, em_set_page
+        # Quá trang 3: Thoát SET về TIME (Mode 0)
+        sw    $zero, V_MODE($zero)
+        sw    $zero, V_TPAGE($zero)
+        sw    $zero, REG_BLINK_MASK($zero)
+        jr    $ra
+em_set_page:
+        sw    $t4, V_TPAGE($zero)
+        j     set_in                    # Nạp ngữ cảnh tương ứng cho trang mới
+
+em_mode_norm:
         # Nút MODE: Chuyển đổi trạng thái FSM (TIME -> SW -> TMR -> ALARM -> SET -> TIME)
         addiu $t1, $zero, 1
         bne   $t3, $t1, em1

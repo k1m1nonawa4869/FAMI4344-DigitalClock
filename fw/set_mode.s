@@ -23,8 +23,15 @@
 # 1. KHỞI TẠO VÀO CHẾ ĐỘ SET (CAPTURE CURRENT TIME TO SET BUFFERS)
 # ----------------------------------------------------------------------------
 set_in: addu  $s7, $ra, $zero           # Lưu thanh ghi $ra vào $s7
-        lw    $t0, V_TPAGE($zero)       # Kiểm tra trang cài đặt (0: RTC, 1: Timer Preset)
-        bne   $t0, $zero, st_in_tmr     # Nếu V_TPAGE == 1: Khởi tạo trang Timer
+        lw    $t0, V_TPAGE($zero)       # Kiểm tra trang cài đặt (0: RTC, 1: Timer s1, 2: Chess s2, 3: Stopwatch)
+        beq   $t0, $zero, st_in_rtc
+        addiu $t1, $zero, 1
+        beq   $t0, $t1, st_in_tmr
+        addiu $t1, $zero, 2
+        beq   $t0, $t1, st_in_chess_r
+        j     st_in_sw
+
+st_in_rtc:
         mtc0  $zero, $12                # Tắt ngắt để đọc nguyên tử cặp MS và DAY
         lw    $t0, REG_RTC_MS($zero)
         lw    $a0, REG_DAY_SHADOW($zero)
@@ -80,12 +87,45 @@ st_in_tmr:
         sw    $t0, REG_BLINK_MASK($zero)
         jr    $s7
 
+st_in_chess_r:
+        lw    $t0, V_CHESS_R_INIT($zero) # Đọc mốc s2 hiện tại của Đấu thủ Phải (ms)
+        ori   $t1, $zero, 60000
+        div   $t0, $t1
+        mflo  $t2                       # Phút = V_CHESS_R_INIT / 60.000
+        sw    $t2, V_TPR_M($zero)
+        mfhi  $t0                       # Số ms dư trong phút
+        ori   $t1, $zero, 1000
+        div   $t0, $t1
+        mflo  $t2                       # Giây = (V_CHESS_R_INIT % 60.000) / 1.000
+        sw    $t2, V_TPR_S($zero)
+        addu  $t4, $zero, $zero         # Bắt đầu từ trường 0 (Phút)
+        sw    $t4, V_SF($zero)
+        addiu $t0, $zero, 0x0c          # Mặt nạ nháy cho Phút: DISP3, DISP2 = 0x0C
+        sw    $t0, REG_BLINK_MASK($zero)
+        jr    $s7
+
+st_in_sw:
+        lw    $t0, V_SW_MODE($zero)     # Đọc chế độ Stopwatch hiện tại (0: 9L, 1: 99L)
+        sw    $t0, V_TPSW_MODE($zero)
+        addu  $t4, $zero, $zero
+        sw    $t4, V_SF($zero)
+        addiu $t0, $zero, 0x0c          # Nháy 2 ô DISP3, DISP2 (09 hoặc 99)
+        sw    $t0, REG_BLINK_MASK($zero)
+        jr    $s7
+
 # ----------------------------------------------------------------------------
 # 2. XỬ LÝ SỰ KIỆN NÚT BẤM TRONG CHẾ ĐỘ SET
 # ----------------------------------------------------------------------------
 st_btn: addu  $s7, $ra, $zero
         lw    $t0, V_TPAGE($zero)
-        bne   $t0, $zero, st_btn_tmr    # Xử lý phím khi đang ở trang SET Timer
+        beq   $t0, $zero, st_btn_rtc
+        addiu $t1, $zero, 1
+        beq   $t0, $t1, st_btn_tmr
+        addiu $t1, $zero, 2
+        beq   $t0, $t1, st_btn_chess_r
+        j     st_btn_sw
+
+st_btn_rtc:
         lw    $t4, V_SF($zero)          # Trường hiện đang chỉnh sửa (0..5)
         addiu $t1, $zero, 2
         beq   $a0, $t1, st_b            # Nút B: Đổi trường tiếp theo
@@ -262,9 +302,10 @@ st_tm_sv: # Nút C: Lưu cấu hình và thoát
         j     st_tm_sv_done
 
 st_tm_sv_chess:
-        # Lưu cho Chess Clock: Cả Trái và Phải xuất phát cùng preset
-        sw    $t0, V_CHESS_INIT($zero)
+        # Lưu cho Chess Clock: Trái xuất phát từ s1 ($t0), Phải mặc định s1 (hoặc s2 độc lập nếu chỉnh ở Trang 2)
+        sw    $t0, V_CHESS_INIT($zero)   # s1 cho Left
         sw    $t0, V_CHESS_L($zero)
+        sw    $t0, V_CHESS_R_INIT($zero) # Mặc định s2 = s1 khi cấu hình từ Trang 1
         sw    $t0, V_CHESS_R($zero)
         sw    $zero, V_CHESS_ACT($zero) # Trạng thái cờ vua về Dừng/Chờ
         sw    $t0, REG_TMR_VALUE($zero)
@@ -275,6 +316,80 @@ st_tm_sv_done:
         sw    $zero, REG_BLINK_MASK($zero)
         sw    $zero, V_TPAGE($zero)
         addiu $t0, $zero, MODE_TIMER
+        sw    $t0, V_MODE($zero)
+        jr    $s7
+
+st_btn_chess_r:
+        lw    $t4, V_SF($zero)          # 0: Phút, 1: Giây
+        addiu $t1, $zero, 2
+        beq   $a0, $t1, st_cr_b         # Nút B: Đổi trường (0 <-> 1)
+        addiu $t1, $zero, 3
+        beq   $a0, $t1, st_cr_sv        # Nút C: Lưu s2 và thoát về TIMER
+
+        # Nút A: Tăng giá trị (+1) trường đang chọn
+        bne   $t4, $zero, st_cr_a_s
+        lw    $t0, V_TPR_M($zero)       # Tăng Phút (0..59)
+        addiu $t0, $t0, 1
+        addiu $t1, $zero, 60
+        bne   $t0, $t1, st_cr_a_m1
+        addu  $t0, $zero, $zero
+st_cr_a_m1:
+        sw    $t0, V_TPR_M($zero)
+        jr    $s7
+
+st_cr_a_s:
+        lw    $t0, V_TPR_S($zero)       # Tăng Giây (0..59)
+        addiu $t0, $t0, 1
+        addiu $t1, $zero, 60
+        bne   $t0, $t1, st_cr_a_s1
+        addu  $t0, $zero, $zero
+st_cr_a_s1:
+        sw    $t0, V_TPR_S($zero)
+        jr    $s7
+
+st_cr_b: # Nút B: Đổi trường xoay vòng (0 <-> 1)
+        addiu $t1, $zero, 1
+        subu  $t4, $t1, $t4             # 1 - t4 (0 <-> 1)
+        sw    $t4, V_SF($zero)
+        addiu $t0, $zero, 0x0c          # 0: Nháy Phút (DISP3, DISP2 = 0x0C)
+        beq   $t4, $zero, st_cr_b_mask
+        addiu $t0, $zero, 0x03          # 1: Nháy Giây (DISP1, DISP0 = 0x03)
+st_cr_b_mask:
+        sw    $t0, REG_BLINK_MASK($zero)
+        jr    $s7
+
+st_cr_sv: # Nút C: Lưu cấu hình s2 của Đấu thủ Phải và thoát về TIMER
+        lw    $t0, V_TPR_M($zero)
+        addiu $t1, $zero, 60
+        mul   $t0, $t0, $t1
+        lw    $t2, V_TPR_S($zero)
+        addu  $t0, $t0, $t2
+        ori   $t1, $zero, 1000
+        mul   $t0, $t0, $t1             # $t0 = preset s2 (ms)
+        sw    $t0, V_CHESS_R_INIT($zero) # Lưu mốc xuất phát s2
+        sw    $t0, V_CHESS_R($zero)     # Nạp lại thời gian Đấu thủ Phải
+        sw    $zero, REG_BLINK_MASK($zero)
+        sw    $zero, V_TPAGE($zero)
+        addiu $t0, $zero, MODE_TIMER
+        sw    $t0, V_MODE($zero)
+        jr    $s7
+
+st_btn_sw:
+        addiu $t1, $zero, 3
+        beq   $a0, $t1, st_sw_sv        # Nút C: Lưu Stopwatch Mode và thoát về STOPWATCH
+        # Nút A hoặc Nút B: Đảo chế độ 0 (9 Laps @ 1 ms) <-> 1 (99 Laps @ 10 ms)
+        lw    $t0, V_TPSW_MODE($zero)
+        addiu $t1, $zero, 1
+        subu  $t0, $t1, $t0             # 1 - t0: đảo 0 <-> 1
+        sw    $t0, V_TPSW_MODE($zero)
+        jr    $s7
+
+st_sw_sv: # Nút C: Lưu cấu hình Stopwatch và thoát về STOPWATCH
+        lw    $t0, V_TPSW_MODE($zero)
+        sw    $t0, V_SW_MODE($zero)
+        sw    $zero, REG_BLINK_MASK($zero)
+        sw    $zero, V_TPAGE($zero)
+        addiu $t0, $zero, MODE_STOPWATCH
         sw    $t0, V_MODE($zero)
         jr    $s7
 
@@ -382,7 +497,14 @@ yd3:    lw    $t0, V_SD($zero)
 # 7. XỬ LÝ VẼ MÀN HÌNH CHẾ ĐỘ SET
 # ----------------------------------------------------------------------------
 dr_st:  lw    $t0, V_TPAGE($zero)
-        bne   $t0, $zero, dr_st_tmr     # Vẽ màn hình cài đặt Timer Preset
+        beq   $t0, $zero, dr_st_rtc
+        addiu $t1, $zero, 1
+        beq   $t0, $t1, dr_st_tmr
+        addiu $t1, $zero, 2
+        beq   $t0, $t1, dr_st_chess_r
+        j     dr_st_sw
+
+dr_st_rtc:
         lw    $t0, V_SF($zero)
         slti  $t1, $t0, 3               # Các trường 0, 1, 2 (Giờ, Phút, Giây)
         beq   $t1, $zero, dst_d
@@ -438,4 +560,54 @@ dst_t_sub:
         sw    $t2, D1($zero)
         mfhi  $t2                       # Hàng đơn vị Giây (D0)
         sw    $t2, D0($zero)
+        j     dr_out
+
+dr_st_chess_r:
+        # Trang 2: SET CHESS s2 Đấu thủ Phải (Hiển thị "C2  MM.SS")
+        addiu $t0, $zero, 0x0c          # Mã chữ 'C'
+        sw    $t0, D7($zero)
+        addiu $t0, $zero, 0x02          # Số '2'
+        sw    $t0, D6($zero)
+        addiu $t0, $zero, CHAR_BLANK
+        sw    $t0, D5($zero)
+        sw    $t0, D4($zero)
+        addiu $t1, $zero, 10
+        # Phút s2 (D3, D2 có dấu chấm)
+        lw    $t0, V_TPR_M($zero)
+        div   $t0, $t1
+        mflo  $t2                       # Hàng chục Phút (D3)
+        sw    $t2, D3($zero)
+        mfhi  $t2                       # Hàng đơn vị Phút (D2)
+        ori   $t2, $t2, CHAR_DP         # Bật dấu chấm sau Phút
+        sw    $t2, D2($zero)
+        # Giây s2 (D1, D0)
+        lw    $t0, V_TPR_S($zero)
+        div   $t0, $t1
+        mflo  $t2                       # Hàng chục Giây (D1)
+        sw    $t2, D1($zero)
+        mfhi  $t2                       # Hàng đơn vị Giây (D0)
+        sw    $t2, D0($zero)
+        j     dr_out
+
+dr_st_sw:
+        # Trang 3: SET STOPWATCH (Hiển thị "SP  09LA" hoặc "SP  99LA")
+        addiu $t0, $zero, 0x16          # Mã chữ 'S' (0x16)
+        sw    $t0, D7($zero)
+        addiu $t0, $zero, 0x14          # Mã chữ 'P' (0x14)
+        sw    $t0, D6($zero)
+        addiu $t0, $zero, CHAR_BLANK
+        sw    $t0, D5($zero)
+        sw    $t0, D4($zero)
+        lw    $t3, V_TPSW_MODE($zero)
+        addu  $t2, $zero, $zero         # Mặc định: '0' cho 9 Laps
+        beq   $t3, $zero, dst_sw_d3
+        addiu $t2, $zero, 9             # '9' cho 99 Laps
+dst_sw_d3:
+        sw    $t2, D3($zero)
+        addiu $t0, $zero, 9             # D2 luôn là '9' (09 hoặc 99)
+        sw    $t0, D2($zero)
+        addiu $t0, $zero, 0x11          # Mã chữ 'L' (0x11)
+        sw    $t0, D1($zero)
+        addiu $t0, $zero, 0x0a          # Mã chữ 'A' (0x0A)
+        sw    $t0, D0($zero)
         j     dr_out

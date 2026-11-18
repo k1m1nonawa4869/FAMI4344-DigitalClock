@@ -127,10 +127,11 @@ tr_b_running:
 
 tr_b_chess_rst:
         # Reset trong Chess Clock: TÁI ĐẤU (REMATCH)!
-        # Khôi phục cả hai bên Trái và Phải về mốc V_CHESS_INIT ban đầu
+        # Khôi phục Trái về s1 (V_CHESS_INIT) và Phải về s2 (V_CHESS_R_INIT)
         lw    $t4, V_CHESS_INIT($zero)
         sw    $t4, V_CHESS_L($zero)
-        sw    $t4, V_CHESS_R($zero)
+        lw    $t5, V_CHESS_R_INIT($zero)
+        sw    $t5, V_CHESS_R($zero)
         sw    $zero, V_CHESS_ACT($zero) # Về trạng thái Chờ (Idle)
         sw    $t4, REG_TMR_VALUE($zero)
         addiu $t0, $zero, 6             # CLR = 1, BEEP_EN = 1, RUN = 0

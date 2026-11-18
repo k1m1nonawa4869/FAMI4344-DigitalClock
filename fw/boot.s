@@ -38,6 +38,7 @@ b_pre:  sw    $t0, V_PRE($zero)         # Lưu vào biến DMEM
         ori   $t0, $t0, 0x93e0          # 300.000 ms = 5 phút cờ chớp FIDE Blitz
         sw    $t0, V_CHESS_INIT($zero)
         sw    $t0, V_CHESS_L($zero)
+        sw    $t0, V_CHESS_R_INIT($zero)
         sw    $t0, V_CHESS_R($zero)
         sw    $zero, V_B_CNT($zero)     # Khởi tạo bộ đếm bấm nhanh phím B = 0
         sw    $zero, V_B_LAST($zero)
