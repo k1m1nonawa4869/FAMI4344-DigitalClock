@@ -5,6 +5,10 @@
 > **Kiến trúc CPU:** MIPS 32-bit Đơn chu kỳ 2 pha (G1) và Pipeline 5 tầng có bộ giải quyết xung đột (G2)  
 > **Nền tảng kiểm thử:** Icarus Verilog (`iverilog`), GTKWave, Co-simulation ISS (Instruction Set Simulator bằng Python)
 
+> [!TIP]
+> **Trải nghiệm Demo Trực Tiếp Không Cần Cài Đặt (Zero-Install Interactive Web Demo):**  
+> Nhấp đúp mở ngay tệp [`demo_clock.html`](demo_clock.html) trong trình duyệt web bất kỳ để tương tác trực quan với mô hình đồng hồ LED 7 thanh thời gian thực, thử nghiệm đầy đủ 5 chế độ hoạt động, âm thanh còi bíp Web Audio và quan sát trực tiếp thanh ghi phần cứng MMIO mà không cần cài đặt bất kỳ công cụ nào!
+
 ---
 
 ## MỤC LỤC
@@ -470,6 +474,7 @@ fw/
 
 | Đường Dẫn Tệp | Vai Trò Chức Năng Kỹ Thuật |
 | :--- | :--- |
+| **`demo_clock.html`** | Ứng dụng Web mô phỏng tương tác trực tiếp 100% thời gian thực (Zero-install, chạy ngay trên trình duyệt) |
 | **`src/alu.v`** | Khối số học & logic ALU 32-bit: cộng, trừ, and, or, xor, nor, so sánh slt/sltu, dịch bit |
 | **`src/muldiv.v`** | Khối nhân 1 chu kỳ và bộ chia phục hồi số dư Restoring Division 32 chu kỳ |
 | **`src/bcd_unit.v`** | Khối chuyển đổi nhị phân sang 8 chữ số BCD phần cứng (Double-Dabble 27 chu kỳ) |
