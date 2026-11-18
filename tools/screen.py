@@ -72,8 +72,12 @@ def text(segs, tab):
     is_ampm = (c[0] in ('A', 'P') and c[1] == 'M') or (c[0] == ' ' and c[1] in ('A', 'P'))
     is_date = dp[1] and dp[3] and not dp[5] and not dp[7] and "".join(c[4:]).isdigit() and len("".join(c[4:])) == 4
     is_time24 = dp[1] and dp[3] and dp[5] and not dp[7] and all(x.isdigit() for x in c)
-    # Chess Clock: Cả 2 đồng hồ đấu thủ đều gồm 4 chữ số độc lập
-    is_chess = not is_ampm and not is_date and not is_time24 and "".join(c[0:4]).isdigit() and "".join(c[4:8]).isdigit() and (dp[1] or dp[3]) and (dp[5] or dp[7])
+    # Stopwatch / Timer single live clock: dp[2] và dp[4] bật
+    is_live_clock = dp[2] and dp[4] and "".join(c[1:]).isdigit()
+    # Chess Clock: Cả 2 đồng hồ đấu thủ đều gồm 4 chữ số độc lập (hoặc dấu trừ)
+    is_left_chess = (c[0] == '-' and "".join(c[1:4]).isdigit()) or "".join(c[0:4]).isdigit()
+    is_right_chess = (c[4] == '-' and "".join(c[5:8]).isdigit()) or "".join(c[4:8]).isdigit()
+    is_chess = not is_ampm and not is_date and not is_time24 and not is_live_clock and is_left_chess and is_right_chess and (dp[1] or dp[3]) and (dp[5] or dp[7])
 
     if is_chess:
         # Bên Trái: nếu có chấm ở dp[1] và không có dp[3] -> MM:SS; nếu dp[3] bật -> SS.cs
@@ -132,18 +136,22 @@ def big(segs):
     n = len(segs)
     is_chess = False
     if n == 8:
-        c = [CHARS[s & 0x7F] if (s & 0x7F) < len(CHARS) else "?" for s in segs]
+        tab = seg_table()
+        chars = [tab.get(s & 0x7F, "?") for s in segs]
         dp = [(s & 0x80) != 0 for s in segs]
-        is_ampm = (c[0] in ('A', 'P') and c[1] == 'M') or (c[0] == ' ' and c[1] in ('A', 'P'))
-        is_date = dp[1] and dp[3] and not dp[5] and not dp[7] and "".join(c[4:]).isdigit() and len("".join(c[4:])) == 4
-        is_time24 = dp[1] and dp[3] and dp[5] and not dp[7] and all(x.isdigit() for x in c)
-        is_chess = not is_ampm and not is_date and not is_time24 and "".join(c[0:4]).isdigit() and "".join(c[4:8]).isdigit() and (dp[1] or dp[3]) and (dp[5] or dp[7])
+        is_ampm = (chars[0] in ('A', 'P') and chars[1] == 'M') or (chars[0] == ' ' and chars[1] in ('A', 'P'))
+        is_date = dp[1] and dp[3] and not dp[5] and not dp[7] and "".join(chars[4:]).isdigit() and len("".join(chars[4:])) == 4
+        is_time24 = dp[1] and dp[3] and dp[5] and not dp[7] and all(x.isdigit() for x in chars)
+        is_live_clock = dp[2] and dp[4] and "".join(chars[1:]).isdigit()
+        is_left_chess = (chars[0] == '-' and "".join(chars[1:4]).isdigit()) or "".join(chars[0:4]).isdigit()
+        is_right_chess = (chars[4] == '-' and "".join(chars[5:8]).isdigit()) or "".join(chars[4:8]).isdigit()
+        is_chess = not is_ampm and not is_date and not is_time24 and not is_live_clock and is_left_chess and is_right_chess and (dp[1] or dp[3]) and (dp[5] or dp[7])
 
     for k, s in enumerate(segs):
-        a, b, c, d, e, f, g = ((s >> i) & 1 for i in range(7))
-        rows[0] += " " + ("_" if a else " ") + "  "
-        rows[1] += ("|" if f else " ") + ("_" if g else " ") + ("|" if b else " ") + " "
-        rows[2] += ("|" if e else " ") + ("_" if d else " ") + ("|" if c else " ") + ("." if s & 0x80 else " ")
+        sa, sb, sc, sd, se, sf, sg = ((s >> i) & 1 for i in range(7))
+        rows[0] += " " + ("_" if sa else " ") + "  "
+        rows[1] += ("|" if sf else " ") + ("_" if sg else " ") + ("|" if sb else " ") + " "
+        rows[2] += ("|" if se else " ") + ("_" if sd else " ") + ("|" if sc else " ") + ("." if s & 0x80 else " ")
         # Chèn vách ngăn | nổi bật giữa Left Clock (D4) và Right Clock (D3)
         if is_chess and k == 3:
             rows[0] += "   |   "

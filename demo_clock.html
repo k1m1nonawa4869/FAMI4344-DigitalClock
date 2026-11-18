@@ -175,8 +175,8 @@
       margin-right: 22px;
     }
 
-    /* Colons Styling (LED 2 chấm chuẩn phần cứng đồng hồ số) */
-    .colon-col {
+    /* Separator Columns (Colons : and Decimal Dots .) */
+    .sep-col, .colon-col {
       display: flex;
       flex-direction: column;
       justify-content: center;
@@ -187,33 +187,56 @@
       user-select: none;
       opacity: 0.15;
       transition: opacity 0.15s ease, transform 0.12s ease;
+      position: relative;
     }
-    .colon-col.lit {
+    .sep-col.lit, .colon-col.lit {
       opacity: 1.0;
     }
-    .colon-col.hidden {
+    .sep-col.hidden, .colon-col.hidden {
       display: none !important;
     }
-    .colon-dot {
+    .sep-dot, .colon-dot {
       width: 7px;
       height: 7px;
       border-radius: 50%;
       background: var(--led-off);
       transition: background 0.08s ease, box-shadow 0.08s ease;
     }
-    .colon-col.theme-red.lit .colon-dot {
+    /* When used as decimal dot . */
+    .sep-col.is-dot, .colon-col.is-dot {
+      justify-content: flex-end;
+      padding-bottom: 5px;
+    }
+    .sep-col.is-dot .sep-dot.top, .colon-col.is-dot .colon-dot.top {
+      display: none !important;
+    }
+    .sep-col.is-dot .sep-dot.bottom, .colon-col.is-dot .colon-dot.bottom {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+    }
+    /* Empty space gap between distinct fields */
+    .sep-col.is-space, .colon-col.is-space {
+      width: 18px;
+    }
+    .sep-col.is-space .sep-dot, .colon-col.is-space .colon-dot {
+      display: none !important;
+    }
+
+    /* Colors for sep-col and colon-col */
+    .sep-col.theme-red.lit .sep-dot, .colon-col.theme-red.lit .colon-dot {
       background: var(--led-on);
       box-shadow: 0 0 6px var(--led-glow), 0 0 12px var(--led-glow);
     }
-    .colon-col.theme-green.lit .colon-dot {
+    .sep-col.theme-green.lit .sep-dot, .colon-col.theme-green.lit .colon-dot {
       background: var(--led-green-on);
       box-shadow: 0 0 6px var(--led-green-glow), 0 0 12px var(--led-green-glow);
     }
-    .colon-col.theme-cyan.lit .colon-dot {
+    .sep-col.theme-cyan.lit .sep-dot, .colon-col.theme-cyan.lit .colon-dot {
       background: var(--led-cyan-on);
       box-shadow: 0 0 6px var(--led-cyan-glow), 0 0 12px var(--led-cyan-glow);
     }
-    .colon-col.theme-yellow.lit .colon-dot {
+    .sep-col.theme-yellow.lit .sep-dot, .colon-col.theme-yellow.lit .colon-dot {
       background: var(--led-yellow-on);
       box-shadow: 0 0 6px var(--led-yellow-glow), 0 0 12px var(--led-yellow-glow);
     }
@@ -267,6 +290,10 @@
     .seg-digit polygon, .seg-digit circle {
       fill: var(--led-off);
       transition: fill 0.04s ease;
+    }
+    /* Ẩn dấu chấm tròn SVG bên trong khung số 7 đoạn để dấu chấm hiển thị bên ngoài trong cột riêng biệt */
+    .seg-digit circle {
+      display: none !important;
     }
     .seg-digit.theme-red polygon, .seg-digit.theme-red circle { fill: var(--led-off); }
     .seg-digit.theme-red polygon.lit, .seg-digit.theme-red circle.lit {
@@ -878,6 +905,13 @@
             <circle id="d7-dp" cx="50" cy="85" r="3.2" />
           </svg>
         </div>
+
+        <!-- Separator 7-6 (Giữa D7 và D6: Dấu : Giờ trong Live Clock H:MM:SS.mmm) -->
+        <div class="sep-col" id="sep-7-6">
+          <div class="sep-dot top" id="sep-7-6-top"></div>
+          <div class="sep-dot bottom" id="sep-7-6-bottom"></div>
+        </div>
+
         <!-- Digit 6 (S6) -->
         <div class="digit-col" id="col-d6">
           <svg class="seg-digit" id="d6" viewBox="0 0 54 88">
@@ -892,10 +926,10 @@
           </svg>
         </div>
 
-        <!-- Colon Left (giữa D6 và D5) -->
-        <div class="colon-col" id="colon-left">
-          <div class="colon-dot top" id="colon-left-top"></div>
-          <div class="colon-dot bottom" id="colon-left-bottom"></div>
+        <!-- Separator 6-5 (Giữa D6 và D5: Dấu : hoặc . cho 24H, Date, Chess L) -->
+        <div class="sep-col" id="sep-6-5">
+          <div class="sep-dot top" id="sep-6-5-top"></div>
+          <div class="sep-dot bottom" id="sep-6-5-bottom"></div>
         </div>
 
         <!-- Digit 5 (S5) -->
@@ -911,6 +945,13 @@
             <circle id="d5-dp" cx="50" cy="85" r="3.2" />
           </svg>
         </div>
+
+        <!-- Separator 5-4 (Giữa D5 và D4: Dấu : Phút/Giây trong Live Clock) -->
+        <div class="sep-col" id="sep-5-4">
+          <div class="sep-dot top" id="sep-5-4-top"></div>
+          <div class="sep-dot bottom" id="sep-5-4-bottom"></div>
+        </div>
+
         <!-- Digit 4 (S4) -->
         <div class="digit-col" id="col-d4">
           <svg class="seg-digit" id="d4" viewBox="0 0 54 88">
@@ -931,10 +972,10 @@
           <div class="chess-divider-bar"></div>
         </div>
 
-        <!-- Colon Center (giữa D4 và D3) -->
-        <div class="colon-col" id="colon-center">
-          <div class="colon-dot top" id="colon-center-top"></div>
-          <div class="colon-dot bottom" id="colon-center-bottom"></div>
+        <!-- Separator 4-3 (Giữa D4 và D3: Dấu : hoặc . cho 12H, 24H, Date, 99L, Set) -->
+        <div class="sep-col" id="sep-4-3">
+          <div class="sep-dot top" id="sep-4-3-top"></div>
+          <div class="sep-dot bottom" id="sep-4-3-bottom"></div>
         </div>
 
         <!-- Digit 3 (S3) -->
@@ -950,6 +991,13 @@
             <circle id="d3-dp" cx="50" cy="85" r="3.2" />
           </svg>
         </div>
+
+        <!-- Separator 3-2 (Giữa D3 và D2: Dấu chấm . Mili-giây trong Live Clock) -->
+        <div class="sep-col" id="sep-3-2">
+          <div class="sep-dot top" id="sep-3-2-top"></div>
+          <div class="sep-dot bottom" id="sep-3-2-bottom"></div>
+        </div>
+
         <!-- Digit 2 (S2) -->
         <div class="digit-col" id="col-d2">
           <svg class="seg-digit" id="d2" viewBox="0 0 54 88">
@@ -964,11 +1012,12 @@
           </svg>
         </div>
 
-        <!-- Colon Right (giữa D2 và D1) -->
-        <div class="colon-col" id="colon-right">
-          <div class="colon-dot top" id="colon-right-top"></div>
-          <div class="colon-dot bottom" id="colon-right-bottom"></div>
+        <!-- Separator 2-1 (Giữa D2 và D1: Dấu : hoặc . cho 12H, 24H, 99L, Chess R, Alarm) -->
+        <div class="sep-col" id="sep-2-1">
+          <div class="sep-dot top" id="sep-2-1-top"></div>
+          <div class="sep-dot bottom" id="sep-2-1-bottom"></div>
         </div>
+
         <!-- Digit 1 (S1) -->
         <div class="digit-col" id="col-d1">
           <svg class="seg-digit" id="d1" viewBox="0 0 54 88">
@@ -1596,93 +1645,179 @@ t = 0 ms
       return pat;
     }
 
-    // Cập nhật khoảng cách phân nhóm chức năng & điều khiển LED hai chấm (Colons)
+    // Cập nhật khoảng cách phân nhóm chức năng & điều khiển các cột ngăn cách (Colons : và Dots .)
     function updateDigitSpacing() {
-      // Xóa các class sep-after cũ
+      // Xóa các class sep-after cũ trên digit-col
       for (let i = 0; i < 8; i++) {
         const col = document.getElementById(`col-d${i}`);
         if (col) col.classList.remove('sep-after');
       }
 
-      // Điều khiển LED hai chấm (Colons) và thanh phân tách cờ vua kép (Chess Divider)
-      const colLeft = document.getElementById('colon-left');
-      const colCenter = document.getElementById('colon-center');
-      const colRight = document.getElementById('colon-right');
       const chessDiv = document.getElementById('chess-divider');
-
-      [colLeft, colCenter, colRight].forEach(c => {
-        if (c) {
-          c.classList.remove('lit', 'hidden', 'theme-red', 'theme-green', 'theme-cyan', 'theme-yellow');
-          c.classList.add(`theme-${STATE.colorTheme}`);
-        }
-      });
       if (chessDiv) chessDiv.classList.remove('active');
 
+      function setSep(id, type, lit = false) {
+        const el = document.getElementById(id);
+        if (!el) return;
+        el.className = `sep-col theme-${STATE.colorTheme}`;
+        if (type === 'none') {
+          el.classList.add('hidden');
+        } else if (type === 'colon') {
+          if (lit) el.classList.add('lit');
+        } else if (type === 'dot') {
+          el.classList.add('is-dot');
+          if (lit) el.classList.add('lit');
+        } else if (type === 'space') {
+          el.classList.add('is-space');
+        }
+      }
+
       const m = STATE.mode;
-      if (m === 0) {
-        if (STATE.timeView === 0) { // TIME 12H AM/PM (AM HH:MM:SS)
-          document.getElementById('col-d6').classList.add('sep-after');
-          if (colCenter) colCenter.classList.add('lit');
-          if (colRight) colRight.classList.add('lit');
-        } else if (STATE.timeView === 1) { // TIME 24H + CS (HH:MM:SS.cc)
-          if (colLeft) colLeft.classList.add('lit');
-          if (colCenter) colCenter.classList.add('lit');
-          document.getElementById('col-d2').classList.add('sep-after');
-        } else if (STATE.timeView === 2) { // DATE DD.MM.YYYY
-          document.getElementById('col-d6').classList.add('sep-after');
-          document.getElementById('col-d4').classList.add('sep-after');
-        } else if (STATE.timeView === 3) { // WEEK & DOW (W03  THU)
-          document.getElementById('col-d5').classList.add('sep-after');
-          document.getElementById('col-d3').classList.add('sep-after');
+      if (m === 0) { // TIME
+        if (STATE.timeView === 0) { // 12H AM/PM (AM  HH:MM:SS)
+          setSep('sep-7-6', 'none');
+          setSep('sep-6-5', 'space');
+          setSep('sep-5-4', 'none');
+          setSep('sep-4-3', 'colon', true);
+          setSep('sep-3-2', 'none');
+          setSep('sep-2-1', 'colon', true);
+        } else if (STATE.timeView === 1) { // 24H + CS (HH:MM:SS.cs)
+          setSep('sep-7-6', 'none');
+          setSep('sep-6-5', 'colon', true);
+          setSep('sep-5-4', 'none');
+          setSep('sep-4-3', 'colon', true);
+          setSep('sep-3-2', 'none');
+          setSep('sep-2-1', 'dot', true);
+        } else if (STATE.timeView === 2) { // DATE (DD.MM.YYYY)
+          setSep('sep-7-6', 'none');
+          setSep('sep-6-5', 'dot', true);
+          setSep('sep-5-4', 'none');
+          setSep('sep-4-3', 'dot', true);
+          setSep('sep-3-2', 'none');
+          setSep('sep-2-1', 'none');
+        } else if (STATE.timeView === 3) { // WEEK & DOW (W03    THU)
+          setSep('sep-7-6', 'none');
+          setSep('sep-6-5', 'none');
+          setSep('sep-5-4', 'space');
+          setSep('sep-4-3', 'space');
+          setSep('sep-3-2', 'space');
+          setSep('sep-2-1', 'none');
         }
       } else if (m === 1) { // ALARM (AL k  HH:MM)
-        document.getElementById('col-d4').classList.add('sep-after');
-        if (colCenter) colCenter.classList.add('lit');
-      } else if (m === 2) { // STPW (Live: H:MM:SS.mmm hoặc Lap)
-        if (STATE.swMode === '99lap') {
-          document.getElementById('col-d6').classList.add('sep-after');
-          if (colCenter) colCenter.classList.add('lit');
+        setSep('sep-7-6', 'none');
+        setSep('sep-6-5', 'none');
+        setSep('sep-5-4', 'none');
+        setSep('sep-4-3', 'space');
+        setSep('sep-3-2', 'none');
+        setSep('sep-2-1', STATE.almChannel < 4 ? 'colon' : 'none', STATE.almChannel < 4);
+      } else if (m === 2) { // STOPWATCH
+        if (STATE.swLapIdx < 0) {
+          // LIVE RUNNING: H : MM : SS . mmm (Có : sau Giờ D7, : giữa MM và SS, . giữa SS và ms)
+          setSep('sep-7-6', 'colon', true);
+          setSep('sep-6-5', 'none');
+          setSep('sep-5-4', 'colon', true);
+          setSep('sep-4-3', 'none');
+          setSep('sep-3-2', 'dot', true);
+          setSep('sep-2-1', 'none');
         } else {
-          if (colLeft) colLeft.classList.add('lit');
-          if (colCenter) colCenter.classList.add('lit');
-          document.getElementById('col-d3').classList.add('sep-after');
+          // REVIEW LAPS:
+          if (STATE.swMode === '99lap') {
+            // 99 Laps: LL  MM:SS.cc
+            setSep('sep-7-6', 'none');
+            setSep('sep-6-5', 'space');
+            setSep('sep-5-4', 'none');
+            setSep('sep-4-3', 'colon', true);
+            setSep('sep-3-2', 'none');
+            setSep('sep-2-1', 'dot', true);
+          } else {
+            // 9 Laps: L  MM:SS.mmm
+            setSep('sep-7-6', 'space');
+            setSep('sep-6-5', 'none');
+            setSep('sep-5-4', 'colon', true);
+            setSep('sep-4-3', 'none');
+            setSep('sep-3-2', 'dot', true);
+            setSep('sep-2-1', 'none');
+          }
         }
-      } else if (m === 3) { // TMR (Single: H:MM:SS.mmm hoặc Chess: L || R)
+      } else if (m === 3) { // TIMER
         if (STATE.tmrSubmode === 'chess') {
           if (chessDiv) chessDiv.classList.add('active');
-          if (colCenter) colCenter.classList.add('hidden');
           const tag = document.getElementById('chess-divider-tag');
           if (tag) {
             tag.textContent = STATE.tmrChessActive === 1 ? '◄ L' : (STATE.tmrChessActive === 2 ? 'R ►' : 'VS');
             tag.style.color = STATE.tmrChessActive === 1 ? '#39ff14' : (STATE.tmrChessActive === 2 ? '#38bdf8' : '#8b949e');
           }
-          if (Math.abs(STATE.tmrChessLRemainMs) >= 60000 && colLeft) colLeft.classList.add('lit');
-          if (Math.abs(STATE.tmrChessRRemainMs) >= 60000 && colRight) colRight.classList.add('lit');
+          setSep('sep-7-6', 'none');
+          const isLMin = Math.abs(STATE.tmrChessLRemainMs) >= 60000;
+          setSep('sep-6-5', isLMin ? 'colon' : 'dot', true);
+          setSep('sep-5-4', 'none');
+          setSep('sep-4-3', 'none');
+          setSep('sep-3-2', 'none');
+          const isRMin = Math.abs(STATE.tmrChessRRemainMs) >= 60000;
+          setSep('sep-2-1', isRMin ? 'colon' : 'dot', true);
         } else {
-          if (colCenter) colCenter.classList.add('lit');
-          if (Math.abs(STATE.tmrRemainMs) >= 3600000 && colLeft) colLeft.classList.add('lit');
-          document.getElementById('col-d3').classList.add('sep-after');
+          const absMs = Math.abs(STATE.tmrRemainMs);
+          if (absMs >= 36000000) { // >= 10h: _HH:MM:SS
+            setSep('sep-7-6', 'none');
+            setSep('sep-6-5', 'none');
+            setSep('sep-5-4', 'colon', true);
+            setSep('sep-4-3', 'none');
+            setSep('sep-3-2', 'colon', true);
+            setSep('sep-2-1', 'none');
+          } else {
+            // LIVE RUNNING < 10h: H : MM : SS . mmm (Có : sau Giờ D7, : giữa MM và SS, . giữa SS và ms)
+            setSep('sep-7-6', 'colon', true);
+            setSep('sep-6-5', 'none');
+            setSep('sep-5-4', 'colon', true);
+            setSep('sep-4-3', 'none');
+            setSep('sep-3-2', 'dot', true);
+            setSep('sep-2-1', 'none');
+          }
         }
       } else if (m === 4) { // SET
-        if (STATE.tPage === 1) { // SET ALARM: AL k  HH.MM
-          document.getElementById('col-d4').classList.add('sep-after');
-          if (colCenter) colCenter.classList.add('lit');
+        if (STATE.tPage === 1) { // SET ALARM: AL k  HH:MM
+          setSep('sep-7-6', 'none');
+          setSep('sep-6-5', 'none');
+          setSep('sep-5-4', 'none');
+          setSep('sep-4-3', 'space');
+          setSep('sep-3-2', 'none');
+          setSep('sep-2-1', 'colon', true);
         } else if (STATE.tPage === 2) { // SET STOPWATCH: 09L  SPL
-          document.getElementById('col-d5').classList.add('sep-after');
-          document.getElementById('col-d3').classList.add('sep-after');
-        } else if (STATE.tPage === 3) { // SET TIMER: t1/t2 HH.MM.SS
-          if (colCenter) colCenter.classList.add('lit');
-          if (colRight) colRight.classList.add('lit');
-        } else if (STATE.tPage === 4) { // SET CHESS C
-          if (colCenter) colCenter.classList.add('lit');
-          if (colRight) colRight.classList.add('lit');
+          setSep('sep-7-6', 'none');
+          setSep('sep-6-5', 'none');
+          setSep('sep-5-4', 'space');
+          setSep('sep-4-3', 'space');
+          setSep('sep-3-2', 'space');
+          setSep('sep-2-1', 'none');
+        } else if (STATE.tPage === 3) { // SET TIMER: t1  HH:MM:SS
+          setSep('sep-7-6', 'none');
+          setSep('sep-6-5', 'space');
+          setSep('sep-5-4', 'none');
+          setSep('sep-4-3', 'colon', true);
+          setSep('sep-3-2', 'none');
+          setSep('sep-2-1', 'colon', true);
+        } else if (STATE.tPage === 4) { // SET CHESS C: C2  MM:SS
+          setSep('sep-7-6', 'none');
+          setSep('sep-6-5', 'space');
+          setSep('sep-5-4', 'none');
+          setSep('sep-4-3', 'none');
+          setSep('sep-3-2', 'none');
+          setSep('sep-2-1', 'colon', true);
         } else { // SET RTC
-          if (STATE.setField < 3) {
-            if (colCenter) colCenter.classList.add('lit');
-            if (colRight) colRight.classList.add('lit');
-          } else {
-            document.getElementById('col-d6').classList.add('sep-after');
-            document.getElementById('col-d4').classList.add('sep-after');
+          if (STATE.setField < 3) { // Time: HH:MM:SS
+            setSep('sep-7-6', 'none');
+            setSep('sep-6-5', 'none');
+            setSep('sep-5-4', 'none');
+            setSep('sep-4-3', 'colon', true);
+            setSep('sep-3-2', 'none');
+            setSep('sep-2-1', 'colon', true);
+          } else { // Date: DD.MM.YYYY
+            setSep('sep-7-6', 'none');
+            setSep('sep-6-5', 'dot', true);
+            setSep('sep-5-4', 'none');
+            setSep('sep-4-3', 'dot', true);
+            setSep('sep-3-2', 'none');
+            setSep('sep-2-1', 'none');
           }
         }
       }
@@ -1974,7 +2109,7 @@ t = 0 ms
           const min = Math.floor((curT % 3600000) / 60000);
           const sec = Math.floor((curT % 60000) / 1000);
           const ms = curT % 1000;
-          chars[7] = hr > 0 ? hr.toString() : ' ';
+          chars[7] = hr.toString();
           chars[6] = Math.floor(min / 10).toString();
           chars[5] = (min % 10).toString();
           dps[5] = true;
@@ -2122,7 +2257,7 @@ t = 0 ms
             const min = Math.floor((absMs % 3600000) / 60000);
             const sec = Math.floor((absMs % 60000) / 1000);
             const ms = absMs % 1000;
-            chars[7] = isNeg ? '-' : (hr > 0 ? hr.toString() : ' ');
+            chars[7] = isNeg ? '-' : hr.toString();
             chars[6] = Math.floor(min / 10).toString();
             chars[5] = (min % 10).toString();
             dps[5] = true;
@@ -2286,8 +2421,7 @@ t = 0 ms
       // 1. Tạo chuỗi ký tự chuẩn: khớp hoàn toàn với tools/screen.py text(segs, tab)
       let textOut = '';
       const isDate = dps[6] && dps[4] && !dps[2] && !dps[0] && !isNaN(chars[3]) && !isNaN(chars[2]) && !isNaN(chars[1]) && !isNaN(chars[0]);
-      const isChess = (STATE.mode === 3 && STATE.tmrSubmode === 'chess') || 
-                      (!isDate && (dps[6] || dps[4]) && (dps[2] || dps[0]));
+      const isChess = (STATE.mode === 3 && STATE.tmrSubmode === 'chess');
 
       if (isChess) {
         // Phân tách trực quan đồng hồ cờ vua kép: Left | Right (Ví dụ: 50:88 | 04:42)
