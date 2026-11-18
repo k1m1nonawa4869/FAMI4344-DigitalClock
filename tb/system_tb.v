@@ -174,18 +174,42 @@ module system_tb;
                   d8(mmm / 100), d8((mmm / 10) % 10), d8(mmm % 10)};
         end
     endfunction
-    function [63:0] fB(input integer v, input integer h12);   // "__HH.MM.SS" / "A_HH.MM.SS" / "P_HH.MM.SS"
+    function [63:0] fB(input integer v, input integer h12);   // "__HH.MM.SS" / "AMHH.MM.SS" / "PMHH.MM.SS"
         integer s, hh, mi, se;
-        reg [7:0] c7;
+        reg [7:0] c7, c6;
         begin
-            s = v / 1000;  hh = s / 3600;  mi = (s % 3600) / 60;  se = s % 60;  c7 = 8'h1A;
+            s = v / 1000;  hh = s / 3600;  mi = (s % 3600) / 60;  se = s % 60;  c7 = 8'h1A; c6 = 8'h1A;
             if (h12 != 0) begin
                 c7 = (hh >= 12) ? 8'h14 : 8'h0A;
+                c6 = 8'h1B; // 'M'
                 hh = hh % 12;
                 if (hh == 0) hh = 12;
             end
-            fB = {c7, 8'h1A, d8(hh / 10), 8'h80 | d8(hh % 10), d8(mi / 10), 8'h80 | d8(mi % 10), d8(se / 10),
+            fB = {c7, c6, d8(hh / 10), 8'h80 | d8(hh % 10), d8(mi / 10), 8'h80 | d8(mi % 10), d8(se / 10),
                   d8(se % 10)};
+        end
+    endfunction
+    function [63:0] fHMS_CC(input integer v); // "HH.MM.SS.cc"
+        integer s, hh, mi, se, cc;
+        begin
+            s = v / 1000; hh = s / 3600; mi = (s % 3600) / 60; se = s % 60;
+            cc = (v % 1000) / 10;
+            fHMS_CC = {d8(hh / 10), 8'h80 | d8(hh % 10), d8(mi / 10), 8'h80 | d8(mi % 10), d8(se / 10), 8'h80 | d8(se % 10), d8(cc / 10), d8(cc % 10)};
+        end
+    endfunction
+    function [63:0] fWEEK_DOW(input integer w, input integer dw); // "W##  DOW"
+        reg [7:0] c2, c1, c0;
+        begin
+            case (dw)
+                0: begin c2 = 8'h16; c1 = 8'h18; c0 = 8'h12; end // S U n
+                1: begin c2 = 8'h1B; c1 = 8'h13; c0 = 8'h12; end // M o n
+                2: begin c2 = 8'h17; c1 = 8'h18; c0 = 8'h0E; end // t U E
+                3: begin c2 = 8'h1C; c1 = 8'h0E; c0 = 8'h0D; end // W E d
+                4: begin c2 = 8'h17; c1 = 8'h10; c0 = 8'h18; end // t H U
+                5: begin c2 = 8'h0F; c1 = 8'h15; c0 = 8'h01; end // F r 1
+                default: begin c2 = 8'h16; c1 = 8'h0A; c0 = 8'h17; end // S A t
+            endcase
+            fWEEK_DOW = {8'h1C, d8(w / 10), d8(w % 10), 8'h1A, 8'h1A, c2, c1, c0};
         end
     endfunction
     function [63:0] fD(input integer v);                 // stopwatch / trị tuyệt đối timer
@@ -211,10 +235,12 @@ module system_tb;
                    d8(m % 60 / 10), d8(m % 60 % 10)};
         end
     endfunction
-    function [63:0] fDT(input integer dd, input integer mo, input integer yy);  // "dd-MM-YY"
+    function [63:0] fDT(input integer dd, input integer mo, input integer yy);  // "DD.MM.YYYY"
+        integer yyyy;
         begin
-            fDT = {d8(dd / 10), d8(dd % 10), 8'h19, d8(mo / 10), d8(mo % 10), 8'h19, d8(yy % 100 / 10),
-                   d8(yy % 10)};
+            yyyy = (yy < 100) ? (2000 + yy) : yy;
+            fDT = {d8(dd / 10), 8'h80 | d8(dd % 10), d8(mo / 10), 8'h80 | d8(mo % 10),
+                   d8(yyyy / 1000), d8((yyyy / 100) % 10), d8((yyyy / 10) % 10), d8(yyyy % 10)};
         end
     endfunction
 
@@ -360,7 +386,7 @@ module system_tb;
             r = $fgets(line, fd);
             r = $sscanf(line, "%d %d %d %d %d | %h %h %h %h %h %h %h %h", v1, v2, v3, v4, v5,
                         e1[63:56], e1[55:48], e1[47:40], e1[39:32], e1[31:24], e1[23:16], e1[15:8], e1[7:0]);
-            if (r == 13) begin checkf(fDT(v4, v3, v2 - 2000), e1, "date trang 2"); k = k + 1; end
+            if (r == 13) begin checkf(fDT(v4, v3, v2), e1, "date trang 2"); k = k + 1; end
         end
         $fclose(fd);
         check(k > 200 && nchk > 300, "doc du vector");
@@ -378,32 +404,28 @@ module system_tb;
         repeat (6) @(negedge clk);
         rst_in = 0;
 
-        // ---- sys_1: qua nửa đêm, ngày +1, thứ đúng, không xé số; 12 h, giây.ms, trang ngày (+ quét date.txt)
+        // ---- sys_1: qua nửa đêm, ngày +1, thứ đúng, không xé số; 4 views (12h AM/PM, 24h+ms, DD.MM.YYYY, Week & DOW), đổi màu LED
         frame;
         k = 0; ok = 1;
         while (!(dut.day == 9772 && dut.ms >= 40) && cyc < 100000) begin
-            if (fr !== fB(86399000, 0) && fr !== fB(0, 0)) begin
+            if (fr !== fB(86399000, 1) && fr !== fB(0, 1)) begin
                 ok = 0;  $display("  khung la qua nua dem: %h", fr);
             end
             k = k + 1;
             frame;
         end
-        check(ok && k >= 1, "moi khung quanh nua dem la 23.59.59 hoac 00.00.00");
-        checkf(fr, fB(0, 0), "sau nua dem hien 00.00.00");
+        check(ok && k >= 1, "moi khung quanh nua dem la 12h AM/PM");
+        checkf(fr, fB(0, 1), "sau nua dem hien AM 12.00.00");
         check(dut.day == 9772 && dut.dow == 6, "ngay 9772 (03/10/2026), thu 7 (dow 6)");
-        press(B_A);                                      // 12 h
-        freeze_rtc_frame;
-        checkf(fr, fB(v5, 1), "12 h: 0 h -> A 12");
         warp(47100000, 9772, 6);                         // 13:05:00.000
         freeze_rtc_frame;
-        checkf(fr, fB(v5, 1), "12 h: 13 h -> P 01");
+        checkf(fr, fB(v5, 1), "12 h: 13 h -> PM 01");
         warp(1000, 9772, 6);                             // về 00:00:01.000
-        press(B_A);
-        press(B_B);                                      // giây.ms
+        press(B_B);                                      // Chuyển sang View 1: 24h + 2-digit ms
         freeze_rtc_frame;
-        checkf(fr, fA(v5 % 3600000), "TIME giay.ms");
-        press(B_B);                                      // trang ngày
-        checkf(fr, fDT(3, 10, 26), "trang ngay 03-10-26");
+        checkf(fr, fHMS_CC(v5), "TIME 24h + 2-digit ms");
+        press(B_B);                                      // Chuyển sang View 2: Ngày DD.MM.YYYY
+        checkf(fr, fDT(3, 10, 2026), "trang ngay 03.10.2026");
         k = 0;
         fd = $fopen("tb/vectors/date.txt", "r");
         while (!$feof(fd)) begin
@@ -419,8 +441,20 @@ module system_tb;
         $fclose(fd);
         check(k == 0, "firmware d2ymd dung moi dong date.txt");
         warp(dut.ms, 9772, 6);
-        press(B_B);                                      // về giờ
-        done(1, "nua dem, ngay/thu, 12h, giay.ms, trang ngay");
+        press(B_B);                                      // Chuyển sang View 3: Week & DOW
+        checkf(fr, fWEEK_DOW(40, 6), "tuan 40 va thu 7: W40  SAt");
+        press(B_B);                                      // Chuyển về View 0: 12h AM/PM
+        freeze_rtc_frame;
+        checkf(fr, fB(v5, 1), "ve lai View 0 (12h AM/PM)");
+        press(B_C);                                      // Chuyển màu LED: Green (1)
+        check(dut.u_cpu.dmem[482] == 1, "Nut C: Mau xanh la (color=1)");
+        press(B_C);                                      // Cyan (2)
+        check(dut.u_cpu.dmem[482] == 2, "Nut C: Mau xanh lam (color=2)");
+        press(B_C);                                      // Yellow (3)
+        check(dut.u_cpu.dmem[482] == 3, "Nut C: Mau vang (color=3)");
+        press(B_C);                                      // Red (0)
+        check(dut.u_cpu.dmem[482] == 0, "Nut C: Quay ve mau do (color=0)");
+        done(1, "nua dem, ngay/thu, 4 views, date.txt, 4-color cycling");
 
         // ---- sys_5: báo thức 07:00 thứ 2 → kêu đúng phút; snooze 5 phút; tự tắt sau 60 s; Chủ nhật không kêu
         press(B_MODE);
@@ -640,7 +674,7 @@ module system_tb;
         for (i = 0; i < 6; i = i + 1) begin
             press(B_B);
             check(dut.u_disp.blink_mask == e1[63 - 8 * i -: 8], "B: BLINK_MASK theo truong");
-            if (i == 2) checkf(fr, fDT(11, 10, 26), "truong ngay: hien 11-10-26");
+            if (i == 2) checkf(fr, fDT(11, 10, 2026), "truong ngay: hien 11.10.2026");
         end
         checkf(fr, fB(1815000, 0), "B x6: ve truong gio");
         k = nchime;
@@ -650,12 +684,12 @@ module system_tb;
         check(dut.ms >= 1815000 && dut.ms < 1815000 + 150, "luu: RTC = 00:30:15");   // nhấn ~55 ms + 50 ms (26/10: +sync → 100 ms sát)
         check(dut.day == 9780 && dut.dow == 0, "luu: ngay giu nguyen 9780, Chu nhat (doi qua lai dung)");
         check(dut.u_disp.blink_mask == 8'h00 && dut.u_cpu.dmem[12'h400 >> 2] == 0, "ve TIME, het nhay");
-        checkf(fr, fB(1815000, 0), "TIME hien 00.30.15");
+        checkf(fr, fB(1815000, 1), "TIME hien AM 12.30.15");
         for (i = 0; i < 4; i = i + 1) press(B_MODE);     // → SET
         for (i = 0; i < 3; i = i + 1) press(B_B);        // → trường ngày
         check(dut.u_disp.blink_mask == 8'hC0, "truong ngay nhay (0xC0)");
         press(B_A);
-        checkf(fr, fDT(12, 10, 26), "ngay 11 + 1 = 12");
+        checkf(fr, fDT(12, 10, 2026), "ngay 11 + 1 = 12");
         press(B_C);
         check(dut.day == 9781 && dut.dow == 1, "luu 12/10/2026 = ngay 9781, thu 2");
         warp(dut.ms, 9892, 0);                           // 31/01/2027 Chủ nhật
@@ -663,7 +697,7 @@ module system_tb;
         for (i = 0; i < 4; i = i + 1) press(B_B);        // → trường tháng
         check(dut.u_disp.blink_mask == 8'h18, "truong thang nhay (0x18)");
         press(B_A);
-        checkf(fr, fDT(28, 2, 27), "31/01 + 1 thang -> 28/02/2027 (kep ngay)");
+        checkf(fr, fDT(28, 2, 2027), "31/01 + 1 thang -> 28/02/2027 (kep ngay)");
         press(B_C);
         check(dut.day == 9920 && dut.dow == 0, "luu 28/02/2027 = ngay 9920, Chu nhat");
         done(6, "SET: nhay, 23+1 -> 0, luu, ngay/thu, kep ngay");

@@ -549,15 +549,16 @@ rs_arm: lw    $t0, REG_RTC_CTRL($zero)
 # ----------------------------------------------------------------------------
 # 4. HÀM TÍNH SỐ NGÀY TRONG THÁNG (MONTH LENGTH CALCULATION)
 # ----------------------------------------------------------------------------
-# Đầu vào: $a0 = Tháng (1..12), $a1 = Năm - 2000 (0..99)
+# Đầu vào: $a0 = Tháng (1..12), $a1 = Năm - 2000 (0..99 hoặc full year)
 # Đầu ra:  $v0 = Số ngày của tháng đó (28, 29, 30 hoặc 31)
 mlen:   addiu $t8, $zero, 2
         bne   $a0, $t8, ml_n            # Không phải tháng 2
-        andi  $t8, $a1, 3               # Năm nhuận: Năm chia hết cho 4 (2 bit thấp = 0)
-        addiu $v0, $zero, 29
-        beq   $t8, $zero, ml_r
-        addiu $v0, $zero, 28
-ml_r:   jr    $ra
+        andi  $t8, $a1, 3
+        bne   $t8, $zero, ml_28         # Không chia hết cho 4 -> 28
+        addiu $v0, $zero, 29            # Chia hết cho 4 -> 29
+        jr    $ra
+ml_28:  addiu $v0, $zero, 28
+        jr    $ra
 ml_n:   sra   $t8, $a0, 3
         addu  $t8, $t8, $a0
         andi  $t8, $t8, 1

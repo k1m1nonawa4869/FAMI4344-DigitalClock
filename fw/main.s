@@ -238,7 +238,10 @@ fb2:    addiu $t1, $zero, 10000
         jal   putd
         sw    $t6, D7($zero)            # Ký tự AM/PM hoặc khoảng trắng
         addiu $t0, $zero, CHAR_BLANK
-        sw    $t0, D6($zero)
+        addiu $t1, $zero, CHAR_BLANK
+        beq   $t6, $t1, fb_d6
+        addiu $t0, $zero, CHAR_M        # Ký tự 'M' cho AM/PM
+fb_d6:  sw    $t0, D6($zero)
         lw    $t0, D4($zero)
         ori   $t0, $t0, CHAR_DP         # Dấu chấm ngăn cách Giờ và Phút
         sw    $t0, D4($zero)

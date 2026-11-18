@@ -118,8 +118,12 @@
         .eqv  V_RBUF            0x560           # Mảng lưu trữ câu nhận được từ UART (32 từ nhớ, 0x560..0x5DC)
 
 # ----------------------------------------------------------------------------
-# 10. BIẾN ĐỒNG HỒ CỜ VUA KÉP & KHÓA AN TOÀN TRIPLE-CLICK (0x7A0 .. 0x7DF)
+# 10. BIẾN ĐỒNG HỒ CỜ VUA KÉP, SMASH ALARM & COLOR (0x780 .. 0x7DF)
 # ----------------------------------------------------------------------------
+        .eqv  V_A_CNT           0x780           # Đếm số lần nhấn liên tiếp của phím A (Smash/Global Off)
+        .eqv  V_A_LAST          0x784           # Mốc ms REG_RTC_MS của lần nhấn phím A gần nhất
+        .eqv  V_COLOR           0x788           # Màu LED hiển thị (0: Đỏ, 1: Xanh lá, 2: Xanh lam nhạt, 3: Vàng)
+        .eqv  V_GLB_ALM_OFF     0x78c           # Cờ tắt toàn bộ báo thức (1: Global Turn Off)
         .eqv  V_TPR_M           0x7a0           # SET: Phút tạm thời cho Clock C / Đấu thủ Phải (0..59)
         .eqv  V_TPR_S           0x7a4           # SET: Giây tạm thời cho Clock C / Đấu thủ Phải (0..59)
         .eqv  V_TPSW_MODE       0x7a8           # SET: Chế độ tạm thời cho Stopwatch (0: 9L, 1: 99L)
@@ -152,4 +156,6 @@
         .eqv  CHAR_DASH         0x19            # Mã ký tự dấu gạch ngang '-' (Đoạn g, 0x19)
         .eqv  CHAR_T            0x17            # Mã ký tự chữ 't' (0x78)
         .eqv  CHAR_R            0x15            # Mã ký tự chữ 'r' (0x50)
+        .eqv  CHAR_M            0x1B            # Mã ký tự chữ 'M' (0x37: a,b,c,e,f)
+        .eqv  CHAR_W            0x1C            # Mã ký tự chữ 'W' (0x1C: c,d,e)
         .eqv  CHAR_DP           0x80            # Mặt nạ bật dấu chấm thập phân (bit 7)

@@ -63,8 +63,10 @@ module char_rom (
             5'h17: seg = 7'h78;  // 't': d,e,f,g sáng (111_1000)
             5'h18: seg = 7'h3E;  // 'U': b,c,d,e,f sáng (011_1110)
             5'h19: seg = 7'h40;  // '-': chỉ đoạn g giữa sáng (100_0000)
+            5'h1B: seg = 7'h37;  // 'M': a,b,c,e,f sáng (011_0111)
+            5'h1C: seg = 7'h1C;  // 'W': c,d,e sáng (001_1100)
             
-            // Nhóm ký tự trống (0x1A .. 0x1F)
+            // Nhóm ký tự trống (0x1A, 0x1D .. 0x1F)
             default: seg = 7'h00; // Tắt toàn bộ các đoạn (khoảng trắng)
         endcase
     end

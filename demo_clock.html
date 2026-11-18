@@ -15,6 +15,12 @@
       --led-green-off: rgba(57, 255, 20, 0.05);
       --led-green-on: #39ff14;
       --led-green-glow: rgba(57, 255, 20, 0.65);
+      --led-cyan-off: rgba(56, 189, 248, 0.05);
+      --led-cyan-on: #38bdf8;
+      --led-cyan-glow: rgba(56, 189, 248, 0.65);
+      --led-yellow-off: rgba(250, 204, 21, 0.05);
+      --led-yellow-on: #facc15;
+      --led-yellow-glow: rgba(250, 204, 21, 0.65);
       --accent: #58a6ff;
       --accent-glow: rgba(88, 166, 255, 0.35);
       --text: #c9d1d9;
@@ -181,25 +187,30 @@
       fill: var(--led-off);
       transition: fill 0.04s ease;
     }
-    .seg-digit.theme-green polygon, .seg-digit.theme-green circle {
-      fill: var(--led-green-off);
-    }
-    .seg-digit polygon.lit {
+    .seg-digit.theme-red polygon, .seg-digit.theme-red circle { fill: var(--led-off); }
+    .seg-digit.theme-red polygon.lit, .seg-digit.theme-red circle.lit {
       fill: var(--led-on);
       filter: drop-shadow(0 0 5px var(--led-glow));
     }
-    .seg-digit.theme-green polygon.lit {
+    .seg-digit.theme-green polygon, .seg-digit.theme-green circle { fill: var(--led-green-off); }
+    .seg-digit.theme-green polygon.lit, .seg-digit.theme-green circle.lit {
       fill: var(--led-green-on);
       filter: drop-shadow(0 0 5px var(--led-green-glow));
     }
-    .seg-digit circle.lit {
-      fill: var(--led-on);
-      filter: drop-shadow(0 0 5px var(--led-glow));
+    .seg-digit.theme-cyan polygon, .seg-digit.theme-cyan circle { fill: var(--led-cyan-off); }
+    .seg-digit.theme-cyan polygon.lit, .seg-digit.theme-cyan circle.lit {
+      fill: var(--led-cyan-on);
+      filter: drop-shadow(0 0 5px var(--led-cyan-glow));
     }
-    .seg-digit.theme-green circle.lit {
-      fill: var(--led-green-on);
-      filter: drop-shadow(0 0 5px var(--led-green-glow));
+    .seg-digit.theme-yellow polygon, .seg-digit.theme-yellow circle { fill: var(--led-yellow-off); }
+    .seg-digit.theme-yellow polygon.lit, .seg-digit.theme-yellow circle.lit {
+      fill: var(--led-yellow-on);
+      filter: drop-shadow(0 0 5px var(--led-yellow-glow));
     }
+    #term-big-content.theme-red { color: #ff2a2a; }
+    #term-big-content.theme-green { color: #39ff14; }
+    #term-big-content.theme-cyan { color: #38bdf8; }
+    #term-big-content.theme-yellow { color: #facc15; }
 
     /* Brightness level multiplier */
     .dim-15 { opacity: 1.0; }
@@ -1031,6 +1042,8 @@
         <span>Màu LED:</span>
         <button class="pill-btn" onclick="setTheme('red', this)">Ruby Đỏ</button>
         <button class="pill-btn active" onclick="setTheme('green', this)">Emerald Xanh</button>
+        <button class="pill-btn" onclick="setTheme('cyan', this)">Cyan Lam Nhạt</button>
+        <button class="pill-btn" onclick="setTheme('yellow', this)">Hổ Phách Vàng</button>
       </div>
 
       <div class="sim-group">
@@ -1139,7 +1152,8 @@ t = 0 ms
       '5': 0x6D, '6': 0x7D, '7': 0x07, '8': 0x7F, '9': 0x6F,
       'A': 0x77, 'b': 0x7C, 'C': 0x39, 'd': 0x5E, 'E': 0x79, 'F': 0x71,
       'H': 0x76, 'L': 0x38, 'n': 0x54, 'o': 0x5C, 'P': 0x73, 'r': 0x50,
-      'S': 0x6D, 't': 0x78, 'U': 0x3E, '-': 0x40, ' ': 0x00
+      'S': 0x6D, 't': 0x78, 'U': 0x3E, '-': 0x40, ' ': 0x00,
+      'M': 0x37, 'W': 0x1C
     };
 
     // 2. Trạng thái phần cứng WatchChip (Hardware Registers & MMIO)
@@ -1153,8 +1167,12 @@ t = 0 ms
       mode: 0,
 
       // Cấu hình chế độ TIME
-      timeView: 0, // 0: HH.MM.SS, 1: MM.SS.mmm, 2: DD-MM-YY
-      is24h: true,
+      timeView: 0, // 0: 12h AM/PM, 1: 24h+ms (0.01s), 2: Date DD.MM.YYYY, 3: Week & DOW W## DOW
+      is24h: false,
+      colorTheme: 'green',
+      aClickCnt: 0,
+      aLastClickMs: 0,
+      globalAlarmOff: false,
       brightness: 15, // 15, 9, 3
 
       // Stopwatch (TASK-18: Hỗ trợ 2 chế độ 9 Lap 1-ms & 99 Lap 10-ms)
@@ -1224,10 +1242,12 @@ t = 0 ms
       lastLogSec: -1
     };
 
-    // Bảng tính số ngày trong tháng (bù năm nhuận chia hết cho 4)
-    function getMonthLength(m, yOffset) {
+    // Bảng tính số ngày trong tháng (bù năm nhuận Gregory chính xác)
+    function getMonthLength(m, yr) {
       if (m === 2) {
-        return (yOffset % 4 === 0) ? 29 : 28;
+        const fullYr = 2000 + yr;
+        const isLeap = (fullYr % 4 === 0) && (fullYr % 100 !== 0 || fullYr % 400 === 0);
+        return isLeap ? 29 : 28;
       }
       return 30 + ((m + Math.floor(m / 8)) % 2);
     }
@@ -1235,7 +1255,7 @@ t = 0 ms
     // Chuyển đổi số ngày từ 01/01/2000 sang Ngày, Tháng, Năm (d2ymd trong fw/set_mode.s)
     function daysToDate(d) {
       let a0 = d;
-      if (a0 >= 36584) a0 += 1; // bù 2100
+      if (a0 >= 36584) a0 += 1; // bù 2100 (2100 không nhuận: ngày thứ 36525+25)
       const cycle4 = Math.floor(a0 / 1461);
       let rem = a0 % 1461;
       let yr = cycle4 * 4;
@@ -1273,6 +1293,32 @@ t = 0 ms
       }
       d += (day - 1);
       return d;
+    }
+
+    // Tính Số tuần ISO 8601 và Thứ trong tuần (DOW)
+    function getIsoWeekAndDow(days) {
+      // Ngày 01/01/2000 là Thứ 7 (dow = 6)
+      // 0 = CN, 1 = T2, 2 = T3, 3 = T4, 4 = T5, 5 = T6, 6 = T7
+      const dow = (days + 6) % 7;
+      // ISO Day-of-Week: 1 = T2 (Mon) ... 7 = CN (Sun)
+      const isoDow = (dow === 0) ? 7 : dow;
+      // Ngày Thứ 5 của tuần chứa ngày hiện tại: d_thurs = days + (4 - isoDow)
+      const thursDays = days + (4 - isoDow);
+      const thursDate = daysToDate(thursDays);
+      const jan1Days = dateToDays(1, 1, thursDate.yr);
+      const weekNum = 1 + Math.floor((thursDays - jan1Days) / 7);
+
+      // Ký tự hiển thị 3 chữ cái đại diện DOW trên 7 thanh (khớp chính xác dow_tab trong fw/time_mode.s)
+      const dowChars = [
+        ['S', 'U', 'n'], // 0: SUN
+        ['M', 'o', 'n'], // 1: MON
+        ['t', 'U', 'E'], // 2: TUE
+        ['W', 'E', 'd'], // 3: WED
+        ['t', 'H', 'U'], // 4: THU
+        ['F', 'r', '1'], // 5: FRI
+        ['S', 'A', 't']  // 6: SAT
+      ];
+      return { weekNum, dow, chars: dowChars[dow] };
     }
 
     // ============================================================================
@@ -1357,14 +1403,22 @@ t = 0 ms
       }
 
       const m = STATE.mode;
-      if (m === 0 && STATE.timeView === 0) { // TIME HH.MM.SS
-        document.getElementById('col-d6').classList.add('sep-after');
-        document.getElementById('col-d4').classList.add('sep-after');
-        document.getElementById('col-d2').classList.add('sep-after');
-      } else if (m === 0 && STATE.timeView === 1) { // TIME MM.SS.mmm
-        document.getElementById('col-d7').classList.add('sep-after');
-        document.getElementById('col-d5').classList.add('sep-after');
-        document.getElementById('col-d3').classList.add('sep-after');
+      if (m === 0) {
+        if (STATE.timeView === 0) { // TIME 12H AM/PM (AM 10.25.30)
+          document.getElementById('col-d6').classList.add('sep-after');
+          document.getElementById('col-d4').classList.add('sep-after');
+          document.getElementById('col-d2').classList.add('sep-after');
+        } else if (STATE.timeView === 1) { // TIME 24H + CS (HH.MM.SS.cc)
+          document.getElementById('col-d6').classList.add('sep-after');
+          document.getElementById('col-d4').classList.add('sep-after');
+          document.getElementById('col-d2').classList.add('sep-after');
+        } else if (STATE.timeView === 2) { // DATE DD.MM.YYYY
+          document.getElementById('col-d6').classList.add('sep-after');
+          document.getElementById('col-d4').classList.add('sep-after');
+        } else if (STATE.timeView === 3) { // WEEK & DOW (W03  THU)
+          document.getElementById('col-d5').classList.add('sep-after');
+          document.getElementById('col-d3').classList.add('sep-after');
+        }
       } else if (m === 1) { // ALARM
         document.getElementById('col-d4').classList.add('sep-after');
         document.getElementById('col-d2').classList.add('sep-after');
@@ -1390,11 +1444,6 @@ t = 0 ms
           document.getElementById('col-d5').classList.add('sep-after');
           document.getElementById('col-d3').classList.add('sep-after');
         }
-      } else if (m === 0 && STATE.timeView === 2) { // DATE DD-MM-YY
-        document.getElementById('col-d6').classList.add('sep-after');
-        document.getElementById('col-d5').classList.add('sep-after');
-        document.getElementById('col-d3').classList.add('sep-after');
-        document.getElementById('col-d2').classList.add('sep-after');
       } else if (m === 4) { // SET
         if (STATE.tPage === 1) { // SET ALARM: AL k  HH.MM
           document.getElementById('col-d4').classList.add('sep-after');
@@ -1413,9 +1462,7 @@ t = 0 ms
             document.getElementById('col-d2').classList.add('sep-after');
           } else {
             document.getElementById('col-d6').classList.add('sep-after');
-            document.getElementById('col-d5').classList.add('sep-after');
-            document.getElementById('col-d3').classList.add('sep-after');
-            document.getElementById('col-d2').classList.add('sep-after');
+            document.getElementById('col-d4').classList.add('sep-after');
           }
         }
       }
@@ -1428,27 +1475,34 @@ t = 0 ms
       let html = '';
 
       if (m === 0) { // TIME
-        if (STATE.timeView === 0) { // HH.MM.SS
+        if (STATE.timeView === 0) { // 12H AM/PM
+          const totalSec = Math.floor(STATE.msOfDay / 1000);
+          const hr = Math.floor(totalSec / 3600) % 24;
+          const ampm = hr >= 12 ? 'P' : 'A';
           html = `
-            <div class="sub-label-cell" style="width:122px; color:#58a6ff; margin-right:22px;">[S7..S6: ${STATE.is24h ? '24H' : '12H'}]</div>
+            <div class="sub-label-cell" style="width:122px; color:#58a6ff; margin-right:22px;">[S7..S6: ${ampm}M]</div>
             <div class="sub-label-cell" style="width:122px; margin-right:22px;">[S5..S4: GIỜ (HH)]</div>
             <div class="sub-label-cell" style="width:122px; margin-right:22px;">[S3..S2: PHÚT (MM)]</div>
             <div class="sub-label-cell" style="width:122px;">[S1..S0: GIÂY (SS)]</div>
           `;
-        } else if (STATE.timeView === 1) { // MM.SS.mmm
+        } else if (STATE.timeView === 1) { // 24H with 2-digit ms (0.01s)
           html = `
-            <div class="sub-label-cell" style="width:54px; margin-right:22px;">[S7]</div>
-            <div class="sub-label-cell" style="width:122px; margin-right:22px;">[S6..S5: PHÚT]</div>
-            <div class="sub-label-cell" style="width:122px; margin-right:22px;">[S4..S3: GIÂY]</div>
-            <div class="sub-label-cell" style="width:190px; color:#39ff14;">[S2..S0: MILI-GIÂY (ms)]</div>
+            <div class="sub-label-cell" style="width:122px; margin-right:22px;">[S7..S6: GIỜ (HH)]</div>
+            <div class="sub-label-cell" style="width:122px; margin-right:22px;">[S5..S4: PHÚT (MM)]</div>
+            <div class="sub-label-cell" style="width:122px; margin-right:22px;">[S3..S2: GIÂY (SS)]</div>
+            <div class="sub-label-cell" style="width:122px; color:#39ff14;">[S1..S0: CENTI (cc)]</div>
           `;
-        } else { // DD-MM-YY
+        } else if (STATE.timeView === 2) { // DATE DD.MM.YYYY
           html = `
-            <div class="sub-label-cell" style="width:122px; margin-right:22px;">[S7..S6: NGÀY]</div>
-            <div class="sub-label-cell" style="width:54px; margin-right:22px;">[-]</div>
-            <div class="sub-label-cell" style="width:122px; margin-right:22px;">[S4..S3: THÁNG]</div>
-            <div class="sub-label-cell" style="width:54px; margin-right:22px;">[-]</div>
-            <div class="sub-label-cell" style="width:122px;">[S1..S0: NĂM]</div>
+            <div class="sub-label-cell" style="width:122px; margin-right:22px;">[S7..S6: NGÀY (DD)]</div>
+            <div class="sub-label-cell" style="width:122px; margin-right:22px;">[S5..S4: THÁNG (MM)]</div>
+            <div class="sub-label-cell" style="width:258px; color:#58a6ff;">[S3..S0: NĂM (YYYY)]</div>
+          `;
+        } else { // WEEK & DOW (W##  DOW)
+          html = `
+            <div class="sub-label-cell" style="width:190px; color:#e3b341; margin-right:22px;">[S7..S5: TUẦN (W##)]</div>
+            <div class="sub-label-cell" style="width:122px; margin-right:22px;">[S4..S3: KHOẢNG CÁCH]</div>
+            <div class="sub-label-cell" style="width:190px; color:#39ff14;">[S2..S0: THỨ (DOW)]</div>
           `;
         }
       } else if (m === 1) { // ALARM
@@ -1560,11 +1614,9 @@ t = 0 ms
             `;
           } else {
             html = `
-              <div class="sub-label-cell" style="width:122px; margin-right:22px; ${STATE.setField === 3 ? 'color:#58a6ff;' : ''}">[S7..S6: NGÀY]</div>
-              <div class="sub-label-cell" style="width:54px; margin-right:22px;">[-]</div>
-              <div class="sub-label-cell" style="width:122px; margin-right:22px; ${STATE.setField === 4 ? 'color:#58a6ff;' : ''}">[S4..S3: THÁNG]</div>
-              <div class="sub-label-cell" style="width:54px; margin-right:22px;">[-]</div>
-              <div class="sub-label-cell" style="width:122px; ${STATE.setField === 5 ? 'color:#58a6ff;' : ''}">[S1..S0: NĂM]</div>
+              <div class="sub-label-cell" style="width:122px; margin-right:22px; ${STATE.setField === 3 ? 'color:#58a6ff;' : ''}">[S7..S6: NGÀY (DD)]</div>
+              <div class="sub-label-cell" style="width:122px; margin-right:22px; ${STATE.setField === 4 ? 'color:#58a6ff;' : ''}">[S5..S4: THÁNG (MM)]</div>
+              <div class="sub-label-cell" style="width:258px; ${STATE.setField === 5 ? 'color:#58a6ff;' : ''}">[S3..S0: NĂM (YYYY)]</div>
             `;
           }
         }
@@ -1585,52 +1637,64 @@ t = 0 ms
 
       // 1. CHẾ ĐỘ 0: TIME
       if (m === 0) {
-        if (STATE.timeView === 0) { // HH.MM.SS (fmtB)
+        if (STATE.timeView === 0) { // View 0: 12H AM/PM (AM 10.25.30 / PM 11.45.12)
           const totalSec = Math.floor(STATE.msOfDay / 1000);
           let hr = Math.floor(totalSec / 3600) % 24;
           const min = Math.floor((totalSec % 3600) / 60);
           const sec = totalSec % 60;
-          let ampm = ' ';
-          if (!STATE.is24h) {
-            ampm = hr >= 12 ? 'P' : 'A';
-            hr = hr % 12;
-            if (hr === 0) hr = 12;
-          }
-          chars[7] = STATE.is24h ? ' ' : ampm;
-          chars[6] = ' ';
-          chars[5] = Math.floor(hr / 10).toString();
-          chars[4] = (hr % 10).toString();
+          const ampm = hr >= 12 ? 'P' : 'A';
+          let hr12 = hr % 12;
+          if (hr12 === 0) hr12 = 12;
+          chars[7] = ampm;
+          chars[6] = 'M';
+          chars[5] = Math.floor(hr12 / 10).toString();
+          chars[4] = (hr12 % 10).toString();
           dps[4] = true; // Dấu chấm sau Giờ
           chars[3] = Math.floor(min / 10).toString();
           chars[2] = (min % 10).toString();
           dps[2] = true; // Dấu chấm sau Phút
           chars[1] = Math.floor(sec / 10).toString();
           chars[0] = (sec % 10).toString();
-        } else if (STATE.timeView === 1) { // MM.SS.mmm (fmtA)
-          const remMs = Math.floor(STATE.msOfDay % 3600000);
-          const min = Math.floor(remMs / 60000);
-          const sec = Math.floor((remMs % 60000) / 1000);
-          const ms = remMs % 1000;
-          chars[7] = ' ';
-          chars[6] = Math.floor(min / 10).toString();
-          chars[5] = (min % 10).toString();
-          dps[5] = true;
-          chars[4] = Math.floor(sec / 10).toString();
-          chars[3] = (sec % 10).toString();
-          dps[3] = true;
-          chars[2] = Math.floor(ms / 100).toString();
-          chars[1] = Math.floor((ms % 100) / 10).toString();
-          chars[0] = Math.floor(ms % 10).toString(); // <--- Đã sửa Math.floor!
-        } else { // DD-MM-YY (dt_dy)
+        } else if (STATE.timeView === 1) { // View 1: 24H + CS (0.01s) (HH.MM.SS.cc)
+          const totalSec = Math.floor(STATE.msOfDay / 1000);
+          const hr = Math.floor(totalSec / 3600) % 24;
+          const min = Math.floor((totalSec % 3600) / 60);
+          const sec = totalSec % 60;
+          const cc = Math.floor((STATE.msOfDay % 1000) / 10);
+          chars[7] = Math.floor(hr / 10).toString();
+          chars[6] = (hr % 10).toString();
+          dps[6] = true; // Dấu chấm sau Giờ
+          chars[5] = Math.floor(min / 10).toString();
+          chars[4] = (min % 10).toString();
+          dps[4] = true; // Dấu chấm sau Phút
+          chars[3] = Math.floor(sec / 10).toString();
+          chars[2] = (sec % 10).toString();
+          dps[2] = true; // Dấu chấm sau Giây
+          chars[1] = Math.floor(cc / 10).toString();
+          chars[0] = (cc % 10).toString();
+        } else if (STATE.timeView === 2) { // View 2: DATE DD.MM.YYYY (29.02.2024, không gạch ngang)
           const dt = daysToDate(STATE.days);
+          const fullYear = 2000 + dt.yr;
           chars[7] = Math.floor(dt.day / 10).toString();
           chars[6] = (dt.day % 10).toString();
-          chars[5] = '-';
-          chars[4] = Math.floor(dt.mon / 10).toString();
-          chars[3] = (dt.mon % 10).toString();
-          chars[2] = '-';
-          chars[1] = Math.floor(dt.yr / 10).toString();
-          chars[0] = (dt.yr % 10).toString();
+          dps[6] = true; // Dấu chấm sau Ngày
+          chars[5] = Math.floor(dt.mon / 10).toString();
+          chars[4] = (dt.mon % 10).toString();
+          dps[4] = true; // Dấu chấm sau Tháng
+          chars[3] = Math.floor(fullYear / 1000).toString();
+          chars[2] = (Math.floor(fullYear / 100) % 10).toString();
+          chars[1] = (Math.floor(fullYear / 10) % 10).toString();
+          chars[0] = (fullYear % 10).toString();
+        } else { // View 3: Week & DOW (W03  THU)
+          const iso = getIsoWeekAndDow(STATE.days);
+          chars[7] = 'W';
+          chars[6] = Math.floor(iso.weekNum / 10).toString();
+          chars[5] = (iso.weekNum % 10).toString();
+          chars[4] = ' ';
+          chars[3] = ' ';
+          chars[2] = iso.chars[0];
+          chars[1] = iso.chars[1];
+          chars[0] = iso.chars[2];
         }
       }
 
@@ -1887,21 +1951,24 @@ t = 0 ms
               else if (sf === 1) { chars[3] = ' '; chars[2] = ' '; }
               else if (sf === 2) { chars[1] = ' '; chars[0] = ' '; }
             }
-          } else { // Setting Date: DD-MM-YY
+          } else { // Setting Date: DD.MM.YYYY
             const sv = STATE.setVals;
+            const fullYear = 2000 + sv.yr;
             chars[7] = Math.floor(sv.day / 10).toString();
             chars[6] = (sv.day % 10).toString();
-            chars[5] = '-';
-            chars[4] = Math.floor(sv.mon / 10).toString();
-            chars[3] = (sv.mon % 10).toString();
-            chars[2] = '-';
-            chars[1] = Math.floor(sv.yr / 10).toString();
-            chars[0] = (sv.yr % 10).toString();
+            dps[6] = true; // Dấu chấm sau Ngày
+            chars[5] = Math.floor(sv.mon / 10).toString();
+            chars[4] = (sv.mon % 10).toString();
+            dps[4] = true; // Dấu chấm sau Tháng
+            chars[3] = Math.floor(fullYear / 1000).toString();
+            chars[2] = (Math.floor(fullYear / 100) % 10).toString();
+            chars[1] = (Math.floor(fullYear / 10) % 10).toString();
+            chars[0] = (fullYear % 10).toString();
 
             if (!STATE.blinkPhase) {
-              if (sf === 3) { chars[7] = ' '; chars[6] = ' '; }
-              else if (sf === 4) { chars[4] = ' '; chars[3] = ' '; }
-              else if (sf === 5) { chars[1] = ' '; chars[0] = ' '; }
+              if (sf === 3) { chars[7] = ' '; chars[6] = ' '; } // Nháy Ngày
+              else if (sf === 4) { chars[5] = ' '; chars[4] = ' '; } // Nháy Tháng
+              else if (sf === 5) { chars[3] = ' '; chars[2] = ' '; chars[1] = ' '; chars[0] = ' '; } // Nháy Năm
             }
           }
         }
@@ -2193,9 +2260,27 @@ t = 0 ms
       playClick();
       animateBtn('btn-a');
       const m = STATE.mode;
-      if (m === 0) { // TIME: Đảo 12h / 24h
-        STATE.is24h = !STATE.is24h;
-        document.getElementById('flag-fmt').textContent = (STATE.is24h ? '24H' : '12H') + ' | THỜI GIAN THẬT';
+      if (m === 0) { // TIME
+        // 1. Tắt còi báo thức ngay lập tức (Alarm Smash)
+        if (STATE.alarmSounding) {
+          STATE.alarmSounding = false;
+          appendStreamLog(`[ALARM SMASH] Phím A: Đã đập tắt còi báo thức ngay lập tức!`);
+        }
+        // 2. Safety Triple-Click (<= 600 ms): Global Alarm Off
+        const now = STATE.simTimeMs;
+        if (now - STATE.aLastClickMs <= 600) {
+          STATE.aClickCnt++;
+        } else {
+          STATE.aClickCnt = 1;
+        }
+        STATE.aLastClickMs = now;
+        if (STATE.aClickCnt >= 3) {
+          STATE.aClickCnt = 0;
+          STATE.globalAlarmOff = true;
+          STATE.alarms.forEach(al => al.en = false);
+          STATE.hourlyChime = false;
+          appendStreamLog(`[GLOBAL ALARM OFF] Nhấn A 3 lần liên tiếp: ĐÃ TẮT TOÀN BỘ BÁO THỨC AL1..AL4 VÀ HOURLY CHIME!`);
+        }
       } else if (m === 1) { // ALM
         if (STATE.almEditing === 1) { // Tăng giờ
           STATE.almEditH = (STATE.almEditH + 1) % 24;
@@ -2309,8 +2394,13 @@ t = 0 ms
       playClick();
       animateBtn('btn-b');
       const m = STATE.mode;
-      if (m === 0) { // TIME: Đổi trang hiển thị (0: HH.MM.SS, 1: MM.SS.mmm, 2: DD-MM-YY)
-        STATE.timeView = (STATE.timeView + 1) % 3;
+      if (m === 0) { // TIME: Chuyển 4 giao diện (0: 12h AM/PM, 1: 24h+ms, 2: Ngày DD.MM.YYYY, 3: Tuần & Thứ W## DOW)
+        STATE.timeView = (STATE.timeView + 1) % 4;
+        updateDigitSpacing();
+        updateSubLabels();
+        const viewNames = ['12H AM/PM', '24H + CS (0.01s)', 'NGÀY THÁNG NĂM (DD.MM.YYYY)', 'SỐ TUẦN & THỨ (W## DOW)'];
+        document.getElementById('flag-fmt').textContent = `${viewNames[STATE.timeView]} | THỜI GIAN THẬT`;
+        appendStreamLog(`[TIME VIEW] Phím B: Chuyển giao diện -> ${viewNames[STATE.timeView]}`);
       } else if (m === 1) { // ALM
         if (STATE.almEditing > 0) { // Chuyển đổi giữa sửa Giờ (1) <-> Phút (2)
           STATE.almEditing = STATE.almEditing === 1 ? 2 : 1;
@@ -2426,13 +2516,12 @@ t = 0 ms
       playClick();
       animateBtn('btn-c');
       const m = STATE.mode;
-      if (m === 0) { // TIME: Điều chỉnh độ sáng LED (15 -> 9 -> 3 -> 15)
-        if (STATE.brightness === 15) STATE.brightness = 9;
-        else if (STATE.brightness === 9) STATE.brightness = 3;
-        else STATE.brightness = 15;
-
-        const dCont = document.getElementById('digits-container');
-        dCont.className = `digits-row dim-${STATE.brightness}`;
+      if (m === 0) { // TIME: Đổi màu LED 4 màu (Đỏ -> Xanh lá -> Xanh lam nhạt -> Vàng)
+        const themes = ['red', 'green', 'cyan', 'yellow'];
+        const curIdx = themes.indexOf(STATE.colorTheme);
+        const nextTheme = themes[(curIdx + 1) % 4];
+        setTheme(nextTheme);
+        appendStreamLog(`[LED THEME] Phím C: Đã chuyển màu hiển thị LED -> ${nextTheme.toUpperCase()}`);
       } else if (m === 1) { // ALM
         if (STATE.alarmSounding) { // Snooze +5 phút
           STATE.alarmSounding = false;
@@ -2984,12 +3073,23 @@ t = 0 ms
     }
 
     function setTheme(color, btn) {
-      const isGreen = color === 'green';
+      STATE.colorTheme = color;
+      const themes = ['red', 'green', 'cyan', 'yellow'];
       document.querySelectorAll('.seg-digit').forEach(svg => {
-        svg.classList.toggle('theme-green', isGreen);
+        themes.forEach(t => svg.classList.remove('theme-' + t));
+        svg.classList.add('theme-' + color);
       });
-      btn.parentElement.querySelectorAll('.pill-btn').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
+      const bigEl = document.getElementById('term-big-content');
+      if (bigEl) {
+        themes.forEach(t => bigEl.classList.remove('theme-' + t));
+        bigEl.classList.add('theme-' + color);
+      }
+      const btns = document.querySelectorAll('.sim-group:nth-child(2) .pill-btn');
+      if (btns && btns.length >= 4) {
+        btns.forEach(b => b.classList.remove('active'));
+        const idx = themes.indexOf(color);
+        if (idx >= 0 && btns[idx]) btns[idx].classList.add('active');
+      }
       playClick();
     }
 
