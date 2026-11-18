@@ -32,6 +32,15 @@ b_pre:  sw    $t0, V_PRE($zero)         # Lưu vào biến DMEM
         sw    $t0, V_TMR_SNAP($zero)    # Khởi tạo snapshot với mốc timer ban đầu
         sw    $zero, V_TPAUSED($zero)   # Xóa cờ tạm dừng
         sw    $zero, V_SW_MODE($zero)   # Mặc định chế độ Stopwatch 9 Laps @ 1 ms
+        sw    $zero, V_TMR_SUBMODE($zero) # Mặc định chế độ đếm lùi Đơn (Single Timer)
+        sw    $zero, V_CHESS_ACT($zero) # Trạng thái cờ vua mặc định: Dừng/Chờ
+        lui   $t0, 4
+        ori   $t0, $t0, 0x93e0          # 300.000 ms = 5 phút cờ chớp FIDE Blitz
+        sw    $t0, V_CHESS_INIT($zero)
+        sw    $t0, V_CHESS_L($zero)
+        sw    $t0, V_CHESS_R($zero)
+        sw    $zero, V_B_CNT($zero)     # Khởi tạo bộ đếm bấm nhanh phím B = 0
+        sw    $zero, V_B_LAST($zero)
         addiu $t0, $zero, TMR_BIT_BEEP_EN
         sw    $t0, REG_TMR_CTRL($zero)  # Cho phép tự kích còi khi đếm về 0
         lui   $t0, 0x3e00               # Báo thức 1: 07:00 (420 phút), T2 -> T6, tắt

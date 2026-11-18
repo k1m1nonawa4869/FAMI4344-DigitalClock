@@ -495,11 +495,16 @@ module system_tb;
         checkf(fr, fT(-2147483648), "-2^31 -> -_--.--.-- (so truoc khi lay tri tuyet doi)");
         press(B_B);                                      // nút đầu chỉ tắt chuông
         check(dut.u_beep.pat == 17'd0 && dut.u_tmr.run == 1'b1, "nut dau: tat chuong, timer van chay");
-        press(B_B);                                      // về giá trị đặt
-        check(dut.u_tmr.run == 1'b0 && dut.u_tmr.zero == 1'b0 && dut.u_tmr.val == 2000, "B: ve 2000, dung, xoa ZERO");
+        // Kiểm tra khóa an toàn chống bấm nhầm Reset (Triple-click B)
+        press(B_B);                                      // lần 1: chưa reset
+        check(dut.u_tmr.run == 1'b1, "B lan 1: chua reset, timer van chay");
+        press(B_B);                                      // lần 2: chưa reset
+        check(dut.u_tmr.run == 1'b1, "B lan 2: chua reset, timer van chay");
+        press(B_B);                                      // lần 3 liên tiếp: thực thi reset về mốc đặt ban đầu
+        check(dut.u_tmr.run == 1'b0 && dut.u_tmr.zero == 1'b0 && dut.u_tmr.val == 2000, "triple B: ve 2000, dung, xoa ZERO");
         checkf(fr, fT(2000), "lai 00:02.000");
 
-        // Kiểm tra cải tiến nút bấm Timer (A: Start/Resume, C: Pause, B: Reset SNAP / Reset 0)
+        // Kiểm tra cải tiến nút bấm Timer (A: Start/Resume, C: Pause, B: Triple Reset SNAP / Reset 0)
         press(B_A);                                      // Bắt đầu chạy lại
         check(dut.u_tmr.run == 1'b1, "A: bat dau chay countdown");
         press(B_A);                                      // Bấm A khi đang chạy: KHÔNG tắt
@@ -510,12 +515,63 @@ module system_tb;
         check(dut.u_tmr.run == 1'b0, "C khi tam dung: tiep tuc giu Pause");
         press(B_A);                                      // Bấm A khi đang tạm dừng: TIẾP TỤC (Resume)
         check(dut.u_tmr.run == 1'b1, "A khi tam dung: tiep tuc chay (Resume)");
-        press(B_B);                                      // Bấm B khi đang chạy: Reset về mốc trước khi bấm A (2000) và dừng
-        check(dut.u_tmr.run == 1'b0 && dut.u_tmr.val == 2000, "B khi dang chay: reset ve moc ban dau 2000 va dung");
-        press(B_B);                                      // Bấm B khi đang dừng: Reset về full 0s
-        check(dut.u_tmr.run == 1'b0 && dut.u_tmr.val == 0, "B khi dang dung: reset ve full 0s (00:00.000)");
+        // Triple-click B khi đang chạy: Reset về mốc trước khi bấm A (2000) và dừng
+        press(B_B);
+        check(dut.u_tmr.run == 1'b1, "B running lan 1: khong reset");
+        press(B_B);
+        check(dut.u_tmr.run == 1'b1, "B running lan 2: khong reset");
+        press(B_B);
+        check(dut.u_tmr.run == 1'b0 && dut.u_tmr.val == 2000, "triple B khi dang chay: reset ve moc ban dau 2000 va dung");
+        // Triple-click B khi đang dừng: Reset về full 0s
+        press(B_B);
+        check(dut.u_tmr.val == 2000, "B stopped lan 1: khong reset");
+        press(B_B);
+        check(dut.u_tmr.val == 2000, "B stopped lan 2: khong reset");
+        press(B_B);
+        check(dut.u_tmr.run == 1'b0 && dut.u_tmr.val == 0, "triple B khi dang dung: reset ve full 0s (00:00.000)");
         frame2;
         checkf(fr, fT(0), "hien full 0s 00:00.000");
+
+        // ---- Kiểm tra Đồng Hồ Cờ Vua Kép (Chess Double Clock) & Phím A/C, Triple-Click Rematch
+        // Chuyển sang tiểu chế độ Chess Clock (t2) qua giao diện SET Mode (Phím C -> Bx3 -> A -> C)
+        press(B_C);                                      // Vào SET Timer (V_TPAGE = 1)
+        check(dut.u_disp.blink_mask == 8'h30, "Vao SET Timer: nhay Gio");
+        press(B_B);                                      // Field 1: Phút
+        check(dut.u_disp.blink_mask == 8'h0C, "SET Timer Field 1: nhay Phut");
+        press(B_B);                                      // Field 2: Giây
+        check(dut.u_disp.blink_mask == 8'h03, "SET Timer Field 2: nhay Giay");
+        press(B_B);                                      // Field 3: Chế độ t1/t2
+        check(dut.u_disp.blink_mask == 8'hC0, "SET Timer Field 3: nhay Submode t1/t2");
+        press(B_A);                                      // Đảo sang chế độ t2 (Chess Clock)
+        press(B_C);                                      // Lưu cấu hình và thoát về TIMER mode
+        frame2;
+        check(dut.u_tmr.run == 1'b0, "Chess ban dau: Idle (chua ai bam)");
+        check(fr == 64'h0082000000820000, "Chess ban dau: 02.00 02.00 (SS.cc)");
+
+        // Đấu thủ Trái bấm A -> Trái bắt đầu đếm
+        press(B_A);
+        check(dut.u_tmr.run == 1'b1, "Chess A: Trai bat dau chay");
+        press(B_A);                                      // Bấm A tiếp: không đổi
+        check(dut.u_tmr.run == 1'b1, "Chess A tiep: van giu Trai chay");
+
+        // Đấu thủ Trái bấm C -> Chuyển sang Phải đếm
+        press(B_C);
+        check(dut.u_tmr.run == 1'b1, "Chess C: chuyen sang Phai chay");
+        press(B_C);                                      // Bấm C tiếp: không đổi
+        check(dut.u_tmr.run == 1'b1, "Chess C tiep: van giu Phai chay");
+
+        // Đấu thủ Phải bấm A -> Chuyển ngược lại Trái đếm
+        press(B_A);
+        check(dut.u_tmr.run == 1'b1, "Chess A: chuyen lai Trai chay");
+
+        // Triple-click B: Tái đấu (Rematch Reset)
+        press(B_B);                                      // 1
+        check(dut.u_tmr.run == 1'b1, "Chess reset misclick 1: chua reset");
+        press(B_B);                                      // 2
+        check(dut.u_tmr.run == 1'b1, "Chess reset misclick 2: chua reset");
+        press(B_B);                                      // 3
+        check(dut.u_tmr.run == 1'b0, "Chess triple B: dung va ve Idle");
+        check(fr == 64'h0082000000820000, "Chess sau rematch reset: 02.00 02.00");
 
         done(4, "timer ve 0 dung ms, chuong, so am");
 

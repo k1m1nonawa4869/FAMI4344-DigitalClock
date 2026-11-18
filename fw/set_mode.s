@@ -56,6 +56,8 @@ set_y:  sw    $a1, V_SY($zero)          # Năm hiện tại (độ lệch từ 2
         j     st_f
 
 st_in_tmr:
+        lw    $t0, V_TMR_SUBMODE($zero) # Đọc chế độ Timer hiện tại (0: Single, 1: Chess)
+        sw    $t0, V_TP_SUB($zero)      # Lưu vào biến tạm cấu hình
         lw    $t0, V_PRE($zero)         # Đọc giá trị preset Timer hiện tại (ms)
         lui   $t1, 0x36
         ori   $t1, $t1, 0xee80          # 3.600.000 ms = 1 giờ
@@ -163,9 +165,9 @@ st_sv:  jal   ymd2d                     # Nút C: Tính tổng số ngày từ 0
         jr    $s7
 
 st_btn_tmr:
-        lw    $t4, V_SF($zero)          # 0: Giờ, 1: Phút, 2: Giây
+        lw    $t4, V_SF($zero)          # 0: Giờ, 1: Phút, 2: Giây, 3: Chế độ t1/t2
         addiu $t1, $zero, 2
-        beq   $a0, $t1, st_tm_b         # Nút B: Đổi trường (Giờ -> Phút -> Giây)
+        beq   $a0, $t1, st_tm_b         # Nút B: Đổi trường (0 -> 1 -> 2 -> 3 -> 0)
         addiu $t1, $zero, 3
         beq   $a0, $t1, st_tm_sv        # Nút C: Lưu preset và thoát về TIMER
 
@@ -193,6 +195,8 @@ st_tm_a_m1:
         jr    $s7
 
 st_tm_a_s:
+        addiu $t1, $zero, 2
+        bne   $t4, $t1, st_tm_a_sub
         lw    $t0, V_TPS($zero)         # Tăng Giây (0..59)
         addiu $t0, $t0, 1
         addiu $t1, $zero, 60
@@ -202,24 +206,39 @@ st_tm_a_s1:
         sw    $t0, V_TPS($zero)
         jr    $s7
 
-st_tm_b: # Nút B: Đổi trường xoay vòng (0: Giờ -> 1: Phút -> 2: Giây -> 0: Giờ)
+st_tm_a_sub:
+        # Trường 3: Đảo chế độ Timer (0: Single t1 <-> 1: Chess t2)
+        lw    $t0, V_TP_SUB($zero)
+        addiu $t2, $zero, 1
+        subu  $t0, $t2, $t0              # 1 - t0: đảo 0 <-> 1 an toàn
+        sw    $t0, V_TP_SUB($zero)
+        jr    $s7
+
+st_tm_b: # Nút B: Đổi trường xoay vòng (0 -> 1 -> 2 -> 3 -> 0)
         addiu $t4, $t4, 1
-        addiu $t1, $zero, 3
+        addiu $t1, $zero, 4
         bne   $t4, $t1, st_tm_b0
         addu  $t4, $zero, $zero
 st_tm_b0:
         sw    $t4, V_SF($zero)
-        addiu $t0, $zero, 0x30          # Nháy Giờ: DISP5, DISP4 (0x30)
-        beq   $t4, $zero, st_tm_b1
-        addiu $t0, $zero, 0x0c          # Nháy Phút: DISP3, DISP2 (0x0C)
+        addiu $t0, $zero, 0x30          # 0: Nháy Giờ (DISP5, DISP4 = 0x30)
+        beq   $t4, $zero, st_tm_b_mask
+        addiu $t0, $zero, 0x0c          # 1: Nháy Phút (DISP3, DISP2 = 0x0C)
         addiu $t1, $zero, 1
-        beq   $t4, $t1, st_tm_b1
-        addiu $t0, $zero, 0x03          # Nháy Giây: DISP1, DISP0 (0x03)
-st_tm_b1:
+        beq   $t4, $t1, st_tm_b_mask
+        addiu $t0, $zero, 0x03          # 2: Nháy Giây (DISP1, DISP0 = 0x03)
+        addiu $t1, $zero, 2
+        beq   $t4, $t1, st_tm_b_mask
+        addiu $t0, $zero, 0xc0          # 3: Nháy Chế độ (DISP7, DISP6 = 0xC0)
+st_tm_b_mask:
         sw    $t0, REG_BLINK_MASK($zero)
         jr    $s7
 
-st_tm_sv: # Nút C: Tính V_PRE = ((Giờ * 60 + Phút) * 60 + Giây) * 1000
+st_tm_sv: # Nút C: Lưu cấu hình và thoát
+        lw    $t5, V_TP_SUB($zero)
+        sw    $t5, V_TMR_SUBMODE($zero) # Cập nhật Chế độ Timer chính
+
+        # Tính toán preset mili-giây: ((Giờ * 60 + Phút) * 60 + Giây) * 1000
         lw    $t0, V_TPH($zero)
         addiu $t1, $zero, 60
         mul   $t0, $t0, $t1
@@ -229,16 +248,33 @@ st_tm_sv: # Nút C: Tính V_PRE = ((Giờ * 60 + Phút) * 60 + Giây) * 1000
         lw    $t2, V_TPS($zero)
         addu  $t0, $t0, $t2
         ori   $t1, $zero, 1000
-        mul   $t0, $t0, $t1             # V_PRE (mili-giây)
-        sw    $t0, V_PRE($zero)         # Lưu vào biến DMEM V_PRE
-        sw    $t0, REG_TMR_VALUE($zero) # Nạp thẳng vào thanh ghi Timer phần cứng
-        sw    $t0, V_TMR_SNAP($zero)    # Khởi tạo snapshot bằng preset mới
-        sw    $zero, V_TPAUSED($zero)   # Xóa cờ tạm dừng
-        addiu $t0, $zero, 6             # CLR = 1, BEEP_EN = 1, RUN = 0
-        sw    $t0, REG_TMR_CTRL($zero)
-        sw    $zero, REG_BLINK_MASK($zero) # Tắt nhấp nháy
-        sw    $zero, V_TPAGE($zero)     # Đặt lại trang về 0
-        addiu $t0, $zero, MODE_TIMER    # Trở về chế độ TIMER (2)
+        mul   $t0, $t0, $t1             # $t0 = preset ms
+
+        bne   $t5, $zero, st_tm_sv_chess # Nếu là Chess Clock (t2)
+
+        # Lưu cho Single Timer:
+        sw    $t0, V_PRE($zero)
+        sw    $t0, REG_TMR_VALUE($zero)
+        sw    $t0, V_TMR_SNAP($zero)
+        sw    $zero, V_TPAUSED($zero)
+        addiu $t2, $zero, 6             # CLR=1, BEEP_EN=1, RUN=0
+        sw    $t2, REG_TMR_CTRL($zero)
+        j     st_tm_sv_done
+
+st_tm_sv_chess:
+        # Lưu cho Chess Clock: Cả Trái và Phải xuất phát cùng preset
+        sw    $t0, V_CHESS_INIT($zero)
+        sw    $t0, V_CHESS_L($zero)
+        sw    $t0, V_CHESS_R($zero)
+        sw    $zero, V_CHESS_ACT($zero) # Trạng thái cờ vua về Dừng/Chờ
+        sw    $t0, REG_TMR_VALUE($zero)
+        addiu $t2, $zero, 6             # CLR=1, BEEP_EN=1, RUN=0
+        sw    $t2, REG_TMR_CTRL($zero)
+
+st_tm_sv_done:
+        sw    $zero, REG_BLINK_MASK($zero)
+        sw    $zero, V_TPAGE($zero)
+        addiu $t0, $zero, MODE_TIMER
         sw    $t0, V_MODE($zero)
         jr    $s7
 
@@ -369,10 +405,14 @@ dst_d:  lw    $t5, V_SD($zero)          # Các trường 3, 4, 5 (Ngày, Tháng,
         j     dt_dd                     # Hiển thị theo bố cục ngày tháng dd-MM-YY
 
 dr_st_tmr:
-        # Hiển thị chuỗi "trHH.MM.SS"
+        # Hiển thị chuỗi "t1" (Single) hoặc "t2" (Chess) tại D7, D6
         addiu $t0, $zero, CHAR_T
         sw    $t0, D7($zero)
-        addiu $t0, $zero, CHAR_R
+        lw    $t3, V_TP_SUB($zero)
+        addiu $t0, $zero, 1             # Số 1 (Single Timer)
+        beq   $t3, $zero, dst_t_sub
+        addiu $t0, $zero, 2             # Số 2 (Chess Double Clock)
+dst_t_sub:
         sw    $t0, D6($zero)
         addiu $t1, $zero, 10
         # Giờ (D5, D4 có dấu chấm)

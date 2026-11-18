@@ -419,7 +419,12 @@ Thiết bị giao tiếp với người dùng thông qua **4 phím bấm vật l
 
 ---
 
-### 4.3. Chế độ TIMER (Đếm Ngược Giờ-Phút-Giây, Đếm Bù Âm Quá Giờ & Còi Báo Động)
+### 4.3. Chế độ TIMER (Đếm Ngược Đơn & Đồng Hồ Cờ Vua Kép Chess Double Clock)
+Chế độ TIMER cung cấp 2 tiểu chế độ chuyên dụng phục vụ mọi tình huống đo đếm thời gian:
+1. **Tiểu chế độ `t1` (Single Timer):** Đếm lùi đơn với mốc giờ/phút/giây, đếm bù âm quá giờ, tự động cảnh báo chuông còi.
+2. **Tiểu chế độ `t2` (Chess Double Clock):** Đồng hồ cờ vua kép chuyên nghiệp 2 bên độc lập cạnh nhau trên 8 LED, định dạng động 3 cấp độ phân giải $0.01\text{ s}$ (centi-giây).
+
+#### A. Tiểu chế độ `t1`: Đếm lùi Đơn (Single Timer)
 * **Chức năng:** Đếm lùi thời gian chính xác tới mili-giây từ khoảng thời gian cài đặt trước ($V_{PRE}$), hỗ trợ đầy đủ 3 trường: Giờ ($0 \dots 99$), Phút ($0 \dots 59$), Giây ($0 \dots 59$).
 * **Định dạng hiển thị tự động thích ứng (Adaptive Display Formatting):**
   * **Khi thời gian $\ge 1\text{ giờ}$ ($V_{\text{TMR}} \ge 3.600.000\text{ ms}$):** Hiển thị định dạng `__HH.MM.SS` (ví dụ `  01.30.00` — dấu chấm tại $S_4$ sau giờ và $S_2$ sau phút).
@@ -428,27 +433,37 @@ Thiết bị giao tiếp với người dùng thông qua **4 phím bấm vật l
 * **Còi Báo Động Khi Về 0 & Nhịp Bíp Cảnh Báo Quá Hạn Âm (Overtime Alarm):**
   * Ngay khi bộ đếm chạm mốc $0$, còi báo thức tự động kích hoạt chuông dồn dập cảnh báo người dùng.
   * Trong suốt quá trình đếm quá giờ âm bù hai (Negative Overtime Counting), còi duy trì nhịp bíp định kỳ cảnh báo (mỗi giây một tiếng bíp ngắn).
-  * **Tắt chuông bằng Phím C:** Nhấn Phím C để tắt chuông báo động (Acknowledge / Silence Alarm) mà không làm gián đoạn bộ đếm quá giờ âm.
-* **Cơ chế Phím bấm Chuyên dụng cho Thi đấu & Kiểm soát Thời gian Thực:**
-  * **Phím A (Start / Resume):**
-    * Khi đang dừng hoặc tạm dừng: Bắt đầu chạy (Start) hoặc Tiếp tục chạy (Resume). Đồng thời tự động chốt giá trị thời gian bắt đầu vào thanh ghi snapshot $V_{\text{TMR\_SNAP}}$ phục vụ chức năng Reset khôi phục.
-    * Khi đang chạy: Nhấn tiếp Phím A **không làm tắt hay đảo trạng thái** (bảo đảm an toàn tuyệt đối trong thi đấu, người dùng bấm nhiều lần để bảo đảm phím ăn cũng không bao giờ làm dừng hay khởi động lại bộ đếm ngoài ý muốn).
-  * **Phím B (Reset Snapshot / Reset Zero):**
-    * Khi đang chạy: **Reset về đúng mốc thời gian trước khi bấm A** ($V_{\text{TMR\_SNAP}}$) và dừng bộ đếm.
-    * Khi đang dừng: **Đặt lại về toàn số 0** ($00:00.000$ / Full 0s).
-  * **Phím C (Pause & Pause / Custom Preset in SET):**
-    * Khi chuông báo động quá hạn đang kêu: Tắt còi báo động (Acknowledge).
-    * Khi đang chạy: **Tạm dừng đếm lùi (Pause)**, giữ nguyên thời gian hiện tại.
-    * Khi đang tạm dừng: Nhấn tiếp C vẫn **tiếp tục giữ trạng thái Pause** (Pause & Pause — không re-enable, không bị thoát nhầm sang màn hình khác). Để tiếp tục chạy đếm lùi, người dùng bắt buộc phải nhấn Phím A.
-    * Khi đang dừng tĩnh / reset về 0: Kích hoạt **Chế độ Cài Đặt Thời Gian Tùy Chỉnh (Custom Timer Preset in SET Mode)** với định dạng `trHH.MM.SS`.
-* **Quy trình Cài đặt Thời gian Đếm lùi Tùy chỉnh (SET TIMER):**
-  1. Khi Timer đang dừng, nhấn **Phím C** để vào trang cài đặt: Màn hình hiển thị `trHH.MM.SS` với trường Giờ nhấp nháy ($2\text{ Hz}$, `BLINK_MASK = 0x30`).
-  2. Nhấn **Phím A** để tăng số Giờ ($0 \dots 99$, quay vòng về $00$).
-  3. Nhấn **Phím B** để chuyển sang chỉnh số Phút: Trường Phút nhấp nháy ($2\text{ Hz}$, `BLINK_MASK = 0x0C`).
-  4. Nhấn **Phím A** để tăng số Phút ($0 \dots 59$, quay vòng về $00$).
-  5. Nhấn **Phím B** để chuyển sang chỉnh số Giây: Trường Giây nhấp nháy ($2\text{ Hz}$, `BLINK_MASK = 0x03`).
-  6. Nhấn **Phím A** để tăng số Giây ($0 \dots 59$, quay vòng về $00$).
-  7. Nhấn **Phím C** để lưu: Hệ thống tính toán thời gian $V_{PRE} = ((\text{Giờ} \times 60 + \text{Phút}) \times 60 + \text{Giây}) \times 1000\text{ ms}$, nạp trực tiếp vào thanh ghi phần cứng `REG_TMR_VALUE`, đặt lại Timer và tự động quay về màn hình `TIMER` hiển thị thời gian mới vừa đặt.
+  * **Tắt chuông:** Nhấn bất kỳ phím nào để ngắt còi PWM mà không làm gián đoạn bộ đếm quá giờ âm.
+
+#### B. Tiểu chế độ `t2`: Đồng Hồ Cờ Vua Kép (Chess Double Clock)
+* **Bố cục hiển thị chia đôi 8 LED 7-đoạn ($S_7 \dots S_0$):**
+  * **Bên Trái ($S_7 S_6 S_5 S_4$):** Đồng hồ Đấu thủ A (Left Clock).
+  * **Bên Phải ($S_3 S_2 S_1 S_0$):** Đồng hồ Đấu thủ C (Right Clock).
+* **Cơ chế Định Dạng Động 3 Cấp (3-Tier Dynamic LED Formatting) cho mỗi bên:**
+  1. **Khi $\ge 1\text{ phút}$ ($V \ge 60.000\text{ ms}$):** Định dạng `MM.SS` (ví dụ: `05.00` — dấu chấm tại $S_6$ và $S_2$).
+  2. **Khi $< 1\text{ phút}$ dương ($0 < V < 60.000\text{ ms}$):** Tự động chuyển sang định dạng độ phân giải cao centi-giây $0.01\text{ s}$ `SS.cc` (ví dụ: `58.42` — 58 giây 42 centi-giây).
+  3. **Khi quá giờ âm (Overtime $V < 0$):** Hiển thị `-S.cc` với dấu trừ ở hàng đầu (ví dụ: `-1.25`, bão hòa cực hạn tại `-9.99`).
+* **Bàn Phím Lật Đơn Chiều (One-Way Flip-Flop Switch):**
+  * **Phím A:** Điều khiển Đồng hồ Trái (Left Clock).
+  * **Phím C:** Điều khiển Đồng hồ Phải (Right Clock).
+  * **Quy tắc lật switch:** Ai bấm trước sẽ kích hoạt đồng hồ bên đó chạy trước. Khi bên A đang chạy, đấu thủ A kết thúc nước đi nhấn Phím C $\to$ Đồng hồ A tạm dừng và Đồng hồ C bắt đầu đếm. Nhấn lặp lại nhiều lần Phím C **không làm lật ngược lại A**. Tương tự, khi C đang chạy, nhấn Phím A sẽ chuyển quyền sang A.
+* **Tái Sử Dụng Phần Cứng Tối Ưu (Zero Hardware Overhead):**
+  * Tại một thời điểm chỉ có 1 đấu thủ suy nghĩ, hệ thống dùng đúng 1 khối phần cứng `countdown_core.v` duy nhất: khi đổi lượt, CPU lưu thời gian tức thời vào DMEM và nạp thời gian đối phương vào thanh ghi đếm, không tốn thêm LUT/Flip-Flop nào trên FPGA.
+
+#### C. Khóa An Toàn Chống Bấm Nhầm Reset (Triple-Click Safety Reset trên Phím B)
+* Để ngăn chặn vận động viên hoặc trọng tài vô ý quệt tay vào nút Reset làm hỏng ván cờ hoặc phiên đếm lùi, lệnh Reset chỉ kích hoạt khi **nhấn Phím B nhanh 3 lần liên tiếp** ($\Delta t \le 600\text{ ms}$).
+* **Tác vụ Reset:**
+  * **Trong Single Timer (`t1`):** Khi đang chạy $\to$ Reset về mốc snapshot trước khi bấm A ($V_{\text{TMR\_SNAP}}$) và dừng; Khi đang dừng $\to$ Reset về toàn số 0 ($00:00.000$).
+  * **Trong Chess Clock (`t2`):** Tái đấu (Rematch Reset) $\to$ Khôi phục cả hai bên Trái và Phải về mốc ban đầu ($V_{\text{CHESS\_INIT}}$), sẵn sàng cho ván đấu mới.
+
+#### D. Quy trình Cài đặt & Chuyển đổi Tiểu Chế Độ (SET TIMER Page):
+1. Khi Single Timer đang dừng tĩnh (hoặc đã reset 0), nhấn **Phím C** để vào trang cài đặt: Màn hình hiển thị `t1` (hoặc `t2`) cùng 6 chữ số giờ/phút/giây.
+2. **Nhấn Phím B để đổi vòng qua 4 trường:**
+   `Giờ (DISP5-4 nháy 0x30)` $\to$ `Phút (DISP3-2 nháy 0x0C)` $\to$ `Giây (DISP1-0 nháy 0x03)` $\to$ `Chế độ t1/t2 (DISP7-6 nháy 0xC0)`.
+3. **Tại trường 3 (Chế độ `t1`/`t2`):** Nhấn **Phím A** để đảo giữa `t1` (Single Timer) và `t2` (Chess Double Clock).
+4. **Nhấn Phím C để lưu:**
+   * Nếu chọn `t1`: Cập nhật $V_{PRE}$ và nạp vào Timer đơn.
+   * Nếu chọn `t2`: Nạp thời gian cài đặt vào cả $V_{\text{CHESS\_INIT}}$, $V_{\text{CHESS\_L}}$, $V_{\text{CHESS\_R}}$, khởi động giao diện Cờ vua Kép.
 
 ---
 
