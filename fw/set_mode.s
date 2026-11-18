@@ -23,6 +23,8 @@
 # 1. KHỞI TẠO VÀO CHẾ ĐỘ SET (CAPTURE CURRENT TIME TO SET BUFFERS)
 # ----------------------------------------------------------------------------
 set_in: addu  $s7, $ra, $zero           # Lưu thanh ghi $ra vào $s7
+        lw    $t0, V_TPAGE($zero)       # Kiểm tra trang cài đặt (0: RTC, 1: Timer Preset)
+        bne   $t0, $zero, st_in_tmr     # Nếu V_TPAGE == 1: Khởi tạo trang Timer
         mtc0  $zero, $12                # Tắt ngắt để đọc nguyên tử cặp MS và DAY
         lw    $t0, REG_RTC_MS($zero)
         lw    $a0, REG_DAY_SHADOW($zero)
@@ -53,10 +55,29 @@ set_y:  sw    $a1, V_SY($zero)          # Năm hiện tại (độ lệch từ 2
         addu  $t4, $zero, $zero         # Bắt đầu từ trường 0 (Giờ)
         j     st_f
 
+st_in_tmr:
+        lw    $t0, V_PRE($zero)         # Đọc giá trị preset Timer hiện tại (ms)
+        ori   $t1, $zero, 60000
+        div   $t0, $t1
+        mflo  $t2                       # Phút = V_PRE / 60.000
+        sw    $t2, V_TPM($zero)
+        mfhi  $t0
+        ori   $t1, $zero, 1000
+        div   $t0, $t1
+        mflo  $t2                       # Giây = (V_PRE % 60.000) / 1.000
+        sw    $t2, V_TPS($zero)
+        addu  $t4, $zero, $zero         # Bắt đầu từ trường 0 (Phút)
+        sw    $t4, V_SF($zero)
+        addiu $t0, $zero, 0x0c          # Mặt nạ nhấp nháy 2 Hz: DISP3, DISP2 (Phút)
+        sw    $t0, REG_BLINK_MASK($zero)
+        jr    $s7
+
 # ----------------------------------------------------------------------------
 # 2. XỬ LÝ SỰ KIỆN NÚT BẤM TRONG CHẾ ĐỘ SET
 # ----------------------------------------------------------------------------
 st_btn: addu  $s7, $ra, $zero
+        lw    $t0, V_TPAGE($zero)
+        bne   $t0, $zero, st_btn_tmr    # Xử lý phím khi đang ở trang SET Timer
         lw    $t4, V_SF($zero)          # Trường hiện đang chỉnh sửa (0..5)
         addiu $t1, $zero, 2
         beq   $a0, $t1, st_b            # Nút B: Đổi trường tiếp theo
@@ -133,6 +154,62 @@ st_sv:  jal   ymd2d                     # Nút C: Tính tổng số ngày từ 0
         sw    $zero, V_T1OK($zero)      # Đặt giờ thủ công: Hủy mốc đồng bộ trước đó để tránh lệch CAL
         sw    $zero, V_MODE($zero)      # Trở về chế độ TIME
         sw    $zero, REG_BLINK_MASK($zero) # Tắt nhấp nháy LED
+        jr    $s7
+
+st_btn_tmr:
+        lw    $t4, V_SF($zero)          # 0: Phút, 1: Giây
+        addiu $t1, $zero, 2
+        beq   $a0, $t1, st_tm_b         # Nút B: Đổi trường (Phút <-> Giây)
+        addiu $t1, $zero, 3
+        beq   $a0, $t1, st_tm_sv        # Nút C: Lưu preset và thoát về TIMER
+
+        # Nút A: Tăng giá trị (+1) trường đang chọn (0..59)
+        bne   $t4, $zero, st_tm_a_sec
+        lw    $t0, V_TPM($zero)         # Tăng Phút
+        addiu $t0, $t0, 1
+        addiu $t1, $zero, 60
+        bne   $t0, $t1, st_tm_a_m1
+        addu  $t0, $zero, $zero
+st_tm_a_m1:
+        sw    $t0, V_TPM($zero)
+        jr    $s7
+st_tm_a_sec:
+        lw    $t0, V_TPS($zero)         # Tăng Giây
+        addiu $t0, $t0, 1
+        addiu $t1, $zero, 60
+        bne   $t0, $t1, st_tm_a_s1
+        addu  $t0, $zero, $zero
+st_tm_a_s1:
+        sw    $t0, V_TPS($zero)
+        jr    $s7
+
+st_tm_b: # Nút B: Đổi giữa Phút (0) <-> Giây (1)
+        addiu $t1, $zero, 1
+        subu  $t4, $t1, $t4
+        sw    $t4, V_SF($zero)
+        addiu $t0, $zero, 0x0c          # Mặc định nháy Phút: DISP3, DISP2 (0x0C)
+        beq   $t4, $zero, st_tm_b1
+        addiu $t0, $zero, 0x03          # Nháy Giây: DISP1, DISP0 (0x03)
+st_tm_b1:
+        sw    $t0, REG_BLINK_MASK($zero)
+        jr    $s7
+
+st_tm_sv: # Nút C: Tính V_PRE = (Phút * 60 + Giây) * 1000
+        lw    $t0, V_TPM($zero)
+        addiu $t1, $zero, 60
+        mul   $t0, $t0, $t1
+        lw    $t2, V_TPS($zero)
+        addu  $t0, $t0, $t2
+        ori   $t1, $zero, 1000
+        mul   $t0, $t0, $t1             # V_PRE (mili-giây)
+        sw    $t0, V_PRE($zero)         # Lưu vào biến DMEM V_PRE
+        sw    $t0, REG_TMR_VALUE($zero) # Nạp thẳng vào thanh ghi Timer phần cứng
+        addiu $t0, $zero, 6             # CLR = 1, BEEP_EN = 1, RUN = 0
+        sw    $t0, REG_TMR_CTRL($zero)
+        sw    $zero, REG_BLINK_MASK($zero) # Tắt nhấp nháy
+        sw    $zero, V_TPAGE($zero)     # Đặt lại trang về 0
+        addiu $t0, $zero, MODE_TIMER    # Trở về chế độ TIMER (2)
+        sw    $t0, V_MODE($zero)
         jr    $s7
 
 # ----------------------------------------------------------------------------
@@ -238,7 +315,9 @@ yd3:    lw    $t0, V_SD($zero)
 # ----------------------------------------------------------------------------
 # 7. XỬ LÝ VẼ MÀN HÌNH CHẾ ĐỘ SET
 # ----------------------------------------------------------------------------
-dr_st:  lw    $t0, V_SF($zero)
+dr_st:  lw    $t0, V_TPAGE($zero)
+        bne   $t0, $zero, dr_st_tmr     # Vẽ màn hình cài đặt Timer Preset
+        lw    $t0, V_SF($zero)
         slti  $t1, $t0, 3               # Các trường 0, 1, 2 (Giờ, Phút, Giây)
         beq   $t1, $zero, dst_d
         lw    $t0, V_SH($zero)          # Hiển thị theo bố cục 24h: HH.MM.SS
@@ -258,3 +337,24 @@ dst_d:  lw    $t5, V_SD($zero)          # Các trường 3, 4, 5 (Ngày, Tháng,
         lw    $a0, V_SMO($zero)
         lw    $a1, V_SY($zero)
         j     dt_dd                     # Hiển thị theo bố cục ngày tháng dd-MM-YY
+
+dr_st_tmr:
+        # Hiển thị chuỗi "tr  MM.SS"
+        addiu $t0, $zero, CHAR_T
+        sw    $t0, D7($zero)
+        addiu $t0, $zero, CHAR_R
+        sw    $t0, D6($zero)
+        addiu $t0, $zero, CHAR_BLANK
+        sw    $t0, D5($zero)
+        sw    $t0, D4($zero)
+        lw    $t0, V_TPM($zero)
+        addiu $t1, $zero, 100
+        mul   $t0, $t0, $t1
+        lw    $t2, V_TPS($zero)
+        addu  $a0, $t0, $t2             # a0 = TPM * 100 + TPS (MMSS)
+        addiu $a1, $zero, 4             # 4 chữ số ghi vào D0..D3
+        jal   putd
+        lw    $t0, D2($zero)
+        ori   $t0, $t0, CHAR_DP         # Bật dấu chấm sau Phút tại D2
+        sw    $t0, D2($zero)
+        j     dr_out

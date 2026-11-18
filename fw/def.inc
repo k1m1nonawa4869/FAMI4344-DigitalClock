@@ -125,10 +125,15 @@
         .eqv  CFG_MS            0x7e4           # Giờ nạp cấu hình ban đầu (mili-giây trong ngày)
         .eqv  CFG_DAY           0x7e8           # Ngày nạp cấu hình ban đầu
         .eqv  CFG_PRE           0x7ec           # Thời gian đặt trước mặc định cho đếm lùi (ms)
+        .eqv  V_TPAGE           0x7f0           # Trang cài đặt trong SET: 0: RTC Giờ/Ngày, 1: Timer Preset
+        .eqv  V_TPM             0x7f4           # Timer Preset: Phút tạm thời đang chỉnh (0..59)
+        .eqv  V_TPS             0x7f8           # Timer Preset: Giây tạm thời đang chỉnh (0..59)
 
 # ----------------------------------------------------------------------------
 # 11. HẰNG SỐ MÃ KÝ TỰ BẢNG TRA ROM (CHAR ROM LOOKUP CONSTANTS)
 # ----------------------------------------------------------------------------
         .eqv  CHAR_BLANK        0x1A            # Mã ký tự khoảng trắng (Tắt hết các đoạn LED)
         .eqv  CHAR_DASH         0x19            # Mã ký tự dấu gạch ngang '-' (Đoạn g, 0x19)
+        .eqv  CHAR_T            0x17            # Mã ký tự chữ 't' (0x78)
+        .eqv  CHAR_R            0x15            # Mã ký tự chữ 'r' (0x50)
         .eqv  CHAR_DP           0x80            # Mặt nạ bật dấu chấm thập phân (bit 7)

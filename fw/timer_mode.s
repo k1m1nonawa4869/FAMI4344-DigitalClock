@@ -36,16 +36,11 @@ tr_rst: lw    $t0, V_PRE($zero)         # Nút B: Khôi phục về giá trị �
         sw    $t0, REG_TMR_CTRL($zero)
         jr    $ra
 tr_c:   bne   $t2, $zero, tr_r          # Nút C: Chỉ có tác dụng khi Timer đang dừng
-        lw    $t0, V_PRE($zero)
-        ori   $t1, $zero, 60000         # Mỗi lần nhấn tăng thêm 1 phút (+60.000 ms)
-        addu  $t0, $t0, $t1
-        lui   $t1, 0x36
-        ori   $t1, $t1, 0xee80          # 3.600.000 ms = 60 phút
-        slt   $t2, $t0, $t1
-        bne   $t2, $zero, tr_c1         # Nếu vượt quá 60 phút thì quay vòng về 0
-        subu  $t0, $t0, $t1
-tr_c1:  sw    $t0, V_PRE($zero)         # Cập nhật giá trị đặt mới
-        j     tr_rst                    # Tự động nạp giá trị mới vào thanh ghi phần cứng
+        addiu $t0, $zero, 1
+        sw    $t0, V_TPAGE($zero)       # Chuyển sang trang Cài đặt Timer trong SET (V_TPAGE = 1)
+        addiu $t0, $zero, MODE_SET
+        sw    $t0, V_MODE($zero)        # Chuyển FSM sang chế độ SET (4)
+        j     set_in                    # Gọi thủ tục khởi tạo SET
 tr_r:   jr    $ra
 
 # ----------------------------------------------------------------------------

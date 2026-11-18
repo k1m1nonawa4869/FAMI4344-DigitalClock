@@ -407,36 +407,57 @@ Thiết bị giao tiếp với người dùng thông qua **4 phím bấm vật l
 ---
 
 ### 4.3. Chế độ TIMER (Đếm Ngược & Đếm Bù Âm Quá Giờ)
-* **Chức năng:** Đếm lùi từ khoảng thời gian cài đặt trước (mặc định 60.000 ms = 1 phút). Khi chạm mốc 0, còi báo thức tự động kêu và đồng hồ chuyển sang đếm quá giờ âm (Overtime).
-* **Thao tác phím:**
+* **Chức năng:** Đếm lùi thời gian chính xác tới mili-giây từ khoảng thời gian cài đặt trước ($V_{PRE}$). Khi đếm về mốc $0$, còi báo thức tự động phát chuông cảnh báo và bộ đếm phần cứng tiếp tục đếm quá hạn âm (Two's Complement Overtime Counting) giúp người dùng biết sự kiện đã quá hạn bao lâu.
+* **Định dạng hiển thị:**
+  * Đang đếm lùi: ` MM.SS.mmm` (ví dụ ` 01.30.000` — dấu chấm tại $S_5$ sau phút và $S_3$ sau giây).
+  * Quá giờ âm: `-MM.SS.mmm` (ví dụ `-00.00.307` — ô ngoài cùng bên trái $S_7$ bật dấu trừ `-`).
+* **Thao tác phím bấm:**
   * **Phím A:** Bắt đầu (Run) / Tạm dừng (Pause).
-  * **Phím B:** Nạp lại giá trị ban đầu (Reload Preset).
-  * **Phím C:** Tắt tiếng chuông báo khi đếm về 0.
-* **Hiển thị quá giờ âm:** Khi đếm âm, ô ngoài cùng DISP7 hiển thị dấu trừ `-`, các ô còn lại đếm tăng dần độ lệch quá giờ.
+  * **Phím B:** Nạp lại giá trị đặt trước ban đầu (Reset to Preset $V_{PRE}$).
+  * **Phím C (khi Timer đang dừng):** Kích hoạt **Chế độ Cài Đặt Thời Gian Tùy Chỉnh (Custom Timer Preset in SET Mode)**. Màn hình chuyển sang giao diện `tr  MM.SS` với các trường Phút và Giây nhấp nháy $2\text{ Hz}$.
+* **Quy trình Cài đặt Thời gian Đếm lùi Tùy chỉnh (SET TIMER):**
+  1. Khi Timer đang dừng, nhấn **Phím C** để vào trang cài đặt: Màn hình hiển thị `tr  MM.SS` với trường Phút nhấp nháy ($2\text{ Hz}$, `BLINK_MASK = 0x0C`).
+  2. Nhấn **Phím A** để tăng số Phút ($0 \dots 59$, quay vòng về $00$).
+  3. Nhấn **Phím B** để chuyển sang chỉnh số Giây: Trường Giây nhấp nháy ($2\text{ Hz}$, `BLINK_MASK = 0x03`).
+  4. Nhấn **Phím A** để tăng số Giây ($0 \dots 59$, quay vòng về $00$).
+  5. Nhấn **Phím C** để lưu: Hệ thống tính toán thời gian $V_{PRE} = (\text{Phút} \times 60 + \text{Giây}) \times 1000\text{ ms}$, nạp trực tiếp vào thanh ghi phần cứng `REG_TMR_VALUE`, đặt lại Timer và tự động quay về màn hình `TIMER` hiển thị thời gian mới vừa đặt.
 
 ---
 
-### 4.4. Chế độ ALARM (4 Kênh Báo Thức & Chuông Báo Giờ)
-* **Chức năng:** Cấu hình 4 mốc báo thức độc lập (`AL1`, `AL2`, `AL3`, `AL4`), chuông báo đầu giờ (Hourly Chime), tính năng hoãn chuông (Snooze) và tự tắt sau 60 giây.
-* **Thao tác phím:**
-  * **Phím A:** Bật/Tắt kích hoạt kênh báo thức hiện tại (Enable/Disable).
-  * **Phím B:** Chuyển đổi giữa 4 kênh báo thức và trang Chuông đầu giờ (`CH`).
-  * **Phím C:**
-    * Khi đang reo chuông: Kích hoạt chế độ hoãn chuông (**Snooze +5 phút**). Chuông sẽ tắt và tự động kêu lại sau đúng 300.000 ms.
-    * Khi không reo: Nhấn giữ để vào chế độ chỉnh giờ cho mốc báo thức.
+### 4.4. Chế độ ALARM (4 Kênh Báo Thức Độc Lập & Chuông Báo Giờ Tròn Tiếng)
+Chế độ ALARM cung cấp khả năng quản lý 4 mốc báo thức độc lập (`AL1` đến `AL4`) và tính năng chuông điểm giờ tròn tiếng (`CH` - Hourly Chime) thông qua các thanh ghi phần cứng `REG_ALARM0` đến `REG_ALARM3`.
+
+* **4 Kênh Báo Thức Độc Lập (`AL1`, `AL2`, `AL3`, `AL4`):**
+  * **Ý nghĩa:** Quản lý 4 mốc thời gian báo thức riêng biệt trong ngày (từ phút thứ $0$ đến $1439$, tương đương $00:00 \dots 23:59$), có thể gán mặt nạ các ngày trong tuần (Chủ nhật đến Thứ bảy).
+  * **Định dạng hiển thị:** `ALk.o HH.MM`
+    * `AL1o07.00`: Báo thức kênh 1 đang **BẬT** (ký tự `o` ở ô $S_4$), reo lúc $07:00$.
+    * `AL2 12.30`: Báo thức kênh 2 đang **TẮT** (khoảng trắng ở ô $S_4$), reo lúc $12:30$.
+  * **Thao tác phím:**
+    * **Phím A:** Bật / Tắt kích hoạt kênh báo thức hiện tại (Đảo cờ `EN`).
+    * **Phím B:** Chuyển đổi vòng tròn giữa các kênh: `AL1` $\to$ `AL2` $\to$ `AL3` $\to$ `AL4` $\to$ `CH` $\to$ `AL1`.
+    * **Phím C (khi không reo):** Vào chế độ chỉnh sửa giờ/phút báo thức. Nhấn Phím A để tăng giá trị (+1), Phím B để đổi giữa Giờ $\leftrightarrow$ Phút, Phím C để lưu lại.
+    * **Phím C (khi chuông đang reo dồn dập):** Kích hoạt tính năng **Snooze (Tạm hoãn chuông Casio +5 phút)**. Chuông sẽ tắt ngay lập tức và tự động hẹn giờ reo lại sau đúng $300.000\text{ ms}$ (+5 phút).
+    * **Tự động ngắt (Auto-Silence):** Nếu không có tương tác người dùng, chuông báo thức sẽ tự động tắt sau đúng 60 giây ($60.000\text{ ms}$) để tiết kiệm pin.
+
+* **Chuông Điểm Giờ Tròn Tiếng (`CH` — Hourly Chime):**
+  * **Ý nghĩa:** Tính năng phát tín hiệu âm thanh báo hiệu mỗi khi đồng hồ bước sang giờ mới (ví dụ: $08:00, 09:00, \dots, 23:00$).
+  * **Định dạng hiển thị:** `CH o    ` (Hourly Chime đang **BẬT**) hoặc `CH      ` (Hourly Chime đang **TẮT**).
+  * **Hành vi âm thanh:** Khi bật, tại đúng giây $00$ của đầu mỗi giờ tròn tiếng, phần cứng PWM beeper tự động phát 2 tiếng bíp kép thanh thoát (`REG_BEEP_PAT = 5`).
+  * **Thao tác:** Ở trang `CH`, bấm **Phím A** để Bật / Tắt tính năng này.
 
 ---
 
-### 4.5. Chế độ SET (Chỉnh Giờ Nhấp Nháy 2 Hz & Lịch Năm Nhuận)
-* **Chức năng:** Cài đặt ngày giờ hệ thống trực quan với tần số nhấp nháy 2 Hz tại trường đang chọn.
-* **Trình tự các trường chỉnh:**
-  $$\text{Giờ (0..23)} \longrightarrow \text{Phút (0..59)} \longrightarrow \text{Giây (0..59)} \longrightarrow \text{Ngày (1..mlen)} \longrightarrow \text{Tháng (1..12)} \longrightarrow \text{Năm (0..99)}$$
+### 4.5. Chế độ SET (Chỉnh Giờ Nhấp Nháy 2 Hz, Lịch Năm Nhuận & Cài Đặt Timer)
+* **Chức năng:** Cài đặt ngày giờ hệ thống RTC trực quan hoặc cài đặt thời gian Timer đếm lùi, với tần số nhấp nháy $2\text{ Hz}$ tại trường dữ liệu đang chọn (`REG_BLINK_MASK`).
+* **Trình tự các trường chỉnh giờ hệ thống (RTC SET):**
+  $$\text{Giờ (0..23)} \xrightarrow{\text{Nút B}} \text{Phút (0..59)} \xrightarrow{\text{Nút B}} \text{Giây (ép về 00)} \xrightarrow{\text{Nút B}} \text{Ngày (1..mlen)} \xrightarrow{\text{Nút B}} \text{Tháng (1..12)} \xrightarrow{\text{Nút B}} \text{Năm (0..99)}$$
 * **Thuật toán Năm Nhuận & Tự động Kẹp Ngày:**
-  Firmware tự động xác định năm nhuận: Nếu `Year % 4 == 0`, tháng 2 có 29 ngày, ngược lại có 28 ngày. Khi người dùng đổi tháng từ tháng có 31 ngày (ví dụ: ngày 31 tháng 1) sang tháng 2, phần mềm tự động kẹp ngày về giới hạn cực đại hợp lệ (ngày 28 hoặc 29).
+  Firmware tự động xác định năm nhuận: Nếu `Năm % 4 == 0`, tháng 2 có 29 ngày, ngược lại có 28 ngày. Khi người dùng đổi tháng từ tháng có 31 ngày (ví dụ: ngày 31 tháng 1) sang tháng 2, phần mềm tự động kẹp ngày về giới hạn cực đại hợp lệ (ngày 28 hoặc 29).
 * **Thao tác phím:**
-  * **Phím A:** Chuyển sang trường dữ liệu kế tiếp.
-  * **Phím B:** Tăng giá trị của trường đang chọn (+1 đơn vị, tự động quay vòng về 0 khi chạm ngưỡng).
-  * **Phím C:** Lưu toàn bộ thiết lập vào phần cứng RTC và quay trở lại chế độ xem giờ TIME.
+  * **Phím A:** Tăng giá trị của trường đang chọn (+1 đơn vị, tự động quay vòng khi chạm ngưỡng; riêng giây ép về 00).
+  * **Phím B:** Chuyển sang trường dữ liệu kế tiếp (xoay vòng qua 6 trường).
+  * **Phím C:** Lưu toàn bộ thiết lập vào phần cứng RTC (kích hoạt cờ nguyên tử `ARM`) và quay trở lại chế độ xem giờ TIME.
+* **Cài đặt Timer Preset trong SET:** Được kích hoạt khi vào từ chế độ TIMER (bấm Phím C khi dừng), hiển thị `tr  MM.SS`, sử dụng Phím A để tăng và Phím B để đổi giữa Phút và Giây, Phím C để lưu.
 
 ---
 

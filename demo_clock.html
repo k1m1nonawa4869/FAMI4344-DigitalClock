@@ -126,7 +126,7 @@
       background: #040608;
       border: 2px solid #1a202c;
       border-radius: 14px;
-      padding: 22px 18px 18px;
+      padding: 24px 20px 20px;
       box-shadow: inset 0 4px 20px rgba(0, 0, 0, 0.95);
       position: relative;
     }
@@ -145,12 +145,12 @@
       text-shadow: 0 0 8px rgba(57, 255, 20, 0.6);
     }
 
-    /* 7-Segment SVG Display Row (8 digits, zero artificial colons) */
+    /* 7-Segment SVG Display Row (8 digits, zero artificial colons, functional group spacing) */
     .digits-row {
       display: flex;
       justify-content: center;
       align-items: center;
-      gap: 12px;
+      gap: 14px;
       user-select: none;
       padding: 10px 0;
     }
@@ -160,6 +160,13 @@
       flex-direction: column;
       align-items: center;
       width: 54px;
+      position: relative;
+      transition: margin 0.12s ease;
+    }
+
+    /* Functional group spacing to give breathing room around dots and dashes */
+    .digit-col.sep-after {
+      margin-right: 22px;
     }
 
     /* SVG Segments Styling */
@@ -199,16 +206,15 @@
     .dim-9  { opacity: 0.65; }
     .dim-3  { opacity: 0.35; }
 
-    /* Aligned Dynamic Sub-Labels directly below each digit */
-    .sub-labels-row {
+    /* Aligned Dynamic Sub-Labels */
+    #sublabels-container {
       display: flex;
       justify-content: center;
       align-items: center;
-      gap: 12px;
-      margin-top: 8px;
+      gap: 14px;
+      margin-top: 12px;
     }
     .sub-label-cell {
-      width: 54px;
       text-align: center;
       color: #6e7681;
       font-size: 0.68rem;
@@ -217,21 +223,6 @@
       white-space: nowrap;
       height: 18px;
       line-height: 18px;
-    }
-    .sub-label-cell.span-2 {
-      width: 120px; /* 54*2 + 12 = 120px */
-    }
-    .sub-label-cell.span-3 {
-      width: 186px; /* 54*3 + 12*2 = 186px */
-    }
-
-    /* Dynamic Sub-Labels Container */
-    #sublabels-container {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      gap: 12px;
-      margin-top: 10px;
     }
 
     /* Pushbuttons Grid (4 buttons: MODE, A, B, C) */
@@ -304,6 +295,105 @@
       padding: 2px 7px;
       border-radius: 4px;
       font-family: monospace;
+    }
+
+    /* Custom Timer Preset Setter Panel */
+    .custom-timer-card {
+      width: 100%;
+      max-width: 900px;
+      margin-top: 20px;
+      background: var(--card-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 16px 20px;
+    }
+    .custom-timer-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+    .custom-timer-title {
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: #f0f6fc;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .custom-timer-body {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 16px;
+    }
+    .timer-inputs-group {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .timer-input-item {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .timer-input-item label {
+      font-size: 0.68rem;
+      color: #8b949e;
+      font-weight: 600;
+    }
+    .timer-input-item input {
+      width: 68px;
+      background: #0d1117;
+      border: 1px solid #30363d;
+      border-radius: 6px;
+      padding: 6px 8px;
+      color: #f0f6fc;
+      font-size: 0.85rem;
+      font-family: monospace;
+      font-weight: bold;
+      outline: none;
+      text-align: center;
+    }
+    .timer-input-item input:focus {
+      border-color: #58a6ff;
+    }
+    .timer-preset-pills {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+    .timer-pill {
+      background: #21262d;
+      border: 1px solid #30363d;
+      color: #c9d1d9;
+      font-size: 0.72rem;
+      padding: 5px 10px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: all 0.12s ease;
+    }
+    .timer-pill:hover {
+      background: #30363d;
+      color: #fff;
+      border-color: #58a6ff;
+    }
+    .btn-load-timer {
+      background: #238636;
+      border: 1px solid #2ea043;
+      color: #fff;
+      font-size: 0.78rem;
+      font-weight: 700;
+      padding: 8px 14px;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.12s ease;
+      margin-left: auto;
+    }
+    .btn-load-timer:hover {
+      background: #2ea043;
+      box-shadow: 0 0 10px rgba(46, 160, 67, 0.4);
     }
 
     /* Simulation Toolbar */
@@ -526,9 +616,10 @@
       line-height: 1.5;
     }
 
-    @media (max-width: 680px) {
-      .digits-row { gap: 6px; }
+    @media (max-width: 720px) {
+      .digits-row { gap: 8px; }
       .digit-col { width: 38px; }
+      .digit-col.sep-after { margin-right: 12px; }
       .seg-digit { width: 38px; height: 62px; }
       .controls-panel { grid-template-columns: repeat(2, 1fr); }
       .sub-label-cell { font-size: 0.58rem; width: 38px; }
@@ -540,7 +631,7 @@
   <header>
     <div class="badge">HUST MI4344 / IT3283 — KIẾN TRÚC MÁY TÍNH</div>
     <h1>WatchChip SoC — Trình Mô Phỏng Vi Mạch Đồng Hồ Số</h1>
-    <p>Trải nghiệm tương tác trực tiếp 100% thời gian thực không cần cài đặt. Mô phỏng chính xác kiến trúc vi xử lý MIPS 32-bit: Quét LED 7 thanh đa hợp, 5 chế độ hoạt động FSM, bắt sự kiện 0-ns, đếm quá giờ âm và bám sát hiển thị terminal <code>tools/screen.py</code>.</p>
+    <p>Trải nghiệm tương tác trực tiếp 100% thời gian thực không cần cài đặt. Mô phỏng chính xác kiến trúc vi xử lý MIPS 32-bit: Quét LED 7 thanh đa hợp, 5 chế độ hoạt động FSM, bắt sự kiện 0-ns, đếm quá giờ âm, cài đặt Timer tùy chỉnh (TASK-17) và bám sát hiển thị terminal <code>tools/screen.py</code>.</p>
   </header>
 
   <!-- Watch Chassis -->
@@ -569,7 +660,7 @@
       <!-- 8 Uniform 7-Segment Digits (S7..S0 from left to right, NO artificial colons) -->
       <div class="digits-row dim-15" id="digits-container">
         <!-- Digit 7 (S7) -->
-        <div class="digit-col">
+        <div class="digit-col" id="col-d7">
           <svg class="seg-digit" id="d7" viewBox="0 0 54 88">
             <polygon id="d7-a" points="7,3.25 10.25,0 43.75,0 47,3.25 43.75,6.5 10.25,6.5" />
             <polygon id="d7-b" points="48.75,4.5 52,7.75 52,39.25 48.75,42.5 45.5,39.25 45.5,7.75" />
@@ -582,7 +673,7 @@
           </svg>
         </div>
         <!-- Digit 6 (S6) -->
-        <div class="digit-col">
+        <div class="digit-col" id="col-d6">
           <svg class="seg-digit" id="d6" viewBox="0 0 54 88">
             <polygon id="d6-a" points="7,3.25 10.25,0 43.75,0 47,3.25 43.75,6.5 10.25,6.5" />
             <polygon id="d6-b" points="48.75,4.5 52,7.75 52,39.25 48.75,42.5 45.5,39.25 45.5,7.75" />
@@ -595,7 +686,7 @@
           </svg>
         </div>
         <!-- Digit 5 (S5) -->
-        <div class="digit-col">
+        <div class="digit-col" id="col-d5">
           <svg class="seg-digit" id="d5" viewBox="0 0 54 88">
             <polygon id="d5-a" points="7,3.25 10.25,0 43.75,0 47,3.25 43.75,6.5 10.25,6.5" />
             <polygon id="d5-b" points="48.75,4.5 52,7.75 52,39.25 48.75,42.5 45.5,39.25 45.5,7.75" />
@@ -608,7 +699,7 @@
           </svg>
         </div>
         <!-- Digit 4 (S4) -->
-        <div class="digit-col">
+        <div class="digit-col" id="col-d4">
           <svg class="seg-digit" id="d4" viewBox="0 0 54 88">
             <polygon id="d4-a" points="7,3.25 10.25,0 43.75,0 47,3.25 43.75,6.5 10.25,6.5" />
             <polygon id="d4-b" points="48.75,4.5 52,7.75 52,39.25 48.75,42.5 45.5,39.25 45.5,7.75" />
@@ -621,7 +712,7 @@
           </svg>
         </div>
         <!-- Digit 3 (S3) -->
-        <div class="digit-col">
+        <div class="digit-col" id="col-d3">
           <svg class="seg-digit" id="d3" viewBox="0 0 54 88">
             <polygon id="d3-a" points="7,3.25 10.25,0 43.75,0 47,3.25 43.75,6.5 10.25,6.5" />
             <polygon id="d3-b" points="48.75,4.5 52,7.75 52,39.25 48.75,42.5 45.5,39.25 45.5,7.75" />
@@ -634,7 +725,7 @@
           </svg>
         </div>
         <!-- Digit 2 (S2) -->
-        <div class="digit-col">
+        <div class="digit-col" id="col-d2">
           <svg class="seg-digit" id="d2" viewBox="0 0 54 88">
             <polygon id="d2-a" points="7,3.25 10.25,0 43.75,0 47,3.25 43.75,6.5 10.25,6.5" />
             <polygon id="d2-b" points="48.75,4.5 52,7.75 52,39.25 48.75,42.5 45.5,39.25 45.5,7.75" />
@@ -647,7 +738,7 @@
           </svg>
         </div>
         <!-- Digit 1 (S1) -->
-        <div class="digit-col">
+        <div class="digit-col" id="col-d1">
           <svg class="seg-digit" id="d1" viewBox="0 0 54 88">
             <polygon id="d1-a" points="7,3.25 10.25,0 43.75,0 47,3.25 43.75,6.5 10.25,6.5" />
             <polygon id="d1-b" points="48.75,4.5 52,7.75 52,39.25 48.75,42.5 45.5,39.25 45.5,7.75" />
@@ -660,7 +751,7 @@
           </svg>
         </div>
         <!-- Digit 0 (S0) -->
-        <div class="digit-col">
+        <div class="digit-col" id="col-d0">
           <svg class="seg-digit" id="d0" viewBox="0 0 54 88">
             <polygon id="d0-a" points="7,3.25 10.25,0 43.75,0 47,3.25 43.75,6.5 10.25,6.5" />
             <polygon id="d0-b" points="48.75,4.5 52,7.75 52,39.25 48.75,42.5 45.5,39.25 45.5,7.75" />
@@ -714,6 +805,42 @@
         <div class="btn-key">Phím [C] hoặc [4]</div>
       </div>
     </div>
+
+    <!-- Custom Timer Preset Setter Panel (TASK-17) -->
+    <section class="custom-timer-card">
+      <div class="custom-timer-header">
+        <div class="custom-timer-title">⏱️ Cài Đặt Thời Gian Đếm Lùi Tùy Chỉnh (Custom Timer Preset)</div>
+        <span style="font-size:0.75rem; color:#8b949e;">TASK-17: Nạp trực tiếp MMIO REG_TMR_VALUE</span>
+      </div>
+      <div class="custom-timer-body">
+        <div class="timer-inputs-group">
+          <div class="timer-input-item">
+            <label>Phút (0..59)</label>
+            <input type="number" id="inp-tmr-min" min="0" max="59" value="1">
+          </div>
+          <div class="timer-input-item">
+            <label>Giây (0..59)</label>
+            <input type="number" id="inp-tmr-sec" min="0" max="59" value="30">
+          </div>
+          <div class="timer-input-item">
+            <label>Mili-giây</label>
+            <input type="number" id="inp-tmr-ms" min="0" max="999" step="50" value="0">
+          </div>
+        </div>
+
+        <div class="timer-preset-pills">
+          <button class="timer-pill" onclick="quickFillTimer(0, 15, 0)">15s</button>
+          <button class="timer-pill" onclick="quickFillTimer(0, 30, 0)">30s</button>
+          <button class="timer-pill" onclick="quickFillTimer(1, 0, 0)">1m</button>
+          <button class="timer-pill" onclick="quickFillTimer(2, 0, 0)">2m</button>
+          <button class="timer-pill" onclick="quickFillTimer(3, 0, 0)">3m</button>
+          <button class="timer-pill" onclick="quickFillTimer(5, 0, 0)">5m</button>
+          <button class="timer-pill" onclick="quickFillTimer(10, 0, 0)">10m</button>
+        </div>
+
+        <button class="btn-load-timer" onclick="applyCustomTimerPreset()">▶️ Nạp Vào Timer & Chuyển Chế Độ</button>
+      </div>
+    </section>
 
     <!-- Simulation Speed, Theme & Audio Toolbar -->
     <div class="sim-bar">
@@ -858,8 +985,8 @@ t = 0 ms
 
       // Timer
       tmrRunning: false,
-      tmrPresetMs: 60000,
-      tmrRemainMs: 60000,
+      tmrPresetMs: 90000, // Mặc định 1 phút 30 giây
+      tmrRemainMs: 90000,
       tmrBeeping: false,
 
       // Alarm (4 kênh + Hourly Chime)
@@ -878,9 +1005,12 @@ t = 0 ms
       alarmSoundStartMs: 0,
       snoozeUntilMs: -1,
 
-      // SET Mode (FSM 6 trường)
-      setField: 0, // 0: Hour, 1: Min, 2: Sec, 3: Day, 4: Month, 5: Year
+      // SET Mode (TASK-17: Hỗ trợ cả RTC và Timer Preset)
+      tPage: 0, // 0: SET RTC (Giờ/Ngày), 1: SET Timer Preset
+      setField: 0, // RTC: 0: Hr, 1: Min, 2: Sec, 3: Day, 4: Mon, 5: Yr | Timer: 0: Min, 1: Sec
       setVals: { hr: 23, min: 59, sec: 50, day: 28, mon: 2, yr: 24 },
+      tmrSetMin: 1,
+      tmrSetSec: 30,
       blinkPhase: false, // 2 Hz nhấp nháy
       blinkTimer: 0,
 
@@ -994,7 +1124,7 @@ t = 0 ms
     }
 
     // ============================================================================
-    // HIỂN THỊ 7 THANH & CẬP NHẬT SUB-LABELS ĐỒNG BỘ
+    // HIỂN THỊ 7 THANH & CẬP NHẬT KHOẢNG CÁCH / NHÃN PHỤ ĐỒNG BỘ
     // ============================================================================
 
     // Bật tắt từng thanh đoạn trên SVG
@@ -1016,6 +1146,51 @@ t = 0 ms
       return pat;
     }
 
+    // Cập nhật khoảng cách phân nhóm chức năng (Functional Group Spacing)
+    function updateDigitSpacing() {
+      // Xóa các class sep-after cũ
+      for (let i = 0; i < 8; i++) {
+        const col = document.getElementById(`col-d${i}`);
+        if (col) col.classList.remove('sep-after');
+      }
+
+      const m = STATE.mode;
+      if (m === 0 && STATE.timeView === 0) { // TIME HH.MM.SS
+        document.getElementById('col-d6').classList.add('sep-after');
+        document.getElementById('col-d4').classList.add('sep-after');
+        document.getElementById('col-d2').classList.add('sep-after');
+      } else if ((m === 0 && STATE.timeView === 1) || m === 1 || m === 2) { // MM.SS.mmm (TIME, STPW, TMR)
+        document.getElementById('col-d7').classList.add('sep-after');
+        document.getElementById('col-d5').classList.add('sep-after');
+        document.getElementById('col-d3').classList.add('sep-after');
+      } else if (m === 0 && STATE.timeView === 2) { // DATE DD-MM-YY
+        document.getElementById('col-d6').classList.add('sep-after');
+        document.getElementById('col-d5').classList.add('sep-after');
+        document.getElementById('col-d3').classList.add('sep-after');
+        document.getElementById('col-d2').classList.add('sep-after');
+      } else if (m === 3) { // ALARM
+        document.getElementById('col-d4').classList.add('sep-after');
+        document.getElementById('col-d2').classList.add('sep-after');
+      } else if (m === 4) { // SET
+        if (STATE.tPage === 1) { // SET TIMER
+          document.getElementById('col-d6').classList.add('sep-after');
+          document.getElementById('col-d4').classList.add('sep-after');
+          document.getElementById('col-d2').classList.add('sep-after');
+        } else { // SET RTC
+          if (STATE.setField < 3) {
+            document.getElementById('col-d6').classList.add('sep-after');
+            document.getElementById('col-d4').classList.add('sep-after');
+            document.getElementById('col-d2').classList.add('sep-after');
+          } else {
+            document.getElementById('col-d6').classList.add('sep-after');
+            document.getElementById('col-d5').classList.add('sep-after');
+            document.getElementById('col-d3').classList.add('sep-after');
+            document.getElementById('col-d2').classList.add('sep-after');
+          }
+        }
+      }
+    }
+
     // Tạo HTML các nhãn phụ tương ứng chính xác với từng chế độ
     function updateSubLabels() {
       const container = document.getElementById('sublabels-container');
@@ -1025,77 +1200,86 @@ t = 0 ms
       if (m === 0) { // TIME
         if (STATE.timeView === 0) { // HH.MM.SS
           html = `
-            <div class="sub-label-cell span-2" style="color:#58a6ff;">[S7..S6: ${STATE.is24h ? '24H' : '12H'}]</div>
-            <div class="sub-label-cell span-2">[S5..S4: GIỜ (HH)]</div>
-            <div class="sub-label-cell span-2">[S3..S2: PHÚT (MM)]</div>
-            <div class="sub-label-cell span-2">[S1..S0: GIÂY (SS)]</div>
+            <div class="sub-label-cell" style="width:122px; color:#58a6ff; margin-right:22px;">[S7..S6: ${STATE.is24h ? '24H' : '12H'}]</div>
+            <div class="sub-label-cell" style="width:122px; margin-right:22px;">[S5..S4: GIỜ (HH)]</div>
+            <div class="sub-label-cell" style="width:122px; margin-right:22px;">[S3..S2: PHÚT (MM)]</div>
+            <div class="sub-label-cell" style="width:122px;">[S1..S0: GIÂY (SS)]</div>
           `;
         } else if (STATE.timeView === 1) { // MM.SS.mmm
           html = `
-            <div class="sub-label-cell">[S7: Trống]</div>
-            <div class="sub-label-cell span-2">[S6..S5: PHÚT (MM)]</div>
-            <div class="sub-label-cell span-2">[S4..S3: GIÂY (SS)]</div>
-            <div class="sub-label-cell span-3" style="color:#39ff14;">[S2..S0: MILI-GIÂY (ms)]</div>
+            <div class="sub-label-cell" style="width:54px; margin-right:22px;">[S7]</div>
+            <div class="sub-label-cell" style="width:122px; margin-right:22px;">[S6..S5: PHÚT]</div>
+            <div class="sub-label-cell" style="width:122px; margin-right:22px;">[S4..S3: GIÂY]</div>
+            <div class="sub-label-cell" style="width:190px; color:#39ff14;">[S2..S0: MILI-GIÂY (ms)]</div>
           `;
         } else { // DD-MM-YY
           html = `
-            <div class="sub-label-cell span-2">[S7..S6: NGÀY (DD)]</div>
-            <div class="sub-label-cell">[S5: -]</div>
-            <div class="sub-label-cell span-2">[S4..S3: THÁNG (MM)]</div>
-            <div class="sub-label-cell">[S2: -]</div>
-            <div class="sub-label-cell span-2">[S1..S0: NĂM (YY)]</div>
+            <div class="sub-label-cell" style="width:122px; margin-right:22px;">[S7..S6: NGÀY]</div>
+            <div class="sub-label-cell" style="width:54px; margin-right:22px;">[-]</div>
+            <div class="sub-label-cell" style="width:122px; margin-right:22px;">[S4..S3: THÁNG]</div>
+            <div class="sub-label-cell" style="width:54px; margin-right:22px;">[-]</div>
+            <div class="sub-label-cell" style="width:122px;">[S1..S0: NĂM]</div>
           `;
         }
       } else if (m === 1) { // STOPWATCH
         const isLap = STATE.swLapIdx >= 0;
         html = `
-          <div class="sub-label-cell" style="color:#e3b341;">[S7: ${isLap ? 'LAP ' + (STATE.swLapIdx + 1) : 'LIVE'}]</div>
-          <div class="sub-label-cell span-2">[S6..S5: PHÚT (MM)]</div>
-          <div class="sub-label-cell span-2">[S4..S3: GIÂY (SS)]</div>
-          <div class="sub-label-cell span-3" style="color:#39ff14;">[S2..S0: MILI-GIÂY (ms)]</div>
+          <div class="sub-label-cell" style="width:54px; margin-right:22px; color:#e3b341;">[S7: ${isLap ? 'L' + (STATE.swLapIdx + 1) : 'LIVE'}]</div>
+          <div class="sub-label-cell" style="width:122px; margin-right:22px;">[S6..S5: PHÚT (MM)]</div>
+          <div class="sub-label-cell" style="width:122px; margin-right:22px;">[S4..S3: GIÂY (SS)]</div>
+          <div class="sub-label-cell" style="width:190px; color:#39ff14;">[S2..S0: MILI-GIÂY (ms)]</div>
         `;
       } else if (m === 2) { // TIMER
         const isNeg = STATE.tmrRemainMs < 0;
         html = `
-          <div class="sub-label-cell" style="color:${isNeg ? '#f85149' : '#8b949e'};">[S7: ${isNeg ? 'DẤU (-)' : 'TRỐNG'}]</div>
-          <div class="sub-label-cell span-2">[S6..S5: PHÚT (MM)]</div>
-          <div class="sub-label-cell span-2">[S4..S3: GIÂY (SS)]</div>
-          <div class="sub-label-cell span-3" style="color:#39ff14;">[S2..S0: MILI-GIÂY (ms)]</div>
+          <div class="sub-label-cell" style="width:54px; margin-right:22px; color:${isNeg ? '#f85149' : '#8b949e'};">[S7: ${isNeg ? '-' : ' '}</div>
+          <div class="sub-label-cell" style="width:122px; margin-right:22px;">[S6..S5: PHÚT (MM)]</div>
+          <div class="sub-label-cell" style="width:122px; margin-right:22px;">[S4..S3: GIÂY (SS)]</div>
+          <div class="sub-label-cell" style="width:190px; color:#39ff14;">[S2..S0: MILI-GIÂY (ms)]</div>
         `;
       } else if (m === 3) { // ALARM
         if (STATE.almChannel < 4) {
           const alm = STATE.alarms[STATE.almChannel];
           html = `
-            <div class="sub-label-cell span-3" style="color:#e3b341;">[S7..S5: ALARM ${STATE.almChannel + 1}]</div>
-            <div class="sub-label-cell" style="color:${alm.en ? '#39ff14' : '#8b949e'};">[S4: ${alm.en ? 'BẬT (o)' : 'TẮT'}]</div>
-            <div class="sub-label-cell span-2">[S3..S2: GIỜ (HH)]</div>
-            <div class="sub-label-cell span-2">[S1..S0: PHÚT (MM)]</div>
+            <div class="sub-label-cell" style="width:190px; color:#e3b341;">[S7..S5: ALARM ${STATE.almChannel + 1}]</div>
+            <div class="sub-label-cell" style="width:54px; margin-right:22px; color:${alm.en ? '#39ff14' : '#8b949e'};">[S4: ${alm.en ? 'BẬT' : 'TẮT'}]</div>
+            <div class="sub-label-cell" style="width:122px; margin-right:22px;">[S3..S2: GIỜ (HH)]</div>
+            <div class="sub-label-cell" style="width:122px;">[S1..S0: PHÚT (MM)]</div>
           `;
         } else {
           html = `
-            <div class="sub-label-cell span-2" style="color:#e3b341;">[S7..S6: CHIME]</div>
-            <div class="sub-label-cell">[S5: Trống]</div>
-            <div class="sub-label-cell" style="color:${STATE.hourlyChime ? '#39ff14' : '#8b949e'};">[S4: ${STATE.hourlyChime ? 'BẬT (o)' : 'TẮT'}]</div>
-            <div class="sub-label-cell span-2">[S3..S2: Trống]</div>
-            <div class="sub-label-cell span-2">[S1..S0: Trống]</div>
+            <div class="sub-label-cell" style="width:122px; color:#e3b341;">[S7..S6: CHIME]</div>
+            <div class="sub-label-cell" style="width:54px;">[S5]</div>
+            <div class="sub-label-cell" style="width:54px; margin-right:22px; color:${STATE.hourlyChime ? '#39ff14' : '#8b949e'};">[S4: ${STATE.hourlyChime ? 'BẬT' : 'TẮT'}]</div>
+            <div class="sub-label-cell" style="width:122px; margin-right:22px;">[S3..S2]</div>
+            <div class="sub-label-cell" style="width:122px;">[S1..S0]</div>
           `;
         }
       } else if (m === 4) { // SET
-        if (STATE.setField < 3) { // Setting Time
+        if (STATE.tPage === 1) { // SET TIMER (TASK-17)
           html = `
-            <div class="sub-label-cell span-2">[S7..S6: CÀI ĐẶT]</div>
-            <div class="sub-label-cell span-2" style="${STATE.setField === 0 ? 'color:#58a6ff;' : ''}">[S5..S4: GIỜ (HH)]</div>
-            <div class="sub-label-cell span-2" style="${STATE.setField === 1 ? 'color:#58a6ff;' : ''}">[S3..S2: PHÚT (MM)]</div>
-            <div class="sub-label-cell span-2" style="${STATE.setField === 2 ? 'color:#58a6ff;' : ''}">[S1..S0: GIÂY (SS)]</div>
+            <div class="sub-label-cell" style="width:122px; margin-right:22px; color:#e3b341;">[S7..S6: SET TIMER]</div>
+            <div class="sub-label-cell" style="width:122px; margin-right:22px;">[S5..S4: --]</div>
+            <div class="sub-label-cell" style="width:122px; margin-right:22px; ${STATE.setField === 0 ? 'color:#58a6ff;' : ''}">[S3..S2: PHÚT (MM)]</div>
+            <div class="sub-label-cell" style="width:122px; ${STATE.setField === 1 ? 'color:#58a6ff;' : ''}">[S1..S0: GIÂY (SS)]</div>
           `;
-        } else { // Setting Date
-          html = `
-            <div class="sub-label-cell span-2" style="${STATE.setField === 3 ? 'color:#58a6ff;' : ''}">[S7..S6: NGÀY (DD)]</div>
-            <div class="sub-label-cell">[S5: -]</div>
-            <div class="sub-label-cell span-2" style="${STATE.setField === 4 ? 'color:#58a6ff;' : ''}">[S4..S3: THÁNG (MM)]</div>
-            <div class="sub-label-cell">[S2: -]</div>
-            <div class="sub-label-cell span-2" style="${STATE.setField === 5 ? 'color:#58a6ff;' : ''}">[S1..S0: NĂM (YY)]</div>
-          `;
+        } else { // SET RTC
+          if (STATE.setField < 3) {
+            html = `
+              <div class="sub-label-cell" style="width:122px; margin-right:22px;">[S7..S6: SET RTC]</div>
+              <div class="sub-label-cell" style="width:122px; margin-right:22px; ${STATE.setField === 0 ? 'color:#58a6ff;' : ''}">[S5..S4: GIỜ (HH)]</div>
+              <div class="sub-label-cell" style="width:122px; margin-right:22px; ${STATE.setField === 1 ? 'color:#58a6ff;' : ''}">[S3..S2: PHÚT (MM)]</div>
+              <div class="sub-label-cell" style="width:122px; ${STATE.setField === 2 ? 'color:#58a6ff;' : ''}">[S1..S0: GIÂY (SS)]</div>
+            `;
+          } else {
+            html = `
+              <div class="sub-label-cell" style="width:122px; margin-right:22px; ${STATE.setField === 3 ? 'color:#58a6ff;' : ''}">[S7..S6: NGÀY]</div>
+              <div class="sub-label-cell" style="width:54px; margin-right:22px;">[-]</div>
+              <div class="sub-label-cell" style="width:122px; margin-right:22px; ${STATE.setField === 4 ? 'color:#58a6ff;' : ''}">[S4..S3: THÁNG]</div>
+              <div class="sub-label-cell" style="width:54px; margin-right:22px;">[-]</div>
+              <div class="sub-label-cell" style="width:122px; ${STATE.setField === 5 ? 'color:#58a6ff;' : ''}">[S1..S0: NĂM]</div>
+            `;
+          }
         }
       }
 
@@ -1111,7 +1295,6 @@ t = 0 ms
       const dps = [false, false, false, false, false, false, false, false];
 
       const m = STATE.mode;
-      const blinkMask = (STATE.blinkPhase) ? 0 : 1; // 0: tắt chữ số đang nháy
 
       // 1. CHẾ ĐỘ 0: TIME
       if (m === 0) {
@@ -1137,7 +1320,7 @@ t = 0 ms
           chars[1] = Math.floor(sec / 10).toString();
           chars[0] = (sec % 10).toString();
         } else if (STATE.timeView === 1) { // MM.SS.mmm (fmtA)
-          const remMs = STATE.msOfDay % 3600000;
+          const remMs = Math.floor(STATE.msOfDay % 3600000);
           const min = Math.floor(remMs / 60000);
           const sec = Math.floor((remMs % 60000) / 1000);
           const ms = remMs % 1000;
@@ -1150,7 +1333,7 @@ t = 0 ms
           dps[3] = true;
           chars[2] = Math.floor(ms / 100).toString();
           chars[1] = Math.floor((ms % 100) / 10).toString();
-          chars[0] = (ms % 10).toString();
+          chars[0] = Math.floor(ms % 10).toString(); // <--- Đã sửa Math.floor!
         } else { // DD-MM-YY (dt_dy)
           const dt = daysToDate(STATE.days);
           chars[7] = Math.floor(dt.day / 10).toString();
@@ -1166,13 +1349,14 @@ t = 0 ms
 
       // 2. CHẾ ĐỘ 1: STOPWATCH (fmtD -> fmtA)
       else if (m === 1) {
-        let t = STATE.swElapsedMs;
+        const t = Math.floor(STATE.swElapsedMs);
+        let curT = t;
         if (STATE.swLapIdx >= 0 && STATE.laps[STATE.swLapIdx] !== undefined) {
-          t = STATE.laps[STATE.swLapIdx];
+          curT = Math.floor(STATE.laps[STATE.swLapIdx]);
         }
-        const min = Math.floor(t / 60000) % 60;
-        const sec = Math.floor((t % 60000) / 1000);
-        const ms = t % 1000;
+        const min = Math.floor(curT / 60000) % 60;
+        const sec = Math.floor((curT % 60000) / 1000);
+        const ms = curT % 1000;
         chars[7] = STATE.swLapIdx >= 0 ? (STATE.swLapIdx + 1).toString() : ' ';
         chars[6] = Math.floor(min / 10).toString();
         chars[5] = (min % 10).toString();
@@ -1182,12 +1366,12 @@ t = 0 ms
         dps[3] = true;
         chars[2] = Math.floor(ms / 100).toString();
         chars[1] = Math.floor((ms % 100) / 10).toString();
-        chars[0] = (ms % 10).toString();
+        chars[0] = Math.floor(ms % 10).toString(); // <--- Đã sửa Math.floor!
       }
 
       // 3. CHẾ ĐỘ 2: TIMER (dr_tr -> fmtD)
       else if (m === 2) {
-        const rem = STATE.tmrRemainMs;
+        const rem = Math.floor(STATE.tmrRemainMs);
         const isNeg = rem < 0;
         const absMs = Math.abs(rem);
         const min = Math.floor(absMs / 60000) % 60;
@@ -1202,7 +1386,7 @@ t = 0 ms
         dps[3] = true;
         chars[2] = Math.floor(ms / 100).toString();
         chars[1] = Math.floor((ms % 100) / 10).toString();
-        chars[0] = (ms % 10).toString();
+        chars[0] = Math.floor(ms % 10).toString(); // <--- Đã sửa Math.floor!
       }
 
       // 4. CHẾ ĐỘ 3: ALARM (dr_al)
@@ -1240,45 +1424,65 @@ t = 0 ms
         }
       }
 
-      // 5. CHẾ ĐỘ 4: SET (dr_st)
+      // 5. CHẾ ĐỘ 4: SET (TASK-17: Hỗ trợ cả RTC và Timer Preset)
       else if (m === 4) {
-        const sf = STATE.setField;
-        if (sf < 3) { // Setting Time: HH.MM.SS
-          const sv = STATE.setVals;
-          chars[7] = ' ';
-          chars[6] = ' ';
-          chars[5] = Math.floor(sv.hr / 10).toString();
-          chars[4] = (sv.hr % 10).toString();
-          dps[4] = true;
-          chars[3] = Math.floor(sv.min / 10).toString();
-          chars[2] = (sv.min % 10).toString();
-          dps[2] = true;
-          chars[1] = Math.floor(sv.sec / 10).toString();
-          chars[0] = (sv.sec % 10).toString();
+        if (STATE.tPage === 1) { // SET TIMER: tr  MM.SS
+          chars[7] = 't';
+          chars[6] = 'r';
+          chars[5] = ' ';
+          chars[4] = ' ';
+          chars[3] = Math.floor(STATE.tmrSetMin / 10).toString();
+          chars[2] = (STATE.tmrSetMin % 10).toString();
+          dps[2] = true; // Dấu chấm sau phút
+          chars[1] = Math.floor(STATE.tmrSetSec / 10).toString();
+          chars[0] = (STATE.tmrSetSec % 10).toString();
 
           if (!STATE.blinkPhase) {
-            if (sf === 0) { chars[5] = ' '; chars[4] = ' '; }
-            else if (sf === 1) { chars[3] = ' '; chars[2] = ' '; }
-            else if (sf === 2) { chars[1] = ' '; chars[0] = ' '; }
+            if (STATE.setField === 0) { chars[3] = ' '; chars[2] = ' '; } // Nháy phút
+            else if (STATE.setField === 1) { chars[1] = ' '; chars[0] = ' '; } // Nháy giây
           }
-        } else { // Setting Date: DD-MM-YY
-          const sv = STATE.setVals;
-          chars[7] = Math.floor(sv.day / 10).toString();
-          chars[6] = (sv.day % 10).toString();
-          chars[5] = '-';
-          chars[4] = Math.floor(sv.mon / 10).toString();
-          chars[3] = (sv.mon % 10).toString();
-          chars[2] = '-';
-          chars[1] = Math.floor(sv.yr / 10).toString();
-          chars[0] = (sv.yr % 10).toString();
+        } else { // SET RTC
+          const sf = STATE.setField;
+          if (sf < 3) { // Setting Time: HH.MM.SS
+            const sv = STATE.setVals;
+            chars[7] = ' ';
+            chars[6] = ' ';
+            chars[5] = Math.floor(sv.hr / 10).toString();
+            chars[4] = (sv.hr % 10).toString();
+            dps[4] = true;
+            chars[3] = Math.floor(sv.min / 10).toString();
+            chars[2] = (sv.min % 10).toString();
+            dps[2] = true;
+            chars[1] = Math.floor(sv.sec / 10).toString();
+            chars[0] = (sv.sec % 10).toString();
 
-          if (!STATE.blinkPhase) {
-            if (sf === 3) { chars[7] = ' '; chars[6] = ' '; }
-            else if (sf === 4) { chars[4] = ' '; chars[3] = ' '; }
-            else if (sf === 5) { chars[1] = ' '; chars[0] = ' '; }
+            if (!STATE.blinkPhase) {
+              if (sf === 0) { chars[5] = ' '; chars[4] = ' '; }
+              else if (sf === 1) { chars[3] = ' '; chars[2] = ' '; }
+              else if (sf === 2) { chars[1] = ' '; chars[0] = ' '; }
+            }
+          } else { // Setting Date: DD-MM-YY
+            const sv = STATE.setVals;
+            chars[7] = Math.floor(sv.day / 10).toString();
+            chars[6] = (sv.day % 10).toString();
+            chars[5] = '-';
+            chars[4] = Math.floor(sv.mon / 10).toString();
+            chars[3] = (sv.mon % 10).toString();
+            chars[2] = '-';
+            chars[1] = Math.floor(sv.yr / 10).toString();
+            chars[0] = (sv.yr % 10).toString();
+
+            if (!STATE.blinkPhase) {
+              if (sf === 3) { chars[7] = ' '; chars[6] = ' '; }
+              else if (sf === 4) { chars[4] = ' '; chars[3] = ' '; }
+              else if (sf === 5) { chars[1] = ' '; chars[0] = ' '; }
+            }
           }
         }
       }
+
+      // Cập nhật phân nhóm khoảng cách thị giác (Functional Group Spacing)
+      updateDigitSpacing();
 
       // Xuất mẫu 7 thanh lên giao diện SVG
       const segPats = [];
@@ -1307,7 +1511,6 @@ t = 0 ms
       }
 
       // 2. Tạo chữ số lớn 3 dòng: big(segs) trong screen.py
-      // segPats[7] (trái nhất) -> segPats[0] (phải nhất)
       const rows = ['', '', ''];
       for (let i = 7; i >= 0; i--) {
         const s = segPats[i];
@@ -1384,13 +1587,20 @@ t = 0 ms
       const a0Val = (a0.en ? 0x80000000 : 0) | (a0.minOfDay & 0x7FF);
       document.getElementById('reg-alarm0').textContent = toHex32(a0Val);
       document.getElementById('reg-bright').textContent = toHex32(STATE.brightness);
-      const blinkMask = (STATE.mode === 4) ? (1 << (STATE.setField * 2)) : 0;
+      let blinkMask = 0;
+      if (STATE.mode === 4) {
+        if (STATE.tPage === 1) {
+          blinkMask = STATE.setField === 0 ? 0x0C : 0x03;
+        } else {
+          blinkMask = 1 << (STATE.setField * 2);
+        }
+      }
       document.getElementById('reg-blink').textContent = toHex32(blinkMask);
       const beepPat = STATE.alarmSounding ? 0x00010F0F : (STATE.tmrBeeping ? 0x00000005 : 0);
       document.getElementById('reg-beep').textContent = toHex32(beepPat);
 
       const fsmNames = ['TIME', 'STPW', 'TMR', 'ALM', 'SET'];
-      document.getElementById('reg-fsm-mode').textContent = fsmNames[STATE.mode];
+      document.getElementById('reg-fsm-mode').textContent = fsmNames[STATE.mode] + (STATE.mode === 4 && STATE.tPage === 1 ? ' (TIMER)' : '');
     }
 
     // ============================================================================
@@ -1425,7 +1635,7 @@ t = 0 ms
       } else if (m === 2) { // TMR
         dA.textContent = STATE.tmrRunning ? 'DỪNG (Stop) đếm ngược' : 'BẮT ĐẦU (Start) đếm ngược';
         dB.textContent = 'Khôi phục về giá trị đặt trước (Reset)';
-        dC.textContent = STATE.tmrRunning ? '(Khóa khi đang chạy)' : 'Tăng thêm 1 phút vào preset';
+        dC.textContent = STATE.tmrRunning ? '(Khóa khi đang chạy)' : 'Cài đặt Preset Phút:Giây (Vào SET)';
       } else if (m === 3) { // ALM
         if (STATE.almEditing > 0) {
           dA.textContent = `Tăng giá trị trường ${STATE.almEditing === 1 ? 'Giờ (+1)' : 'Phút (+1)'}`;
@@ -1437,10 +1647,16 @@ t = 0 ms
           dC.textContent = STATE.alarmSounding ? 'Tạm hoãn chuông Snooze (+5 phút)' : 'Vào chế độ chỉnh sửa giờ';
         }
       } else if (m === 4) { // SET
-        const fNames = ['Giờ (+1)', 'Phút (+1)', 'Giây (Đặt về 00)', 'Ngày (+1)', 'Tháng (+1)', 'Năm (+1)'];
-        dA.textContent = `Tăng trường: ${fNames[STATE.setField]}`;
-        dB.textContent = 'Chuyển sang trường tiếp theo (Next Field)';
-        dC.textContent = 'Lưu vào RTC phần cứng và thoát về TIME';
+        if (STATE.tPage === 1) { // SET TIMER (TASK-17)
+          dA.textContent = `Tăng trường: ${STATE.setField === 0 ? 'Phút (+1)' : 'Giây (+1)'}`;
+          dB.textContent = 'Chuyển đổi giữa Phút ↔ Giây';
+          dC.textContent = 'Lưu Preset vào Timer & Thoát';
+        } else { // SET RTC
+          const fNames = ['Giờ (+1)', 'Phút (+1)', 'Giây (Đặt về 00)', 'Ngày (+1)', 'Tháng (+1)', 'Năm (+1)'];
+          dA.textContent = `Tăng trường: ${fNames[STATE.setField]}`;
+          dB.textContent = 'Chuyển sang trường tiếp theo (Next Field)';
+          dC.textContent = 'Lưu vào RTC phần cứng và thoát về TIME';
+        }
       }
     }
 
@@ -1448,12 +1664,10 @@ t = 0 ms
     function pressMODE() {
       playClick();
       animateBtn('btn-mode');
-      if (STATE.mode === 4) {
-        // Thoát khỏi SET mà không lưu (hoặc chuyển sang TIME)
-      }
       STATE.mode = (STATE.mode + 1) % 5;
+      STATE.tPage = 0; // Mặc định về SET RTC khi chuyển mode bằng nút MODE
       if (STATE.mode === 4) {
-        // Khởi tạo các giá trị SET từ RTC hiện tại
+        // Khởi tạo các giá trị SET RTC từ đồng hồ hiện tại
         const secTotal = Math.floor(STATE.msOfDay / 1000);
         const dt = daysToDate(STATE.days);
         STATE.setVals = {
@@ -1502,23 +1716,31 @@ t = 0 ms
             STATE.hourlyChime = !STATE.hourlyChime;
           }
         }
-      } else if (m === 4) { // SET: +1
-        const sv = STATE.setVals;
-        const sf = STATE.setField;
-        if (sf === 0) sv.hr = (sv.hr + 1) % 24;
-        else if (sf === 1) sv.min = (sv.min + 1) % 60;
-        else if (sf === 2) sv.sec = 0; // Riêng giây ép về 00
-        else if (sf === 3) {
-          const maxD = getMonthLength(sv.mon, sv.yr);
-          sv.day = (sv.day % maxD) + 1;
-        } else if (sf === 4) {
-          sv.mon = (sv.mon % 12) + 1;
-          const maxD = getMonthLength(sv.mon, sv.yr);
-          if (sv.day > maxD) sv.day = maxD;
-        } else if (sf === 5) {
-          sv.yr = (sv.yr + 1) % 100;
-          const maxD = getMonthLength(sv.mon, sv.yr);
-          if (sv.day > maxD) sv.day = maxD;
+      } else if (m === 4) { // SET
+        if (STATE.tPage === 1) { // SET TIMER (TASK-17)
+          if (STATE.setField === 0) {
+            STATE.tmrSetMin = (STATE.tmrSetMin + 1) % 60;
+          } else {
+            STATE.tmrSetSec = (STATE.tmrSetSec + 1) % 60;
+          }
+        } else { // SET RTC
+          const sv = STATE.setVals;
+          const sf = STATE.setField;
+          if (sf === 0) sv.hr = (sv.hr + 1) % 24;
+          else if (sf === 1) sv.min = (sv.min + 1) % 60;
+          else if (sf === 2) sv.sec = 0; // Riêng giây ép về 00
+          else if (sf === 3) {
+            const maxD = getMonthLength(sv.mon, sv.yr);
+            sv.day = (sv.day % maxD) + 1;
+          } else if (sf === 4) {
+            sv.mon = (sv.mon % 12) + 1;
+            const maxD = getMonthLength(sv.mon, sv.yr);
+            if (sv.day > maxD) sv.day = maxD;
+          } else if (sf === 5) {
+            sv.yr = (sv.yr + 1) % 100;
+            const maxD = getMonthLength(sv.mon, sv.yr);
+            if (sv.day > maxD) sv.day = maxD;
+          }
         }
       }
       updateAnnunciators();
@@ -1536,7 +1758,7 @@ t = 0 ms
         if (STATE.swRunning) {
           if (STATE.laps.length < 8) {
             STATE.laps.push(STATE.swElapsedMs);
-            appendStreamLog(`[STPW] Da chup Lap ${STATE.laps.length}: ${STATE.swElapsedMs} ms (0-ns capture)`);
+            appendStreamLog(`[STPW] Da chup Lap ${STATE.laps.length}: ${Math.floor(STATE.swElapsedMs)} ms (0-ns capture)`);
           }
         } else {
           STATE.swElapsedMs = 0;
@@ -1553,8 +1775,12 @@ t = 0 ms
         } else {
           STATE.almChannel = (STATE.almChannel + 1) % 5;
         }
-      } else if (m === 4) { // SET: Đổi trường (0..5)
-        STATE.setField = (STATE.setField + 1) % 6;
+      } else if (m === 4) { // SET
+        if (STATE.tPage === 1) { // SET TIMER: Đổi giữa Phút (0) <-> Giây (1)
+          STATE.setField = (STATE.setField === 0 ? 1 : 0);
+        } else { // SET RTC: Đổi trường (0..5)
+          STATE.setField = (STATE.setField + 1) % 6;
+        }
       }
       updateAnnunciators();
       render();
@@ -1579,10 +1805,14 @@ t = 0 ms
             STATE.swLapIdx = -1; // Quay về xem chạy trực tiếp
           }
         }
-      } else if (m === 2) { // TMR: +1 phút vào preset khi dừng
+      } else if (m === 2) { // TMR: Vào chế độ SET TIMER khi dừng (TASK-17)
         if (!STATE.tmrRunning) {
-          STATE.tmrPresetMs = (STATE.tmrPresetMs + 60000) % 3600000;
-          STATE.tmrRemainMs = STATE.tmrPresetMs;
+          STATE.tPage = 1;
+          STATE.mode = 4; // Vào SET
+          STATE.tmrSetMin = Math.floor(STATE.tmrPresetMs / 60000) % 60;
+          STATE.tmrSetSec = Math.floor((STATE.tmrPresetMs % 60000) / 1000);
+          STATE.setField = 0; // Bắt đầu từ Phút
+          appendStreamLog(`[TIMER SET] Vao cai dat Timer Preset trong SET Mode`);
         }
       } else if (m === 3) { // ALM
         if (STATE.alarmSounding) { // Snooze +5 phút
@@ -1600,12 +1830,21 @@ t = 0 ms
             STATE.almEditing = 0;
           }
         }
-      } else if (m === 4) { // SET: Lưu vào RTC & Thoát về TIME
-        const sv = STATE.setVals;
-        STATE.msOfDay = (sv.hr * 3600 + sv.min * 60 + sv.sec) * 1000;
-        STATE.days = dateToDays(sv.day, sv.mon, sv.yr);
-        STATE.mode = 0;
-        appendStreamLog(`[RTC] Da dong bo gio moi: ${sv.hr}:${sv.min}:${sv.sec} ngay ${sv.day}/${sv.mon}/${sv.yr}`);
+      } else if (m === 4) { // SET: Lưu & Thoát
+        if (STATE.tPage === 1) { // Lưu Timer Preset (TASK-17)
+          const newPreset = (STATE.tmrSetMin * 60 + STATE.tmrSetSec) * 1000;
+          STATE.tmrPresetMs = newPreset;
+          STATE.tmrRemainMs = newPreset;
+          STATE.mode = 2; // Trở về TIMER
+          STATE.tPage = 0;
+          appendStreamLog(`[TIMER SET] Da luu preset moi: ${STATE.tmrSetMin} phut ${STATE.tmrSetSec} giay (${newPreset} ms)`);
+        } else { // Lưu RTC
+          const sv = STATE.setVals;
+          STATE.msOfDay = (sv.hr * 3600 + sv.min * 60 + sv.sec) * 1000;
+          STATE.days = dateToDays(sv.day, sv.mon, sv.yr);
+          STATE.mode = 0;
+          appendStreamLog(`[RTC] Da dong bo gio moi: ${sv.hr}:${sv.min}:${sv.sec} ngay ${sv.day}/${sv.mon}/${sv.yr}`);
+        }
       }
       updateAnnunciators();
       render();
@@ -1627,6 +1866,35 @@ t = 0 ms
       else if (k === 'b' || k === '3') pressB();
       else if (k === 'c' || k === '4') pressC();
     });
+
+    // ============================================================================
+    // BẢNG ĐIỀU KHIỂN NẠP TIMER TÙY CHỈNH (TASK-17 GUI PRESET SETTER)
+    // ============================================================================
+    function quickFillTimer(m, s, ms) {
+      document.getElementById('inp-tmr-min').value = m;
+      document.getElementById('inp-tmr-sec').value = s;
+      document.getElementById('inp-tmr-ms').value = ms;
+      playClick();
+    }
+
+    function applyCustomTimerPreset() {
+      playClick();
+      const m = parseInt(document.getElementById('inp-tmr-min').value) || 0;
+      const s = parseInt(document.getElementById('inp-tmr-sec').value) || 0;
+      const ms = parseInt(document.getElementById('inp-tmr-ms').value) || 0;
+      const totalMs = (m * 60 + s) * 1000 + ms;
+
+      STATE.tmrPresetMs = totalMs;
+      STATE.tmrRemainMs = totalMs;
+      STATE.tmrRunning = false;
+      STATE.tmrBeeping = false;
+      STATE.mode = 2; // Chuyển sang chế độ TIMER
+      STATE.tPage = 0;
+
+      updateAnnunciators();
+      render();
+      appendStreamLog(`[MMIO] Da nap REG_TMR_VALUE = ${totalMs} ms (${m}m ${s}s ${ms}ms). Timer san sang!`);
+    }
 
     // ============================================================================
     // VÒNG LẶP ĐỒNG HỒ PHẦN CỨNG (HARDWARE SYSTEM CLOCK ENGINE)
@@ -1743,19 +2011,19 @@ t = 0 ms
       setTimeout(() => {
         if (STATE.mode === 1) {
           STATE.laps.push(STATE.swElapsedMs);
-          appendStreamLog(`[KICH BAN 2] Chup Lap 1: ${STATE.swElapsedMs} ms`);
+          appendStreamLog(`[KICH BAN 2] Chup Lap 1: ${Math.floor(STATE.swElapsedMs)} ms`);
         }
       }, 700);
       setTimeout(() => {
         if (STATE.mode === 1) {
           STATE.laps.push(STATE.swElapsedMs);
-          appendStreamLog(`[KICH BAN 2] Chup Lap 2: ${STATE.swElapsedMs} ms`);
+          appendStreamLog(`[KICH BAN 2] Chup Lap 2: ${Math.floor(STATE.swElapsedMs)} ms`);
         }
       }, 1500);
       setTimeout(() => {
         if (STATE.mode === 1) {
           STATE.laps.push(STATE.swElapsedMs);
-          appendStreamLog(`[KICH BAN 2] Chup Lap 3: ${STATE.swElapsedMs} ms. Dung bam gio va xem Lap!`);
+          appendStreamLog(`[KICH BAN 2] Chup Lap 3: ${Math.floor(STATE.swElapsedMs)} ms. Dung bam gio va xem Lap!`);
           STATE.swRunning = false;
           STATE.swLapIdx = 0;
           render();

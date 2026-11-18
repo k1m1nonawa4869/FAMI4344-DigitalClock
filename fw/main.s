@@ -84,6 +84,7 @@ ev_norm: addiu $t1, $zero, 1
         sw    $zero, V_LAPI($zero)
 em1:    sw    $zero, REG_BLINK_MASK($zero) # Tắt nhấp nháy LED
         sw    $zero, V_AED($zero)
+        sw    $zero, V_TPAGE($zero)     # Reset trang SET về 0 (RTC) khi đổi mode
         addiu $t3, $t3, 1
         addiu $t1, $zero, 5
         bne   $t3, $t1, em2
