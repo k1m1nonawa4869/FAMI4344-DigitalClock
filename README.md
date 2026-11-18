@@ -397,30 +397,50 @@ Thiết bị giao tiếp với người dùng thông qua **4 phím bấm vật l
 
 ---
 
-### 4.2. Chế độ STOPWATCH (Bấm Giờ Thể Thao 8 Lap)
-* **Chức năng:** Bấm giờ chính xác mili-giây, lưu trữ 8 vòng chạy (Laps) bằng phần cứng chốt tức thời ($\Delta T = 0\text{ ns}$).
-* **Thao tác phím:**
+### 4.2. Chế độ STOPWATCH (Bấm Giờ Thể Thao 2 Chế Độ & Cấu Trúc Ngăn Xếp Stack)
+* **Chức năng:** Bấm giờ chính xác mili-giây, chốt tức thời ($\Delta T = 0\text{ ns}$) tại chân phần cứng `REG_SW_LAP`.
+* **2 Chế độ hiển thị & Đánh đổi kiến trúc (Display & Resolution Trade-off):**
+  Hệ thống 8 LED 7-đoạn tuân theo bài toán phân bổ hiển thị vật lý:
+  $$\text{Số lượng LED ID} + \text{Số lượng LED Thời gian} = 8$$
+  * **Chế độ 1: 9 Laps @ 1 ms (`L MM.SS.mmm`):**
+    * Dành 1 LED ô ngoài cùng bên trái ($S_7$) làm chỉ số vòng chạy ($1 \dots 9$), 7 LED còn lại ($S_6 \dots S_0$) hiển thị đầy đủ Phút, Giây và Mili-giây (`MM.SS.mmm`) với độ phân giải tuyệt đối $1\text{ ms}$.
+    * **Cơ chế Ngăn xếp Trượt (Sliding Buffer / Queue):** Khi vượt quá 9 mốc, firmware tự động dịch mảng sang trái và nạp mốc mới vào đỉnh, đảm bảo **không bao giờ bỏ sót (dismiss) lượt bấm mới nhất**.
+  * **Chế độ 2: 99 Laps @ 10 ms (`LL MM.SS.cc`):**
+    * Khi cần lưu trữ và theo dõi toàn bộ lịch sử lên tới 99 vòng chạy, hệ thống hy sinh 1 chữ số mili-giây xuống centi-giây ($0.01\text{ s}$, tức $10\text{ ms}$). Khi đó, 2 LED ($S_7 S_6$) được giải phóng làm số thứ tự ($01 \dots 99$), 6 LED ($S_5 \dots S_0$) hiển thị `MM.SS.cc`.
+    * **Cấu trúc Dữ liệu Ngăn Xếp (Stack / LIFO):** Toàn bộ 99 mốc được lưu trữ liên tục trong bộ nhớ RAM, cho phép duyệt ngược từ mốc mới nhất về mốc đầu tiên.
+* **Thao tác phím bấm:**
   * **Phím A:** Bắt đầu chạy (Start) / Tạm dừng (Stop).
-  * **Phím B:** Chốt vòng chạy (Lap). Khi đồng hồ đang chạy, nhấn B sẽ ghi tức thì giá trị mili-giây hiện tại vào mảng 8 thanh ghi Lap. Khi đồng hồ đang dừng, nhấn B sẽ duyệt xem lại các Lap đã lưu.
-  * **Phím C:** Xóa trắng bộ đếm về $0$ (Clear / Reset).
+  * **Phím B:**
+    * Khi đang chạy: Chốt tức thì mốc thời gian hiện tại vào đỉnh Ngăn xếp (Stack Push). Khi mảng đầy, áp dụng cơ chế dịch trượt giữ lại các mốc mới nhất.
+    * Khi đang dừng: Đặt lại toàn bộ bộ đếm về $00:00.000$ và giải phóng ngăn xếp (Reset).
+  * **Phím C:** Duyệt tuần tự qua các mốc Lap đã lưu trong ngăn xếp ($1 \dots N \to \text{Live}$).
 
 ---
 
-### 4.3. Chế độ TIMER (Đếm Ngược & Đếm Bù Âm Quá Giờ)
-* **Chức năng:** Đếm lùi thời gian chính xác tới mili-giây từ khoảng thời gian cài đặt trước ($V_{PRE}$). Khi đếm về mốc $0$, còi báo thức tự động phát chuông cảnh báo và bộ đếm phần cứng tiếp tục đếm quá hạn âm (Two's Complement Overtime Counting) giúp người dùng biết sự kiện đã quá hạn bao lâu.
-* **Định dạng hiển thị:**
-  * Đang đếm lùi: ` MM.SS.mmm` (ví dụ ` 01.30.000` — dấu chấm tại $S_5$ sau phút và $S_3$ sau giây).
-  * Quá giờ âm: `-MM.SS.mmm` (ví dụ `-00.00.307` — ô ngoài cùng bên trái $S_7$ bật dấu trừ `-`).
+### 4.3. Chế độ TIMER (Đếm Ngược Giờ-Phút-Giây, Đếm Bù Âm Quá Giờ & Còi Báo Động)
+* **Chức năng:** Đếm lùi thời gian chính xác tới mili-giây từ khoảng thời gian cài đặt trước ($V_{PRE}$), hỗ trợ đầy đủ 3 trường: Giờ ($0 \dots 99$), Phút ($0 \dots 59$), Giây ($0 \dots 59$).
+* **Định dạng hiển thị tự động thích ứng (Adaptive Display Formatting):**
+  * **Khi thời gian $\ge 1\text{ giờ}$ ($V_{\text{TMR}} \ge 3.600.000\text{ ms}$):** Hiển thị định dạng `__HH.MM.SS` (ví dụ `  01.30.00` — dấu chấm tại $S_4$ sau giờ và $S_2$ sau phút).
+  * **Khi thời gian $< 1\text{ giờ}$ ($V_{\text{TMR}} < 3.600.000\text{ ms}$):** Hiển thị định dạng `_MM.SS.mmm` (ví dụ ` 01.30.000` — dấu chấm tại $S_5$ sau phút và $S_3$ sau giây).
+  * **Khi quá giờ âm (Negative Overtime in play):** Bật dấu trừ `-` tại ô ngoài cùng bên trái $S_7$ (`- HH.MM.SS` hoặc `-MM.SS.mmm`).
+* **Còi Báo Động Khi Về 0 & Nhịp Bíp Cảnh Báo Quá Hạn Âm (Overtime Alarm):**
+  * Ngay khi bộ đếm chạm mốc $0$, còi báo thức tự động kích hoạt chuông dồn dập cảnh báo người dùng.
+  * Trong suốt quá trình đếm quá giờ âm bù hai (Negative Overtime Counting), còi duy trì nhịp bíp định kỳ cảnh báo (mỗi giây một tiếng bíp ngắn).
+  * **Tắt chuông bằng Phím C:** Nhấn Phím C để tắt chuông báo động (Acknowledge / Silence Alarm) mà không làm gián đoạn bộ đếm quá giờ âm.
 * **Thao tác phím bấm:**
   * **Phím A:** Bắt đầu (Run) / Tạm dừng (Pause).
   * **Phím B:** Nạp lại giá trị đặt trước ban đầu (Reset to Preset $V_{PRE}$).
-  * **Phím C (khi Timer đang dừng):** Kích hoạt **Chế độ Cài Đặt Thời Gian Tùy Chỉnh (Custom Timer Preset in SET Mode)**. Màn hình chuyển sang giao diện `tr  MM.SS` với các trường Phút và Giây nhấp nháy $2\text{ Hz}$.
+  * **Phím C:**
+    * Khi chuông báo động quá hạn đang kêu: Tắt còi báo động (Acknowledge).
+    * Khi Timer đang dừng: Kích hoạt **Chế độ Cài Đặt Thời Gian Tùy Chỉnh (Custom Timer Preset in SET Mode)** với định dạng `trHH.MM.SS`.
 * **Quy trình Cài đặt Thời gian Đếm lùi Tùy chỉnh (SET TIMER):**
-  1. Khi Timer đang dừng, nhấn **Phím C** để vào trang cài đặt: Màn hình hiển thị `tr  MM.SS` với trường Phút nhấp nháy ($2\text{ Hz}$, `BLINK_MASK = 0x0C`).
-  2. Nhấn **Phím A** để tăng số Phút ($0 \dots 59$, quay vòng về $00$).
-  3. Nhấn **Phím B** để chuyển sang chỉnh số Giây: Trường Giây nhấp nháy ($2\text{ Hz}$, `BLINK_MASK = 0x03`).
-  4. Nhấn **Phím A** để tăng số Giây ($0 \dots 59$, quay vòng về $00$).
-  5. Nhấn **Phím C** để lưu: Hệ thống tính toán thời gian $V_{PRE} = (\text{Phút} \times 60 + \text{Giây}) \times 1000\text{ ms}$, nạp trực tiếp vào thanh ghi phần cứng `REG_TMR_VALUE`, đặt lại Timer và tự động quay về màn hình `TIMER` hiển thị thời gian mới vừa đặt.
+  1. Khi Timer đang dừng, nhấn **Phím C** để vào trang cài đặt: Màn hình hiển thị `trHH.MM.SS` với trường Giờ nhấp nháy ($2\text{ Hz}$, `BLINK_MASK = 0x30`).
+  2. Nhấn **Phím A** để tăng số Giờ ($0 \dots 99$, quay vòng về $00$).
+  3. Nhấn **Phím B** để chuyển sang chỉnh số Phút: Trường Phút nhấp nháy ($2\text{ Hz}$, `BLINK_MASK = 0x0C`).
+  4. Nhấn **Phím A** để tăng số Phút ($0 \dots 59$, quay vòng về $00$).
+  5. Nhấn **Phím B** để chuyển sang chỉnh số Giây: Trường Giây nhấp nháy ($2\text{ Hz}$, `BLINK_MASK = 0x03`).
+  6. Nhấn **Phím A** để tăng số Giây ($0 \dots 59$, quay vòng về $00$).
+  7. Nhấn **Phím C** để lưu: Hệ thống tính toán thời gian $V_{PRE} = ((\text{Giờ} \times 60 + \text{Phút}) \times 60 + \text{Giây}) \times 1000\text{ ms}$, nạp trực tiếp vào thanh ghi phần cứng `REG_TMR_VALUE`, đặt lại Timer và tự động quay về màn hình `TIMER` hiển thị thời gian mới vừa đặt.
 
 ---
 
@@ -457,7 +477,7 @@ Chế độ ALARM cung cấp khả năng quản lý 4 mốc báo thức độc l
   * **Phím A:** Tăng giá trị của trường đang chọn (+1 đơn vị, tự động quay vòng khi chạm ngưỡng; riêng giây ép về 00).
   * **Phím B:** Chuyển sang trường dữ liệu kế tiếp (xoay vòng qua 6 trường).
   * **Phím C:** Lưu toàn bộ thiết lập vào phần cứng RTC (kích hoạt cờ nguyên tử `ARM`) và quay trở lại chế độ xem giờ TIME.
-* **Cài đặt Timer Preset trong SET:** Được kích hoạt khi vào từ chế độ TIMER (bấm Phím C khi dừng), hiển thị `tr  MM.SS`, sử dụng Phím A để tăng và Phím B để đổi giữa Phút và Giây, Phím C để lưu.
+* **Cài đặt Timer Preset trong SET:** Được kích hoạt khi vào từ chế độ TIMER (bấm Phím C khi dừng), hiển thị định dạng `trHH.MM.SS` với 3 trường Giờ ($0 \dots 99$), Phút ($0 \dots 59$), Giây ($0 \dots 59$). Sử dụng Phím A để tăng (+1), Phím B để đổi vòng qua 3 trường (`Giờ` $\xrightarrow{\text{Nút B}}$ `Phút` $\xrightarrow{\text{Nút B}}$ `Giây` $\xrightarrow{\text{Nút B}}$ `Giờ`), và Phím C để lưu vào `REG_TMR_VALUE`.
 
 ---
 

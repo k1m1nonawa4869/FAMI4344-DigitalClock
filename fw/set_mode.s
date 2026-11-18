@@ -57,18 +57,24 @@ set_y:  sw    $a1, V_SY($zero)          # Năm hiện tại (độ lệch từ 2
 
 st_in_tmr:
         lw    $t0, V_PRE($zero)         # Đọc giá trị preset Timer hiện tại (ms)
+        lui   $t1, 0x36
+        ori   $t1, $t1, 0xee80          # 3.600.000 ms = 1 giờ
+        div   $t0, $t1
+        mflo  $t2                       # Giờ = V_PRE / 3.600.000
+        sw    $t2, V_TPH($zero)
+        mfhi  $t0                       # Số ms dư trong giờ
         ori   $t1, $zero, 60000
         div   $t0, $t1
-        mflo  $t2                       # Phút = V_PRE / 60.000
+        mflo  $t2                       # Phút = (V_PRE % 3.600.000) / 60.000
         sw    $t2, V_TPM($zero)
-        mfhi  $t0
+        mfhi  $t0                       # Số ms dư trong phút
         ori   $t1, $zero, 1000
         div   $t0, $t1
         mflo  $t2                       # Giây = (V_PRE % 60.000) / 1.000
         sw    $t2, V_TPS($zero)
-        addu  $t4, $zero, $zero         # Bắt đầu từ trường 0 (Phút)
+        addu  $t4, $zero, $zero         # Bắt đầu từ trường 0 (Giờ)
         sw    $t4, V_SF($zero)
-        addiu $t0, $zero, 0x0c          # Mặt nạ nhấp nháy 2 Hz: DISP3, DISP2 (Phút)
+        addiu $t0, $zero, 0x30          # Mặt nạ nhấp nháy 2 Hz: DISP5, DISP4 (Giờ)
         sw    $t0, REG_BLINK_MASK($zero)
         jr    $s7
 
@@ -157,15 +163,27 @@ st_sv:  jal   ymd2d                     # Nút C: Tính tổng số ngày từ 0
         jr    $s7
 
 st_btn_tmr:
-        lw    $t4, V_SF($zero)          # 0: Phút, 1: Giây
+        lw    $t4, V_SF($zero)          # 0: Giờ, 1: Phút, 2: Giây
         addiu $t1, $zero, 2
-        beq   $a0, $t1, st_tm_b         # Nút B: Đổi trường (Phút <-> Giây)
+        beq   $a0, $t1, st_tm_b         # Nút B: Đổi trường (Giờ -> Phút -> Giây)
         addiu $t1, $zero, 3
         beq   $a0, $t1, st_tm_sv        # Nút C: Lưu preset và thoát về TIMER
 
-        # Nút A: Tăng giá trị (+1) trường đang chọn (0..59)
-        bne   $t4, $zero, st_tm_a_sec
-        lw    $t0, V_TPM($zero)         # Tăng Phút
+        # Nút A: Tăng giá trị (+1) trường đang chọn
+        bne   $t4, $zero, st_tm_a_m
+        lw    $t0, V_TPH($zero)         # Tăng Giờ (0..99)
+        addiu $t0, $t0, 1
+        addiu $t1, $zero, 100
+        bne   $t0, $t1, st_tm_a_h1
+        addu  $t0, $zero, $zero
+st_tm_a_h1:
+        sw    $t0, V_TPH($zero)
+        jr    $s7
+
+st_tm_a_m:
+        addiu $t1, $zero, 1
+        bne   $t4, $t1, st_tm_a_s
+        lw    $t0, V_TPM($zero)         # Tăng Phút (0..59)
         addiu $t0, $t0, 1
         addiu $t1, $zero, 60
         bne   $t0, $t1, st_tm_a_m1
@@ -173,8 +191,9 @@ st_btn_tmr:
 st_tm_a_m1:
         sw    $t0, V_TPM($zero)
         jr    $s7
-st_tm_a_sec:
-        lw    $t0, V_TPS($zero)         # Tăng Giây
+
+st_tm_a_s:
+        lw    $t0, V_TPS($zero)         # Tăng Giây (0..59)
         addiu $t0, $t0, 1
         addiu $t1, $zero, 60
         bne   $t0, $t1, st_tm_a_s1
@@ -183,20 +202,29 @@ st_tm_a_s1:
         sw    $t0, V_TPS($zero)
         jr    $s7
 
-st_tm_b: # Nút B: Đổi giữa Phút (0) <-> Giây (1)
-        addiu $t1, $zero, 1
-        subu  $t4, $t1, $t4
+st_tm_b: # Nút B: Đổi trường xoay vòng (0: Giờ -> 1: Phút -> 2: Giây -> 0: Giờ)
+        addiu $t4, $t4, 1
+        addiu $t1, $zero, 3
+        bne   $t4, $t1, st_tm_b0
+        addu  $t4, $zero, $zero
+st_tm_b0:
         sw    $t4, V_SF($zero)
-        addiu $t0, $zero, 0x0c          # Mặc định nháy Phút: DISP3, DISP2 (0x0C)
+        addiu $t0, $zero, 0x30          # Nháy Giờ: DISP5, DISP4 (0x30)
         beq   $t4, $zero, st_tm_b1
+        addiu $t0, $zero, 0x0c          # Nháy Phút: DISP3, DISP2 (0x0C)
+        addiu $t1, $zero, 1
+        beq   $t4, $t1, st_tm_b1
         addiu $t0, $zero, 0x03          # Nháy Giây: DISP1, DISP0 (0x03)
 st_tm_b1:
         sw    $t0, REG_BLINK_MASK($zero)
         jr    $s7
 
-st_tm_sv: # Nút C: Tính V_PRE = (Phút * 60 + Giây) * 1000
-        lw    $t0, V_TPM($zero)
+st_tm_sv: # Nút C: Tính V_PRE = ((Giờ * 60 + Phút) * 60 + Giây) * 1000
+        lw    $t0, V_TPH($zero)
         addiu $t1, $zero, 60
+        mul   $t0, $t0, $t1
+        lw    $t2, V_TPM($zero)
+        addu  $t0, $t0, $t2
         mul   $t0, $t0, $t1
         lw    $t2, V_TPS($zero)
         addu  $t0, $t0, $t2
@@ -339,22 +367,33 @@ dst_d:  lw    $t5, V_SD($zero)          # Các trường 3, 4, 5 (Ngày, Tháng,
         j     dt_dd                     # Hiển thị theo bố cục ngày tháng dd-MM-YY
 
 dr_st_tmr:
-        # Hiển thị chuỗi "tr  MM.SS"
+        # Hiển thị chuỗi "trHH.MM.SS"
         addiu $t0, $zero, CHAR_T
         sw    $t0, D7($zero)
         addiu $t0, $zero, CHAR_R
         sw    $t0, D6($zero)
-        addiu $t0, $zero, CHAR_BLANK
-        sw    $t0, D5($zero)
-        sw    $t0, D4($zero)
+        addiu $t1, $zero, 10
+        # Giờ (D5, D4 có dấu chấm)
+        lw    $t0, V_TPH($zero)
+        div   $t0, $t1
+        mflo  $t2                       # Hàng chục Giờ (D5)
+        sw    $t2, D5($zero)
+        mfhi  $t2                       # Hàng đơn vị Giờ (D4)
+        ori   $t2, $t2, CHAR_DP         # Bật dấu chấm sau Giờ
+        sw    $t2, D4($zero)
+        # Phút (D3, D2 có dấu chấm)
         lw    $t0, V_TPM($zero)
-        addiu $t1, $zero, 100
-        mul   $t0, $t0, $t1
-        lw    $t2, V_TPS($zero)
-        addu  $a0, $t0, $t2             # a0 = TPM * 100 + TPS (MMSS)
-        addiu $a1, $zero, 4             # 4 chữ số ghi vào D0..D3
-        jal   putd
-        lw    $t0, D2($zero)
-        ori   $t0, $t0, CHAR_DP         # Bật dấu chấm sau Phút tại D2
-        sw    $t0, D2($zero)
+        div   $t0, $t1
+        mflo  $t2                       # Hàng chục Phút (D3)
+        sw    $t2, D3($zero)
+        mfhi  $t2                       # Hàng đơn vị Phút (D2)
+        ori   $t2, $t2, CHAR_DP         # Bật dấu chấm sau Phút
+        sw    $t2, D2($zero)
+        # Giây (D1, D0)
+        lw    $t0, V_TPS($zero)
+        div   $t0, $t1
+        mflo  $t2                       # Hàng chục Giây (D1)
+        sw    $t2, D1($zero)
+        mfhi  $t2                       # Hàng đơn vị Giây (D0)
+        sw    $t2, D0($zero)
         j     dr_out

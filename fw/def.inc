@@ -128,6 +128,7 @@
         .eqv  V_TPAGE           0x7f0           # Trang cài đặt trong SET: 0: RTC Giờ/Ngày, 1: Timer Preset
         .eqv  V_TPM             0x7f4           # Timer Preset: Phút tạm thời đang chỉnh (0..59)
         .eqv  V_TPS             0x7f8           # Timer Preset: Giây tạm thời đang chỉnh (0..59)
+        .eqv  V_TPH             0x7fc           # Timer Preset: Giờ tạm thời đang chỉnh (0..99)
 
 # ----------------------------------------------------------------------------
 # 11. HẰNG SỐ MÃ KÝ TỰ BẢNG TRA ROM (CHAR ROM LOOKUP CONSTANTS)

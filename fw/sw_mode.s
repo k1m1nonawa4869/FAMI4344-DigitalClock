@@ -50,14 +50,33 @@ dr_sw:  lw    $t0, REG_SW_LAP($zero)    # Rút hết các giá trị Lap từ FI
         beq   $t1, $zero, ds2           # FIFO rỗng: Chuyển sang vẽ màn hình
         lw    $t2, V_LAPN($zero)
         slti  $t1, $t2, 8
-        beq   $t1, $zero, dr_sw         # Đã đầy 8 Lap trong DMEM: Bỏ qua phần tử dư
+        bne   $t1, $zero, sw_save       # Chưa đầy 8 Lap: Lưu bình thường vào vị trí t2
+        # Đã đầy 8 Lap: Dịch trượt mảng sang trái để chốt ping mới nhất vào cuối (Sliding Window)
+        lw    $t5, 0x444($zero)
+        sw    $t5, 0x440($zero)
+        lw    $t5, 0x448($zero)
+        sw    $t5, 0x444($zero)
+        lw    $t5, 0x44c($zero)
+        sw    $t5, 0x448($zero)
+        lw    $t5, 0x450($zero)
+        sw    $t5, 0x44c($zero)
+        lw    $t5, 0x454($zero)
+        sw    $t5, 0x450($zero)
+        lw    $t5, 0x458($zero)
+        sw    $t5, 0x454($zero)
+        lw    $t5, 0x45c($zero)
+        sw    $t5, 0x458($zero)
+        addiu $t2, $zero, 7             # Đặt vị trí ghi ở phần tử cuối cùng (0x45c)
+sw_save:
         lui   $t1, 0x1fff
         ori   $t1, $t1, 0xffff          # Mặt nạ 29-bit giá trị mili-giây
         and   $t0, $t0, $t1
         sll   $t3, $t2, 2
         sw    $t0, V_LAPV($t3)          # Lưu giá trị Lap vào mảng V_LAPV
+        slti  $t1, $t2, 7
+        beq   $t1, $zero, dr_sw
         addiu $t2, $t2, 1
-        sw    $t2, V_LAPN($zero)        # Tăng biến đếm số Lap đã lưu
+        sw    $t2, V_LAPN($zero)        # Tăng biến đếm số Lap đã lưu (tối đa 8)
         j     dr_sw
 ds2:    lw    $t4, V_LAPI($zero)
         lw    $a0, REG_SW_VALUE($zero)  # Mặc định lấy giá trị chạy trực tiếp từ phần cứng

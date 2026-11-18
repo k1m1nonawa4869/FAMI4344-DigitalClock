@@ -298,6 +298,120 @@
     }
 
     /* Custom Timer Preset Setter Panel */
+        /* Stopwatch Lap History & Stack Trade-off Panel (TASK-18) */
+    .stpw-stack-card {
+      width: 100%;
+      max-width: 900px;
+      margin-top: 20px;
+      background: var(--card-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 16px 20px;
+    }
+    .stpw-stack-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+    .stpw-stack-title {
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: #f0f6fc;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .stpw-mode-toggles {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .stpw-stack-info {
+      background: #0d1117;
+      border: 1px solid #30363d;
+      border-radius: 8px;
+      padding: 8px 12px;
+      margin-bottom: 12px;
+      font-size: 0.78rem;
+      color: #8b949e;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .info-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-weight: 700;
+      color: #58a6ff;
+    }
+    .stpw-table-wrap {
+      max-height: 180px;
+      overflow-y: auto;
+      border: 1px solid #30363d;
+      border-radius: 6px;
+    }
+    .stpw-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.78rem;
+      font-family: monospace;
+      text-align: left;
+    }
+    .stpw-table th {
+      background: #161b22;
+      color: #8b949e;
+      padding: 6px 10px;
+      border-bottom: 1px solid #30363d;
+      position: sticky;
+      top: 0;
+      font-weight: 600;
+    }
+    .stpw-table td {
+      padding: 5px 10px;
+      border-bottom: 1px solid #21262d;
+      color: #c9d1d9;
+    }
+    .stpw-table tr:hover {
+      background: #1f242c;
+    }
+    .stpw-table tr.active-lap {
+      background: rgba(56, 139, 253, 0.15);
+      color: #58a6ff;
+      font-weight: bold;
+    }
+    .lap-badge {
+      display: inline-block;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-weight: bold;
+      font-size: 0.7rem;
+    }
+    .lap-badge.b-9 { background: #238636; color: #fff; }
+    .lap-badge.b-99 { background: #8957e5; color: #fff; }
+    .split-badge {
+      color: #39ff14;
+      font-size: 0.72rem;
+    }
+    .pill-btn.danger {
+      border-color: #da3633;
+      color: #f85149;
+    }
+    .pill-btn.danger:hover {
+      background: #da3633;
+      color: #fff;
+    }
+    .timer-alarm-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      margin-left: auto;
+    }
+
     .custom-timer-card {
       width: 100%;
       max-width: 900px;
@@ -806,14 +920,58 @@
       </div>
     </div>
 
-    <!-- Custom Timer Preset Setter Panel (TASK-17) -->
+    <!-- Stopwatch Lap History & Stack Visualizer Panel (TASK-18) -->
+    <section class="stpw-stack-card">
+      <div class="stpw-stack-header">
+        <div class="stpw-stack-title">
+          <span>⏱️ Lịch Sử Bấm Giờ (Lap History Stack & Resolution Trade-off)</span>
+        </div>
+        <div class="stpw-mode-toggles">
+          <button class="pill-btn active" id="btn-swmode-9lap" onclick="setStopwatchMode('9lap')">⚡ 9 Laps (1 ms, L MM.SS.mmm)</button>
+          <button class="pill-btn" id="btn-swmode-99lap" onclick="setStopwatchMode('99lap')">📚 99 Laps (10 ms, LL MM.SS.cc)</button>
+          <button class="pill-btn danger" onclick="clearStopwatchLaps()">🗑️ Xóa Laps</button>
+        </div>
+      </div>
+      <div class="stpw-stack-info">
+        <div class="info-badge">📦 Cấu Trúc Dữ Liệu: Ngăn Xếp (Stack / LIFO) & Sliding Window Buffer</div>
+        <div id="stpw-mode-desc">
+          <b>Chế độ 9 Laps (Độ phân giải cao 1 ms):</b> 1 LED ID (S7 = 1..9) + 7 LED Thời gian (S6..S0 = MM.SS.mmm). Khi quá 9 mốc, bộ nhớ tự trượt (Sliding Buffer) giữ lại 9 mốc mới nhất, không bỏ sót lượt bấm.
+        </div>
+      </div>
+      <div class="stpw-table-wrap">
+        <table class="stpw-table">
+          <thead>
+            <tr>
+              <th style="width:70px;">Thứ Tự</th>
+              <th style="width:90px;">Mã LED</th>
+              <th>Thời Điểm Chốt (Lap Timestamp)</th>
+              <th>Chênh Lệch Vòng (Split Δ)</th>
+              <th style="width:90px;">Hành Động</th>
+            </tr>
+          </thead>
+          <tbody id="stpw-laps-tbody">
+            <tr>
+              <td colspan="5" style="text-align:center; color:#8b949e; padding:12px;">Ngăn xếp trống (Bấm Start rồi nhấn Phím B để lưu Lap)</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Custom Timer Preset Setter Panel (TASK-17 & TASK-18) -->
     <section class="custom-timer-card">
       <div class="custom-timer-header">
-        <div class="custom-timer-title">⏱️ Cài Đặt Thời Gian Đếm Lùi Tùy Chỉnh (Custom Timer Preset)</div>
-        <span style="font-size:0.75rem; color:#8b949e;">TASK-17: Nạp trực tiếp MMIO REG_TMR_VALUE</span>
+        <div class="custom-timer-title">⏳ Cài Đặt Thời Gian Đếm Lùi (Timer Preset & Overtime Alarm)</div>
+        <div class="timer-alarm-badge">
+          <button class="pill-btn active" id="btn-tmr-alarm-toggle" onclick="toggleTimerAlarm()">🔔 Còi Báo Động Về 0: BẬT</button>
+        </div>
       </div>
       <div class="custom-timer-body">
         <div class="timer-inputs-group">
+          <div class="timer-input-item">
+            <label>Giờ (0..99)</label>
+            <input type="number" id="inp-tmr-hr" min="0" max="99" value="0">
+          </div>
           <div class="timer-input-item">
             <label>Phút (0..59)</label>
             <input type="number" id="inp-tmr-min" min="0" max="59" value="1">
@@ -829,13 +987,16 @@
         </div>
 
         <div class="timer-preset-pills">
-          <button class="timer-pill" onclick="quickFillTimer(0, 15, 0)">15s</button>
-          <button class="timer-pill" onclick="quickFillTimer(0, 30, 0)">30s</button>
-          <button class="timer-pill" onclick="quickFillTimer(1, 0, 0)">1m</button>
-          <button class="timer-pill" onclick="quickFillTimer(2, 0, 0)">2m</button>
-          <button class="timer-pill" onclick="quickFillTimer(3, 0, 0)">3m</button>
-          <button class="timer-pill" onclick="quickFillTimer(5, 0, 0)">5m</button>
-          <button class="timer-pill" onclick="quickFillTimer(10, 0, 0)">10m</button>
+          <button class="timer-pill" onclick="quickFillTimer(0, 0, 15, 0)">15s</button>
+          <button class="timer-pill" onclick="quickFillTimer(0, 0, 30, 0)">30s</button>
+          <button class="timer-pill" onclick="quickFillTimer(0, 1, 0, 0)">1m</button>
+          <button class="timer-pill" onclick="quickFillTimer(0, 2, 0, 0)">2m</button>
+          <button class="timer-pill" onclick="quickFillTimer(0, 5, 0, 0)">5m</button>
+          <button class="timer-pill" onclick="quickFillTimer(0, 10, 0, 0)">10m</button>
+          <button class="timer-pill" onclick="quickFillTimer(0, 30, 0, 0)">30m</button>
+          <button class="timer-pill" onclick="quickFillTimer(1, 0, 0, 0)">1h</button>
+          <button class="timer-pill" onclick="quickFillTimer(2, 0, 0, 0)">2h</button>
+          <button class="timer-pill" onclick="quickFillTimer(5, 0, 0, 0)">5h</button>
         </div>
 
         <button class="btn-load-timer" onclick="applyCustomTimerPreset()">▶️ Nạp Vào Timer & Chuyển Chế Độ</button>
@@ -922,6 +1083,10 @@ t = 0 ms
         <div class="preset-title">5. Đồng Bộ NTP (UART)</div>
         <div>Gửi chuỗi đồng bộ @SET:2026-10-02 12:30:00# cập nhật nguyên tử RTC.</div>
       </button>
+      <button class="preset-btn" onclick="runScenarioTimerHours()">
+        <div class="preset-title">6. Đếm Lùi Có Giờ (__HH.MM.SS)</div>
+        <div>Nạp Timer 1h 00m 02s. Quan sát chuyển đổi định dạng Giờ và còi báo động quá hạn âm khi về 0.</div>
+      </button>
     </div>
   </section>
 
@@ -977,17 +1142,21 @@ t = 0 ms
       is24h: true,
       brightness: 15, // 15, 9, 3
 
-      // Stopwatch
+      // Stopwatch (TASK-18: Hỗ trợ 2 chế độ 9 Lap 1-ms & 99 Lap 10-ms)
       swRunning: false,
       swElapsedMs: 0,
+      swMode: '9lap', // '9lap' (1 ms, S7=1..9) hoặc '99lap' (10 ms, S7..S6=01..99)
       laps: [],
-      swLapIdx: -1, // -1: xem giờ chạy trực tiếp, 0..7: xem Lap đã lưu
+      swLapIdx: -1, // -1: xem giờ chạy trực tiếp, 0..N-1: xem Lap đã lưu
 
-      // Timer
+      // Timer (TASK-18: Hỗ trợ Giờ, chuông về 0 & đếm quá giờ âm)
       tmrRunning: false,
       tmrPresetMs: 90000, // Mặc định 1 phút 30 giây
       tmrRemainMs: 90000,
       tmrBeeping: false,
+      tmrAlarmEn: true, // Kích hoạt còi báo động khi về 0 và quá hạn âm
+      tmrOvertimeBeeping: false,
+      lastOvertimeBeepSec: -1,
 
       // Alarm (4 kênh + Hourly Chime)
       alarms: [
@@ -1005,10 +1174,11 @@ t = 0 ms
       alarmSoundStartMs: 0,
       snoozeUntilMs: -1,
 
-      // SET Mode (TASK-17: Hỗ trợ cả RTC và Timer Preset)
+      // SET Mode (TASK-17 & TASK-18: Hỗ trợ cả RTC và Timer Preset Giờ/Phút/Giây)
       tPage: 0, // 0: SET RTC (Giờ/Ngày), 1: SET Timer Preset
-      setField: 0, // RTC: 0: Hr, 1: Min, 2: Sec, 3: Day, 4: Mon, 5: Yr | Timer: 0: Min, 1: Sec
+      setField: 0, // RTC: 0: Hr, 1: Min, 2: Sec, 3: Day, 4: Mon, 5: Yr | Timer: 0: Hr, 1: Min, 2: Sec
       setVals: { hr: 23, min: 59, sec: 50, day: 28, mon: 2, yr: 24 },
+      tmrSetHr: 0,
       tmrSetMin: 1,
       tmrSetSec: 30,
       blinkPhase: false, // 2 Hz nhấp nháy
@@ -1159,10 +1329,30 @@ t = 0 ms
         document.getElementById('col-d6').classList.add('sep-after');
         document.getElementById('col-d4').classList.add('sep-after');
         document.getElementById('col-d2').classList.add('sep-after');
-      } else if ((m === 0 && STATE.timeView === 1) || m === 1 || m === 2) { // MM.SS.mmm (TIME, STPW, TMR)
+      } else if (m === 0 && STATE.timeView === 1) { // TIME MM.SS.mmm
         document.getElementById('col-d7').classList.add('sep-after');
         document.getElementById('col-d5').classList.add('sep-after');
         document.getElementById('col-d3').classList.add('sep-after');
+      } else if (m === 1) { // STPW (9lap: S7 | S6..S5 | S4..S3 | S2..S0 | 99lap: S7..S6 | S5..S4 | S3..S2 | S1..S0)
+        if (STATE.swMode === '99lap') {
+          document.getElementById('col-d6').classList.add('sep-after');
+          document.getElementById('col-d4').classList.add('sep-after');
+          document.getElementById('col-d2').classList.add('sep-after');
+        } else {
+          document.getElementById('col-d7').classList.add('sep-after');
+          document.getElementById('col-d5').classList.add('sep-after');
+          document.getElementById('col-d3').classList.add('sep-after');
+        }
+      } else if (m === 2) { // TMR (>= 1h: S7 | S6 | S5..S4 | S3..S2 | S1..S0; < 1h: S7 | S6..S5 | S4..S3 | S2..S0)
+        if (Math.abs(STATE.tmrRemainMs) >= 3600000) {
+          document.getElementById('col-d6').classList.add('sep-after');
+          document.getElementById('col-d4').classList.add('sep-after');
+          document.getElementById('col-d2').classList.add('sep-after');
+        } else {
+          document.getElementById('col-d7').classList.add('sep-after');
+          document.getElementById('col-d5').classList.add('sep-after');
+          document.getElementById('col-d3').classList.add('sep-after');
+        }
       } else if (m === 0 && STATE.timeView === 2) { // DATE DD-MM-YY
         document.getElementById('col-d6').classList.add('sep-after');
         document.getElementById('col-d5').classList.add('sep-after');
@@ -1172,7 +1362,7 @@ t = 0 ms
         document.getElementById('col-d4').classList.add('sep-after');
         document.getElementById('col-d2').classList.add('sep-after');
       } else if (m === 4) { // SET
-        if (STATE.tPage === 1) { // SET TIMER
+        if (STATE.tPage === 1) { // SET TIMER: trHH.MM.SS
           document.getElementById('col-d6').classList.add('sep-after');
           document.getElementById('col-d4').classList.add('sep-after');
           document.getElementById('col-d2').classList.add('sep-after');
@@ -1223,20 +1413,41 @@ t = 0 ms
         }
       } else if (m === 1) { // STOPWATCH
         const isLap = STATE.swLapIdx >= 0;
-        html = `
-          <div class="sub-label-cell" style="width:54px; margin-right:22px; color:#e3b341;">[S7: ${isLap ? 'L' + (STATE.swLapIdx + 1) : 'LIVE'}]</div>
-          <div class="sub-label-cell" style="width:122px; margin-right:22px;">[S6..S5: PHÚT (MM)]</div>
-          <div class="sub-label-cell" style="width:122px; margin-right:22px;">[S4..S3: GIÂY (SS)]</div>
-          <div class="sub-label-cell" style="width:190px; color:#39ff14;">[S2..S0: MILI-GIÂY (ms)]</div>
-        `;
+        if (STATE.swMode === '99lap') {
+          const lapStr = isLap ? 'L' + String(STATE.swLapIdx + 1).padStart(2, '0') : 'LIVE';
+          html = `
+            <div class="sub-label-cell" style="width:122px; margin-right:22px; color:#e3b341;">[S7..S6: ${lapStr}]</div>
+            <div class="sub-label-cell" style="width:122px; margin-right:22px;">[S5..S4: PHÚT (MM)]</div>
+            <div class="sub-label-cell" style="width:122px; margin-right:22px;">[S3..S2: GIÂY (SS)]</div>
+            <div class="sub-label-cell" style="width:122px; color:#39ff14;">[S1..S0: CENTI (cs)]</div>
+          `;
+        } else {
+          html = `
+            <div class="sub-label-cell" style="width:54px; margin-right:22px; color:#e3b341;">[S7: ${isLap ? 'L' + ((STATE.swLapIdx % 9) + 1) : 'LIVE'}]</div>
+            <div class="sub-label-cell" style="width:122px; margin-right:22px;">[S6..S5: PHÚT (MM)]</div>
+            <div class="sub-label-cell" style="width:122px; margin-right:22px;">[S4..S3: GIÂY (SS)]</div>
+            <div class="sub-label-cell" style="width:190px; color:#39ff14;">[S2..S0: MILI-GIÂY (ms)]</div>
+          `;
+        }
       } else if (m === 2) { // TIMER
         const isNeg = STATE.tmrRemainMs < 0;
-        html = `
-          <div class="sub-label-cell" style="width:54px; margin-right:22px; color:${isNeg ? '#f85149' : '#8b949e'};">[S7: ${isNeg ? '-' : ' '}</div>
-          <div class="sub-label-cell" style="width:122px; margin-right:22px;">[S6..S5: PHÚT (MM)]</div>
-          <div class="sub-label-cell" style="width:122px; margin-right:22px;">[S4..S3: GIÂY (SS)]</div>
-          <div class="sub-label-cell" style="width:190px; color:#39ff14;">[S2..S0: MILI-GIÂY (ms)]</div>
-        `;
+        const absMs = Math.abs(STATE.tmrRemainMs);
+        if (absMs >= 3600000) {
+          html = `
+            <div class="sub-label-cell" style="width:54px; margin-right:22px; color:${isNeg ? '#f85149' : '#8b949e'};">[S7: ${isNeg ? '-' : ' '}]</div>
+            <div class="sub-label-cell" style="width:54px; margin-right:22px;">[S6]</div>
+            <div class="sub-label-cell" style="width:122px; margin-right:22px;">[S5..S4: GIỜ (HH)]</div>
+            <div class="sub-label-cell" style="width:122px; margin-right:22px;">[S3..S2: PHÚT (MM)]</div>
+            <div class="sub-label-cell" style="width:122px;">[S1..S0: GIÂY (SS)]</div>
+          `;
+        } else {
+          html = `
+            <div class="sub-label-cell" style="width:54px; margin-right:22px; color:${isNeg ? '#f85149' : '#8b949e'};">[S7: ${isNeg ? '-' : ' '}]</div>
+            <div class="sub-label-cell" style="width:122px; margin-right:22px;">[S6..S5: PHÚT (MM)]</div>
+            <div class="sub-label-cell" style="width:122px; margin-right:22px;">[S4..S3: GIÂY (SS)]</div>
+            <div class="sub-label-cell" style="width:190px; color:#39ff14;">[S2..S0: MILI-GIÂY (ms)]</div>
+          `;
+        }
       } else if (m === 3) { // ALARM
         if (STATE.almChannel < 4) {
           const alm = STATE.alarms[STATE.almChannel];
@@ -1256,12 +1467,12 @@ t = 0 ms
           `;
         }
       } else if (m === 4) { // SET
-        if (STATE.tPage === 1) { // SET TIMER (TASK-17)
+        if (STATE.tPage === 1) { // SET TIMER (TASK-17 & TASK-18: trHH.MM.SS)
           html = `
-            <div class="sub-label-cell" style="width:122px; margin-right:22px; color:#e3b341;">[S7..S6: SET TIMER]</div>
-            <div class="sub-label-cell" style="width:122px; margin-right:22px;">[S5..S4: --]</div>
-            <div class="sub-label-cell" style="width:122px; margin-right:22px; ${STATE.setField === 0 ? 'color:#58a6ff;' : ''}">[S3..S2: PHÚT (MM)]</div>
-            <div class="sub-label-cell" style="width:122px; ${STATE.setField === 1 ? 'color:#58a6ff;' : ''}">[S1..S0: GIÂY (SS)]</div>
+            <div class="sub-label-cell" style="width:122px; margin-right:22px; color:#e3b341;">[S7..S6: SET TMR]</div>
+            <div class="sub-label-cell" style="width:122px; margin-right:22px; ${STATE.setField === 0 ? 'color:#58a6ff; font-weight:bold;' : ''}">[S5..S4: GIỜ (HH)]</div>
+            <div class="sub-label-cell" style="width:122px; margin-right:22px; ${STATE.setField === 1 ? 'color:#58a6ff; font-weight:bold;' : ''}">[S3..S2: PHÚT (MM)]</div>
+            <div class="sub-label-cell" style="width:122px; ${STATE.setField === 2 ? 'color:#58a6ff; font-weight:bold;' : ''}">[S1..S0: GIÂY (SS)]</div>
           `;
         } else { // SET RTC
           if (STATE.setField < 3) {
@@ -1347,46 +1558,84 @@ t = 0 ms
         }
       }
 
-      // 2. CHẾ ĐỘ 1: STOPWATCH (fmtD -> fmtA)
+      // 2. CHẾ ĐỘ 1: STOPWATCH (Hỗ trợ 2 chế độ 9 Lap 1-ms & 99 Lap 10-ms)
       else if (m === 1) {
         const t = Math.floor(STATE.swElapsedMs);
         let curT = t;
         if (STATE.swLapIdx >= 0 && STATE.laps[STATE.swLapIdx] !== undefined) {
           curT = Math.floor(STATE.laps[STATE.swLapIdx]);
         }
-        const min = Math.floor(curT / 60000) % 60;
-        const sec = Math.floor((curT % 60000) / 1000);
-        const ms = curT % 1000;
-        chars[7] = STATE.swLapIdx >= 0 ? (STATE.swLapIdx + 1).toString() : ' ';
-        chars[6] = Math.floor(min / 10).toString();
-        chars[5] = (min % 10).toString();
-        dps[5] = true;
-        chars[4] = Math.floor(sec / 10).toString();
-        chars[3] = (sec % 10).toString();
-        dps[3] = true;
-        chars[2] = Math.floor(ms / 100).toString();
-        chars[1] = Math.floor((ms % 100) / 10).toString();
-        chars[0] = Math.floor(ms % 10).toString(); // <--- Đã sửa Math.floor!
+        if (STATE.swMode === '99lap') { // 99 Laps @ 10 ms (LL MM.SS.cc)
+          const min = Math.floor(curT / 60000) % 60;
+          const sec = Math.floor((curT % 60000) / 1000);
+          const cs = Math.floor((curT % 1000) / 10); // 0..99 centiseconds
+          if (STATE.swLapIdx >= 0) {
+            const lNum = ((STATE.swLapIdx % 99) + 1);
+            chars[7] = Math.floor(lNum / 10).toString();
+            chars[6] = (lNum % 10).toString();
+          } else {
+            chars[7] = ' '; chars[6] = ' ';
+          }
+          chars[5] = Math.floor(min / 10).toString();
+          chars[4] = (min % 10).toString();
+          dps[4] = true;
+          chars[3] = Math.floor(sec / 10).toString();
+          chars[2] = (sec % 10).toString();
+          dps[2] = true;
+          chars[1] = Math.floor(cs / 10).toString();
+          chars[0] = (cs % 10).toString();
+        } else { // 9 Laps @ 1 ms (L MM.SS.mmm)
+          const min = Math.floor(curT / 60000) % 60;
+          const sec = Math.floor((curT % 60000) / 1000);
+          const ms = curT % 1000;
+          chars[7] = STATE.swLapIdx >= 0 ? (((STATE.swLapIdx % 9) + 1)).toString() : ' ';
+          chars[6] = Math.floor(min / 10).toString();
+          chars[5] = (min % 10).toString();
+          dps[5] = true;
+          chars[4] = Math.floor(sec / 10).toString();
+          chars[3] = (sec % 10).toString();
+          dps[3] = true;
+          chars[2] = Math.floor(ms / 100).toString();
+          chars[1] = Math.floor((ms % 100) / 10).toString();
+          chars[0] = Math.floor(ms % 10).toString();
+        }
       }
 
-      // 3. CHẾ ĐỘ 2: TIMER (dr_tr -> fmtD)
+      // 3. CHẾ ĐỘ 2: TIMER (dr_tr -> fmtD: >= 1h gọi fmtB __HH.MM.SS, < 1h gọi fmtA _MM.SS.mmm)
       else if (m === 2) {
         const rem = Math.floor(STATE.tmrRemainMs);
         const isNeg = rem < 0;
         const absMs = Math.abs(rem);
-        const min = Math.floor(absMs / 60000) % 60;
-        const sec = Math.floor((absMs % 60000) / 1000);
-        const ms = absMs % 1000;
-        chars[7] = isNeg ? '-' : ' ';
-        chars[6] = Math.floor(min / 10).toString();
-        chars[5] = (min % 10).toString();
-        dps[5] = true;
-        chars[4] = Math.floor(sec / 10).toString();
-        chars[3] = (sec % 10).toString();
-        dps[3] = true;
-        chars[2] = Math.floor(ms / 100).toString();
-        chars[1] = Math.floor((ms % 100) / 10).toString();
-        chars[0] = Math.floor(ms % 10).toString(); // <--- Đã sửa Math.floor!
+        if (absMs >= 3600000) { // >= 1 giờ: Hiển thị __HH.MM.SS (fmtB)
+          const totalSec = Math.floor(absMs / 1000);
+          const hr = Math.floor(totalSec / 3600);
+          const min = Math.floor((totalSec % 3600) / 60);
+          const sec = totalSec % 60;
+          chars[7] = isNeg ? '-' : ' ';
+          chars[6] = ' ';
+          chars[5] = Math.floor(hr / 10).toString();
+          chars[4] = (hr % 10).toString();
+          dps[4] = true;
+          chars[3] = Math.floor(min / 10).toString();
+          chars[2] = (min % 10).toString();
+          dps[2] = true;
+          chars[1] = Math.floor(sec / 10).toString();
+          chars[0] = (sec % 10).toString();
+        } else { // < 1 giờ: Hiển thị _MM.SS.mmm (fmtA)
+          const min = Math.floor(absMs / 60000) % 60;
+          const sec = Math.floor((absMs % 60000) / 1000);
+          const ms = absMs % 1000;
+          chars[7] = isNeg ? '-' : ' ';
+          chars[6] = Math.floor(min / 10).toString();
+          chars[5] = (min % 10).toString();
+          dps[5] = true;
+          chars[4] = Math.floor(sec / 10).toString();
+          chars[3] = (sec % 10).toString();
+          dps[3] = true;
+          chars[2] = Math.floor(ms / 100).toString();
+          chars[1] = Math.floor((ms % 100) / 10).toString();
+          chars[0] = Math.floor(ms % 10).toString();
+        }
       }
 
       // 4. CHẾ ĐỘ 3: ALARM (dr_al)
@@ -1424,22 +1673,24 @@ t = 0 ms
         }
       }
 
-      // 5. CHẾ ĐỘ 4: SET (TASK-17: Hỗ trợ cả RTC và Timer Preset)
+      // 5. CHẾ ĐỘ 4: SET (TASK-17 & TASK-18: trHH.MM.SS với 3 trường Giờ, Phút, Giây)
       else if (m === 4) {
-        if (STATE.tPage === 1) { // SET TIMER: tr  MM.SS
+        if (STATE.tPage === 1) { // SET TIMER: trHH.MM.SS
           chars[7] = 't';
           chars[6] = 'r';
-          chars[5] = ' ';
-          chars[4] = ' ';
+          chars[5] = Math.floor(STATE.tmrSetHr / 10).toString();
+          chars[4] = (STATE.tmrSetHr % 10).toString();
+          dps[4] = true; // Dấu chấm sau Giờ
           chars[3] = Math.floor(STATE.tmrSetMin / 10).toString();
           chars[2] = (STATE.tmrSetMin % 10).toString();
-          dps[2] = true; // Dấu chấm sau phút
+          dps[2] = true; // Dấu chấm sau Phút
           chars[1] = Math.floor(STATE.tmrSetSec / 10).toString();
           chars[0] = (STATE.tmrSetSec % 10).toString();
 
           if (!STATE.blinkPhase) {
-            if (STATE.setField === 0) { chars[3] = ' '; chars[2] = ' '; } // Nháy phút
-            else if (STATE.setField === 1) { chars[1] = ' '; chars[0] = ' '; } // Nháy giây
+            if (STATE.setField === 0) { chars[5] = ' '; chars[4] = ' '; } // Nháy Giờ
+            else if (STATE.setField === 1) { chars[3] = ' '; chars[2] = ' '; } // Nháy Phút
+            else if (STATE.setField === 2) { chars[1] = ' '; chars[0] = ' '; } // Nháy Giây
           }
         } else { // SET RTC
           const sf = STATE.setField;
@@ -1629,13 +1880,14 @@ t = 0 ms
         dB.textContent = 'Đổi trang (Giờ:Phút:Giây → Phút:Giây.ms → Ngày-Tháng)';
         dC.textContent = 'Điều chỉnh độ sáng LED (15 → 9 → 3 → 15)';
       } else if (m === 1) { // STPW
+        const maxL = STATE.swMode === '99lap' ? 99 : 9;
         dA.textContent = STATE.swRunning ? 'DỪNG (Stop) bấm giờ' : 'BẮT ĐẦU (Start) bấm giờ';
-        dB.textContent = STATE.swRunning ? 'Chụp Lap 0-ns phần cứng' : 'Đặt lại về 00:00.000 (Reset)';
-        dC.textContent = 'Duyệt xem 8 Lap đã lưu (1..8 → Live)';
+        dB.textContent = STATE.swRunning ? `Chốt Lap vào Stack (${STATE.laps.length}/${maxL})` : 'Đặt lại về 0 (Xóa Stack)';
+        dC.textContent = `Duyệt xem Laps đã lưu (1..${STATE.laps.length || maxL} → Live)`;
       } else if (m === 2) { // TMR
         dA.textContent = STATE.tmrRunning ? 'DỪNG (Stop) đếm ngược' : 'BẮT ĐẦU (Start) đếm ngược';
         dB.textContent = 'Khôi phục về giá trị đặt trước (Reset)';
-        dC.textContent = STATE.tmrRunning ? '(Khóa khi đang chạy)' : 'Cài đặt Preset Phút:Giây (Vào SET)';
+        dC.textContent = STATE.tmrOvertimeBeeping ? '🔕 TẮT CHUÔNG BÁO ĐỘNG (Acknowledge)' : (STATE.tmrRunning ? '(Khóa khi đang chạy)' : 'Cài đặt Preset trHH.MM.SS (Vào SET)');
       } else if (m === 3) { // ALM
         if (STATE.almEditing > 0) {
           dA.textContent = `Tăng giá trị trường ${STATE.almEditing === 1 ? 'Giờ (+1)' : 'Phút (+1)'}`;
@@ -1647,9 +1899,10 @@ t = 0 ms
           dC.textContent = STATE.alarmSounding ? 'Tạm hoãn chuông Snooze (+5 phút)' : 'Vào chế độ chỉnh sửa giờ';
         }
       } else if (m === 4) { // SET
-        if (STATE.tPage === 1) { // SET TIMER (TASK-17)
-          dA.textContent = `Tăng trường: ${STATE.setField === 0 ? 'Phút (+1)' : 'Giây (+1)'}`;
-          dB.textContent = 'Chuyển đổi giữa Phút ↔ Giây';
+        if (STATE.tPage === 1) { // SET TIMER (TASK-18: 3 trường Giờ, Phút, Giây)
+          const fNames = ['Giờ (+1)', 'Phút (+1)', 'Giây (+1)'];
+          dA.textContent = `Tăng trường: ${fNames[STATE.setField]}`;
+          dB.textContent = 'Chuyển trường (Giờ → Phút → Giây)';
           dC.textContent = 'Lưu Preset vào Timer & Thoát';
         } else { // SET RTC
           const fNames = ['Giờ (+1)', 'Phút (+1)', 'Giây (Đặt về 00)', 'Ngày (+1)', 'Tháng (+1)', 'Năm (+1)'];
@@ -1717,8 +1970,10 @@ t = 0 ms
           }
         }
       } else if (m === 4) { // SET
-        if (STATE.tPage === 1) { // SET TIMER (TASK-17)
+        if (STATE.tPage === 1) { // SET TIMER (TASK-18: Giờ, Phút, Giây)
           if (STATE.setField === 0) {
+            STATE.tmrSetHr = (STATE.tmrSetHr + 1) % 100;
+          } else if (STATE.setField === 1) {
             STATE.tmrSetMin = (STATE.tmrSetMin + 1) % 60;
           } else {
             STATE.tmrSetSec = (STATE.tmrSetSec + 1) % 60;
@@ -1754,21 +2009,31 @@ t = 0 ms
       const m = STATE.mode;
       if (m === 0) { // TIME: Đổi trang hiển thị (0: HH.MM.SS, 1: MM.SS.mmm, 2: DD-MM-YY)
         STATE.timeView = (STATE.timeView + 1) % 3;
-      } else if (m === 1) { // STPW: Chạy -> Chụp Lap 0-ns | Dừng -> Reset 0
+      } else if (m === 1) { // STPW: Chạy -> Chốt Lap vào Stack | Dừng -> Reset 0
         if (STATE.swRunning) {
-          if (STATE.laps.length < 8) {
+          const maxLaps = STATE.swMode === '99lap' ? 99 : 9;
+          if (STATE.laps.length < maxLaps) {
             STATE.laps.push(STATE.swElapsedMs);
-            appendStreamLog(`[STPW] Da chup Lap ${STATE.laps.length}: ${Math.floor(STATE.swElapsedMs)} ms (0-ns capture)`);
+            appendStreamLog(`[STPW ${STATE.swMode.toUpperCase()}] Đã lưu Lap ${STATE.laps.length}: ${Math.floor(STATE.swElapsedMs)} ms (chốt 0-ns)`);
+          } else {
+            // Ngăn xếp trượt (Sliding Stack): Đẩy mốc cũ nhất ra, nạp mốc mới vào đỉnh Stack
+            STATE.laps.shift();
+            STATE.laps.push(STATE.swElapsedMs);
+            appendStreamLog(`[STPW ${STATE.swMode.toUpperCase()}] Ngăn xếp trượt (Sliding Stack): Đẩy mốc cũ nhất, lưu mốc mới: ${Math.floor(STATE.swElapsedMs)} ms`);
           }
+          updateLapTable();
         } else {
           STATE.swElapsedMs = 0;
           STATE.laps = [];
           STATE.swLapIdx = -1;
+          updateLapTable();
+          appendStreamLog(`[STPW] Đã đặt lại về 0 và xóa trắng ngăn xếp Laps.`);
         }
       } else if (m === 2) { // TMR: Reset về preset
         STATE.tmrRemainMs = STATE.tmrPresetMs;
         STATE.tmrRunning = false;
         STATE.tmrBeeping = false;
+        STATE.tmrOvertimeBeeping = false;
       } else if (m === 3) { // ALM
         if (STATE.almEditing > 0) { // Chuyển đổi giữa sửa Giờ (1) <-> Phút (2)
           STATE.almEditing = STATE.almEditing === 1 ? 2 : 1;
@@ -1776,8 +2041,8 @@ t = 0 ms
           STATE.almChannel = (STATE.almChannel + 1) % 5;
         }
       } else if (m === 4) { // SET
-        if (STATE.tPage === 1) { // SET TIMER: Đổi giữa Phút (0) <-> Giây (1)
-          STATE.setField = (STATE.setField === 0 ? 1 : 0);
+        if (STATE.tPage === 1) { // SET TIMER: Đổi vòng Giờ (0) -> Phút (1) -> Giây (2)
+          STATE.setField = (STATE.setField + 1) % 3;
         } else { // SET RTC: Đổi trường (0..5)
           STATE.setField = (STATE.setField + 1) % 6;
         }
@@ -1798,21 +2063,31 @@ t = 0 ms
 
         const dCont = document.getElementById('digits-container');
         dCont.className = `digits-row dim-${STATE.brightness}`;
-      } else if (m === 1) { // STPW: Duyệt 8 Lap đã lưu
+      } else if (m === 1) { // STPW: Duyệt các Lap đã lưu trong Stack
         if (STATE.laps.length > 0) {
           STATE.swLapIdx++;
           if (STATE.swLapIdx >= STATE.laps.length) {
             STATE.swLapIdx = -1; // Quay về xem chạy trực tiếp
           }
+          updateLapTable();
         }
-      } else if (m === 2) { // TMR: Vào chế độ SET TIMER khi dừng (TASK-17)
+      } else if (m === 2) { // TMR: Tắt chuông hoặc Vào chế độ SET TIMER
+        if (STATE.tmrOvertimeBeeping) {
+          // Nhấn Phím C để tắt chuông báo động khi đang kêu dồn dập
+          STATE.tmrOvertimeBeeping = false;
+          appendStreamLog(`[TIMER ALARM] Nhấn Phím C: Đã tắt chuông báo động quá hạn âm. Bộ đếm vẫn tiếp tục.`);
+          render();
+          return;
+        }
         if (!STATE.tmrRunning) {
           STATE.tPage = 1;
           STATE.mode = 4; // Vào SET
-          STATE.tmrSetMin = Math.floor(STATE.tmrPresetMs / 60000) % 60;
-          STATE.tmrSetSec = Math.floor((STATE.tmrPresetMs % 60000) / 1000);
-          STATE.setField = 0; // Bắt đầu từ Phút
-          appendStreamLog(`[TIMER SET] Vao cai dat Timer Preset trong SET Mode`);
+          const totalSec = Math.floor(STATE.tmrPresetMs / 1000);
+          STATE.tmrSetHr = Math.floor(totalSec / 3600);
+          STATE.tmrSetMin = Math.floor((totalSec % 3600) / 60);
+          STATE.tmrSetSec = totalSec % 60;
+          STATE.setField = 0; // Bắt đầu từ Giờ
+          appendStreamLog(`[TIMER SET] Vào cài đặt Timer Preset trong SET Mode (trHH.MM.SS)`);
         }
       } else if (m === 3) { // ALM
         if (STATE.alarmSounding) { // Snooze +5 phút
@@ -1831,13 +2106,13 @@ t = 0 ms
           }
         }
       } else if (m === 4) { // SET: Lưu & Thoát
-        if (STATE.tPage === 1) { // Lưu Timer Preset (TASK-17)
-          const newPreset = (STATE.tmrSetMin * 60 + STATE.tmrSetSec) * 1000;
+        if (STATE.tPage === 1) { // Lưu Timer Preset (TASK-18: Giờ, Phút, Giây)
+          const newPreset = ((STATE.tmrSetHr * 60 + STATE.tmrSetMin) * 60 + STATE.tmrSetSec) * 1000;
           STATE.tmrPresetMs = newPreset;
           STATE.tmrRemainMs = newPreset;
           STATE.mode = 2; // Trở về TIMER
           STATE.tPage = 0;
-          appendStreamLog(`[TIMER SET] Da luu preset moi: ${STATE.tmrSetMin} phut ${STATE.tmrSetSec} giay (${newPreset} ms)`);
+          appendStreamLog(`[TIMER SET] Đã lưu preset mới: ${STATE.tmrSetHr}h ${STATE.tmrSetMin}m ${STATE.tmrSetSec}s (${newPreset} ms)`);
         } else { // Lưu RTC
           const sv = STATE.setVals;
           STATE.msOfDay = (sv.hr * 3600 + sv.min * 60 + sv.sec) * 1000;
@@ -1868,9 +2143,100 @@ t = 0 ms
     });
 
     // ============================================================================
-    // BẢNG ĐIỀU KHIỂN NẠP TIMER TÙY CHỈNH (TASK-17 GUI PRESET SETTER)
+    // QUẢN LÝ LỊCH SỬ BẤM GIỜ & NGĂN XẾP (TASK-18 STOPWATCH STACK ENGINE)
     // ============================================================================
-    function quickFillTimer(m, s, ms) {
+    function setStopwatchMode(mode) {
+      STATE.swMode = mode;
+      document.getElementById('btn-swmode-9lap').classList.toggle('active', mode === '9lap');
+      document.getElementById('btn-swmode-99lap').classList.toggle('active', mode === '99lap');
+      const descEl = document.getElementById('stpw-mode-desc');
+      if (mode === '9lap') {
+        descEl.innerHTML = '<b>Chế độ 9 Laps (Độ phân giải cao 1 ms):</b> 1 LED ID (S7 = 1..9) + 7 LED Thời gian (S6..S0 = MM.SS.mmm). Ngăn xếp trượt (Sliding Buffer) giữ 9 mốc mới nhất, không bỏ sót lượt bấm.';
+      } else {
+        descEl.innerHTML = '<b>Chế độ 99 Laps (Lịch sử mở rộng 99 vòng):</b> 2 LED ID (S7..S6 = 01..99) + 6 LED Thời gian (S5..S0 = MM.SS.cc @ 10 ms). Hy sinh 1 chữ số mili-giây xuống centi-giây (0.01 s) để chứa đủ 99 mốc trong Ngăn xếp (Stack).';
+      }
+      playClick();
+      updateLapTable();
+      render();
+    }
+
+    function clearStopwatchLaps() {
+      STATE.laps = [];
+      STATE.swLapIdx = -1;
+      playClick();
+      updateLapTable();
+      appendStreamLog('[STPW] Đã xóa toàn bộ lịch sử Laps trong ngăn xếp.');
+      render();
+    }
+
+    function viewLap(idx) {
+      if (idx >= 0 && idx < STATE.laps.length) {
+        STATE.mode = 1; // Chuyển sang STPW
+        STATE.swLapIdx = idx;
+        playClick();
+        updateAnnunciators();
+        updateLapTable();
+        render();
+      }
+    }
+
+    function formatTimeMs(t, is99 = false) {
+      const min = Math.floor(t / 60000) % 60;
+      const sec = Math.floor((t % 60000) / 1000);
+      if (is99) {
+        const cs = Math.floor((t % 1000) / 10);
+        return `${String(min).padStart(2, '0')}:${String(sec).padStart(2, '0')}.${String(cs).padStart(2, '0')}`;
+      } else {
+        const ms = Math.floor(t % 1000);
+        return `${String(min).padStart(2, '0')}:${String(sec).padStart(2, '0')}.${String(ms).padStart(3, '0')}`;
+      }
+    }
+
+    function updateLapTable() {
+      const tbody = document.getElementById('stpw-laps-tbody');
+      if (!tbody) return;
+      if (STATE.laps.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; color:#8b949e; padding:12px;">Ngăn xếp trống (Bấm Start rồi nhấn Phím B để lưu Lap)</td></tr>';
+        return;
+      }
+      const is99 = STATE.swMode === '99lap';
+      let html = '';
+      for (let i = STATE.laps.length - 1; i >= 0; i--) { // LIFO: mốc mới nhất hiển thị trên cùng
+        const lapTime = STATE.laps[i];
+        const prevTime = i > 0 ? STATE.laps[i - 1] : 0;
+        const splitDelta = lapTime - prevTime;
+        const isCurrent = STATE.swLapIdx === i;
+        const badgeCls = is99 ? 'b-99' : 'b-9';
+        const ledStr = is99 ? `L${String(i + 1).padStart(2, '0')}` : `L${(i % 9) + 1}`;
+        html += `
+          <tr class="${isCurrent ? 'active-lap' : ''}">
+            <td>#${i + 1}</td>
+            <td><span class="lap-badge ${badgeCls}">${ledStr}</span></td>
+            <td><b>${formatTimeMs(lapTime, is99)}</b></td>
+            <td><span class="split-badge">+${formatTimeMs(splitDelta, is99)}</span></td>
+            <td><button class="timer-pill" onclick="viewLap(${i})" style="padding:2px 8px; font-size:0.7rem;">${isCurrent ? '▶ Đang xem' : 'Xem'}</button></td>
+          </tr>
+        `;
+      }
+      tbody.innerHTML = html;
+    }
+
+    // ============================================================================
+    // BẢNG ĐIỀU KHIỂN NẠP TIMER TÙY CHỈNH (TASK-17 & TASK-18)
+    // ============================================================================
+    function toggleTimerAlarm() {
+      STATE.tmrAlarmEn = !STATE.tmrAlarmEn;
+      const btn = document.getElementById('btn-tmr-alarm-toggle');
+      if (btn) {
+        btn.classList.toggle('active', STATE.tmrAlarmEn);
+        btn.textContent = STATE.tmrAlarmEn ? '🔔 Còi Báo Động Về 0: BẬT' : '🔕 Còi Báo Động Về 0: TẮT';
+      }
+      playClick();
+      appendStreamLog(`[TIMER] Còi báo động khi về 0 & quá hạn âm: ${STATE.tmrAlarmEn ? 'BẬT' : 'TẮT'}`);
+    }
+
+    function quickFillTimer(h, m, s, ms) {
+      document.getElementById('inp-tmr-hr').value = h;
       document.getElementById('inp-tmr-min').value = m;
       document.getElementById('inp-tmr-sec').value = s;
       document.getElementById('inp-tmr-ms').value = ms;
@@ -1879,21 +2245,23 @@ t = 0 ms
 
     function applyCustomTimerPreset() {
       playClick();
+      const h = parseInt(document.getElementById('inp-tmr-hr').value) || 0;
       const m = parseInt(document.getElementById('inp-tmr-min').value) || 0;
       const s = parseInt(document.getElementById('inp-tmr-sec').value) || 0;
       const ms = parseInt(document.getElementById('inp-tmr-ms').value) || 0;
-      const totalMs = (m * 60 + s) * 1000 + ms;
+      const totalMs = ((h * 60 + m) * 60 + s) * 1000 + ms;
 
       STATE.tmrPresetMs = totalMs;
       STATE.tmrRemainMs = totalMs;
       STATE.tmrRunning = false;
       STATE.tmrBeeping = false;
+      STATE.tmrOvertimeBeeping = false;
       STATE.mode = 2; // Chuyển sang chế độ TIMER
       STATE.tPage = 0;
 
       updateAnnunciators();
       render();
-      appendStreamLog(`[MMIO] Da nap REG_TMR_VALUE = ${totalMs} ms (${m}m ${s}s ${ms}ms). Timer san sang!`);
+      appendStreamLog(`[MMIO] Đã nạp REG_TMR_VALUE = ${totalMs} ms (${h}h ${m}m ${s}s ${ms}ms). Timer sẵn sàng!`);
     }
 
     // ============================================================================
@@ -1923,15 +2291,27 @@ t = 0 ms
         STATE.swElapsedMs += deltaSim;
       }
 
-      // 3. Cập nhật Timer đếm lùi & quá hạn âm
+      // 3. Cập nhật Timer đếm lùi & quá hạn âm (TASK-18: Còi báo động khi chạm 0 & bíp định kỳ khi âm)
       if (STATE.tmrRunning) {
         const prev = STATE.tmrRemainMs;
         STATE.tmrRemainMs -= deltaSim;
         if (prev >= 0 && STATE.tmrRemainMs < 0) {
-          // Vừa chạm 0! Kích hoạt còi bíp
+          // Vừa chạm 0! Kích hoạt còi bíp dồn dập
           STATE.tmrBeeping = true;
-          appendStreamLog(`[TIMER] Het gio! Chuyen sang dem qua gio am (-MM.SS.mmm)`);
-          playTone(2400, 0.4, 'square');
+          if (STATE.tmrAlarmEn) {
+            STATE.tmrOvertimeBeeping = true;
+            playTone(2600, 0.35, 'square');
+            setTimeout(() => playTone(3000, 0.35, 'square'), 180);
+          }
+          appendStreamLog(`[TIMER ALARM] Đã đếm về 0! Kích hoạt còi báo động. Chuyển sang đếm quá giờ âm.`);
+        }
+        // Nhịp bíp cảnh báo định kỳ (mỗi 1 giây) khi đang đếm quá hạn âm
+        if (STATE.tmrRemainMs < 0 && STATE.tmrOvertimeBeeping && STATE.tmrAlarmEn) {
+          const curSec = Math.floor(Math.abs(STATE.tmrRemainMs) / 1000);
+          if (curSec !== STATE.lastOvertimeBeepSec) {
+            STATE.lastOvertimeBeepSec = curSec;
+            playTone(2200, 0.12, 'square');
+          }
         }
       }
 
@@ -2072,6 +2452,20 @@ t = 0 ms
       render();
     }
 
+    // Kịch bản 6: Đếm lùi Timer có Giờ (1h 00m 02s -> Hiển thị __HH.MM.SS)
+    function runScenarioTimerHours() {
+      playClick();
+      STATE.mode = 2; // TMR
+      STATE.tmrPresetMs = (1 * 3600 + 2) * 1000; // 1 giờ 2 giây
+      STATE.tmrRemainMs = STATE.tmrPresetMs;
+      STATE.tmrRunning = true;
+      STATE.tmrBeeping = false;
+      STATE.tmrOvertimeBeeping = false;
+      updateAnnunciators();
+      appendStreamLog(`[KỊCH BẢN 6] Đặt Timer 1 giờ 2 giây. Quan sát chuyển đổi định dạng __HH.MM.SS và còi báo khi về 0!`);
+      render();
+    }
+
     // ============================================================================
     // CÁC TIỆN ÍCH GIAO DIỆN (THEME, SPEED)
     // ============================================================================
@@ -2097,6 +2491,7 @@ t = 0 ms
       // Mặc định Emerald Xanh
       setTheme('green', document.querySelectorAll('.sim-group:nth-child(2) .pill-btn')[1]);
       updateAnnunciators();
+      updateLapTable();
       render();
       requestAnimationFrame(systemTick);
     });
