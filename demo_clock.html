@@ -1009,7 +1009,7 @@
       <div class="btn-card">
         <button class="hardware-btn" id="btn-mode" onclick="pressMODE()">M</button>
         <div class="btn-name">NÚT MODE</div>
-        <div class="btn-desc" id="desc-mode">Chuyển chế độ FSM (TIME → STPW → TMR → ALM → SET)</div>
+        <div class="btn-desc" id="desc-mode">Chuyển chế độ FSM (TIME → ALM → STPW → TMR → SET)</div>
         <div class="btn-key">Phím [M] hoặc [1]</div>
       </div>
 
@@ -1017,7 +1017,7 @@
       <div class="btn-card">
         <button class="hardware-btn" id="btn-a" onclick="pressA()">A</button>
         <div class="btn-name">NÚT A</div>
-        <div class="btn-desc" id="desc-a">Chuyển đổi 12H / 24H</div>
+        <div class="btn-desc" id="desc-a">Smash Báo thức (1 lần = Snooze / Tắt chuông; 3 lần nhanh = Tắt/Bật toàn cục)</div>
         <div class="btn-key">Phím [A] hoặc [2]</div>
       </div>
 
@@ -1025,7 +1025,7 @@
       <div class="btn-card">
         <button class="hardware-btn" id="btn-b" onclick="pressB()">B</button>
         <div class="btn-name">NÚT B</div>
-        <div class="btn-desc" id="desc-b">Đổi trang (HH:MM:SS → mm:ss.ms → dd-mm-yy)</div>
+        <div class="btn-desc" id="desc-b">Xoay vòng 4 kiểu xem (12h AM/PM → 24h+ms → Ngày DDMMYYYY → Tuần W## DOW)</div>
         <div class="btn-key">Phím [B] hoặc [3]</div>
       </div>
 
@@ -1033,7 +1033,7 @@
       <div class="btn-card">
         <button class="hardware-btn" id="btn-c" onclick="pressC()">C</button>
         <div class="btn-name">NÚT C</div>
-        <div class="btn-desc" id="desc-c">Độ sáng LED (15 → 9 → 3)</div>
+        <div class="btn-desc" id="desc-c">Đổi 4 màu đèn LED (Đỏ → Xanh lá → Xanh lam → Vàng)</div>
         <div class="btn-key">Phím [C] hoặc [4]</div>
       </div>
     </div>
@@ -2340,9 +2340,9 @@ t = 0 ms
       dMode.textContent = 'Chuyển chế độ FSM (TIME → ALM → STPW → TMR → SET)';
 
       if (m === 0) { // TIME
-        dA.textContent = 'Chuyển đổi 12H / 24H (AM/PM)';
-        dB.textContent = 'Đổi trang (Giờ:Phút:Giây → Phút:Giây.ms → Ngày-Tháng)';
-        dC.textContent = 'Điều chỉnh độ sáng LED (15 → 9 → 3 → 15)';
+        dA.textContent = 'Smash Báo thức (1 lần = Snooze / Tắt chuông; 3 lần nhanh = Tắt/Bật toàn cục)';
+        dB.textContent = 'Xoay vòng 4 kiểu xem (12h AM/PM → 24h+ms → Ngày DDMMYYYY → Tuần W## DOW)';
+        dC.textContent = 'Đổi 4 màu đèn LED (Đỏ → Xanh lá → Xanh lam → Vàng)';
       } else if (m === 1) { // ALM
         if (STATE.almEditing > 0) {
           dA.textContent = `Tăng giá trị trường ${STATE.almEditing === 1 ? 'Giờ (+1)' : 'Phút (+1)'}`;
@@ -2364,21 +2364,21 @@ t = 0 ms
         }
       } else if (m === 3) { // TMR
         if (STATE.tmrSubmode === 'chess') {
-          dA.textContent = STATE.chessAct === 1 ? 'ĐẤU THỦ TRÁI (Left Clock) [Đang suy nghĩ]' : 'ĐẤU THỦ TRÁI: Nhấn để Chạy / Chuyển lượt [Phím A]';
-          dB.textContent = '⚠️ TÁI ĐẤU (REMATCH): Bấm nhanh 3 lần liên tiếp để Reset [Phím B]';
-          dC.textContent = STATE.chessAct === 2 ? 'ĐẤU THỦ PHẢI (Right Clock) [Đang suy nghĩ]' : 'ĐẤU THỦ PHẢI: Nhấn để Chạy / Chuyển lượt [Phím C]';
+          dA.textContent = STATE.tmrChessActive === 1 ? 'ĐẤU THỦ TRÁI [Đang chạy] - Bấm C để chuyển lượt' : 'ĐẤU THỦ TRÁI: Nhấn để Chạy / Chuyển lượt [Phím A]';
+          dB.textContent = '1 lần = Tạm dừng cả 2 | 3 lần nhanh = Tái đấu (Rematch Reset)';
+          dC.textContent = STATE.tmrChessActive === 2 ? 'ĐẤU THỦ PHẢI [Đang chạy] - Bấm A để chuyển lượt' : 'ĐẤU THỦ PHẢI: Nhấn để Chạy / Chuyển lượt [Phím C]';
         } else {
           if (STATE.tmrRunning) {
             dA.textContent = 'BẮT ĐẦU (Start) đếm ngược [Đang chạy]';
-            dB.textContent = '⚠️ RESET AN TOÀN: Bấm nhanh 3 lần liên tiếp về mốc trước [Phím B]';
+            dB.textContent = '1 lần = Tạm dừng (Pause) | 3 lần nhanh = Reset mốc ban đầu';
             dC.textContent = STATE.tmrOvertimeBeeping ? '🔕 TẮT CHUÔNG BÁO ĐỘNG (Acknowledge)' : 'TẠM DỪNG (Pause) đếm ngược';
           } else if (STATE.tmrPaused) {
             dA.textContent = 'TIẾP TỤC (Resume) đếm ngược';
-            dB.textContent = '⚠️ RESET AN TOÀN: Bấm nhanh 3 lần liên tiếp về toàn số 0 [Phím B]';
+            dB.textContent = '1 lần = Tạm dừng (Pause) | 3 lần nhanh = Reset về mốc ban đầu';
             dC.textContent = 'Đang tạm dừng (Bấm A để chạy tiếp)';
           } else {
             dA.textContent = 'BẮT ĐẦU (Start) đếm ngược';
-            dB.textContent = '⚠️ RESET AN TOÀN: Bấm nhanh 3 lần liên tiếp về toàn số 0 [Phím B]';
+            dB.textContent = '1 lần = Tạm dừng (Pause) | 3 lần nhanh = Reset về mốc ban đầu';
             dC.textContent = STATE.tmrOvertimeBeeping ? '🔕 TẮT CHUÔNG BÁO ĐỘNG (Acknowledge)' : 'Cài đặt Preset t1/t2 (Vào SET)';
           }
         }
@@ -2389,10 +2389,10 @@ t = 0 ms
           dA.textContent = `Tăng trường: ${fNames[STATE.setField]}`;
           dB.textContent = 'Chuyển trường (Kênh → Giờ → Phút)';
           dC.textContent = 'Lưu Alarm → Thoát về ALARM';
-        } else if (STATE.tPage === 2) { // SET STOPWATCH: SP  09LA / 99LA
-          dA.textContent = `Đổi Chế độ: 9 Laps (1 ms) ↔ 99 Laps (10 ms) [Hiện tại: ${STATE.swMode === '9lap' ? '9 Laps' : '99 Laps'}]`;
-          dB.textContent = 'Đổi Chế độ: 9 Laps ↔ 99 Laps';
-          dC.textContent = 'Lưu Chế độ Bấm giờ → Thoát về STOPWATCH';
+        } else if (STATE.tPage === 2) { // SET STOPWATCH: 09L SPL / 99L GAP
+          dA.textContent = `Đổi Option A: 9 Laps (1 ms) ↔ 99 Laps (10 ms) [Hiện tại: ${STATE.swMode === '9lap' ? '9 Laps' : '99 Laps'}]`;
+          dB.textContent = `Đổi Option B: ${STATE.swLapDisplay === 'gap' ? 'GAP (Khoảng cách + Tắt 0 đầu)' : 'SPLIT (Mốc tuyệt đối)'} [Bấm B]`;
+          dC.textContent = 'Lưu Cấu hình Stopwatch → Thoát về STOPWATCH';
         } else if (STATE.tPage === 3) { // SET TIMER: t1/t2 HH.MM.SS (4 trường: Hr, Min, Sec, Submode)
           const fNames = ['Giờ (+1)', 'Phút (+1)', 'Giây (+1)', 'Chế độ (t1: Đơn ↔ t2: Cờ vua Kép)'];
           dA.textContent = STATE.setField === 3 ? 'Đổi Chế độ: t1 (Đơn) ↔ t2 (Cờ vua Kép)' : `Tăng trường: ${fNames[STATE.setField]}`;
