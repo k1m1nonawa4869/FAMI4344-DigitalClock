@@ -1,3 +1,10 @@
+# ============================================================================
+# HỌC PHẦN:       MI4344 / IT3283 – Kiến trúc Máy tính (HUST - SAMI/SoICT)
+# TÊN FILE:       fw/tests/cpu/irq_bcd.s — Kiểm Thử Ngắt Khi Pipeline Đang Stall Vì Lệnh BCD
+# CHUYÊN ĐỀ KTMT: Chương 04 & Chương 05: Tương Tác Giữa Ngắt Ngoại Vi & Lệnh Đa Chu Kỳ
+# VAI TRÒ:        Xác minh ngắt đến giữa lúc bộ BCD đang bận (28 chu kỳ) không làm mất hay lặp lệnh
+# MÔ TẢ:          Thực hiện vòng lặp 20 lần lệnh bcd trong khi kích hoạt ngắt ngoài từ testbench.
+# ============================================================================
 # Ngắt khi bcd đang busy (pipeline-policy §10). Vòng 20 lần bcd; máy phát sự kiện trễ 5 chu kỳ hệ thống.
 # Ngắt phải được nhận đúng 1 lần và không làm mất/lặp lệnh. Vị trí ngắt cụ thể (G2: trong busy hay ngay sau) kiểm bằng trace.
 # nomars

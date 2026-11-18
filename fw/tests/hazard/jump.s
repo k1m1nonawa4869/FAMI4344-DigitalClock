@@ -1,3 +1,10 @@
+# ============================================================================
+# HỌC PHẦN:       MI4344 / IT3283 – Kiến trúc Máy tính (HUST - SAMI/SoICT)
+# TÊN FILE:       fw/tests/hazard/jump.s — Kiểm Thử Pipeline G2: Lệnh Nhảy Không Điều Kiện (Jump)
+# CHUYÊN ĐỀ KTMT: Chương 04: Xử Lý Xung Đột Nhảy j / jal / jr & Bypass Thanh Ghi $ra
+# VAI TRÒ:        Đo chính xác số bọt khí (bubbles = 9) khi nhảy tĩnh và nhảy gián tiếp qua thanh ghi
+# MÔ TẢ:          Kiểm tra j (2), jal (2), jr ngay sau jal (2 qua ID bypass) và lw $ra -> jr (1+2).
+# ============================================================================
 # B6 jump — j, jal, jr ngay sau jal (T7: ID đọc $ra qua bypass regfile), jr sau lw $ra (stall 1 + nhảy 2).
 # Tổng: j(2) + jal(2) + jr trong F(2) + lw→jr(1+2) = 9
 # bubbles 9

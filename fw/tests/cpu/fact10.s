@@ -1,3 +1,10 @@
+# ============================================================================
+# HỌC PHẦN:       MI4344 / IT3283 – Kiến trúc Máy tính (HUST - SAMI/SoICT)
+# TÊN FILE:       fw/tests/cpu/fact10.s — Kiểm Thử Lời Gọi Hàm Đệ Quy Qua Ngăn Xếp (Stack)
+# CHUYÊN ĐỀ KTMT: Chương 02: Quy Ước Gọi Hàm, Ngăn Xếp ($sp) & Thanh Ghi Địa Chỉ Trả Về ($ra)
+# VAI TRÒ:        Kiểm chứng phối hợp hoàn chỉnh giữa jal, jr, sw/lw stack và phép nhân mul
+# MÔ TẢ:          Tính 10! = 3.628.800 (0x375F00) bằng đệ quy 10 tầng lưu $ra và đối số $a0 trên stack.
+# ============================================================================
 # C3-2: giai thừa đệ quy qua stack: fact(10) = 3628800 = 0x375F00
 # expect $v0=0x375f00
         li    $sp, 0xff8

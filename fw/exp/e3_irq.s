@@ -1,3 +1,10 @@
+# ============================================================================
+# HỌC PHẦN:       MI4344 / IT3283 – Kiến trúc Máy tính (HUST - SAMI/SoICT)
+# TÊN FILE:       fw/exp/e3_irq.s — Thực Nghiệm E3: Bắt Sự Kiện Bằng Ngắt Phần Cứng (IRQ)
+# CHUYÊN ĐỀ KTMT: Chương 05: Hệ Thống Vào/Ra & Phân Tích Độ Trễ Phản Hồi (Polling vs Interrupt)
+# VAI TRÒ:        Đo độ trễ (Latency) từ lúc bấm nút B đến khi ISR đọc được MS_OF_DAY
+# MÔ TẢ:          Chạy vòng nền có lệnh chia div (33 chu kỳ stall) để khảo sát độ trễ tối đa của ngắt BTN.
+# ============================================================================
 # e3_irq.s — thí nghiệm E3 (chủ TV3 + TV2), cách 2: NGẮT BTN (bit 5). tb/exp_e3_tb.v bấm nút B, đo lúc handler có MS_OF_DAY.
 # Nền = cùng việc W như e3_poll.s (div + 4 lệnh ALU) chạy mãi; ngắt bị chặn khi div đang stall (pipeline-policy §6).
 # Stopwatch SRC = 1, RUN = 1 → mỗi lần B phần cứng chụp lap (cách 3).

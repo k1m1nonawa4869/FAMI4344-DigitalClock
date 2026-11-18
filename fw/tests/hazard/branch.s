@@ -1,3 +1,10 @@
+# ============================================================================
+# HỌC PHẦN:       MI4344 / IT3283 – Kiến trúc Máy tính (HUST - SAMI/SoICT)
+# TÊN FILE:       fw/tests/hazard/branch.s — Kiểm Thử Pipeline G2: Xung Đột Điều Khiển (Branch)
+# CHUYÊN ĐỀ KTMT: Chương 04: Control Hazard, Xả Lệnh (Flush) & Forwarding Vào Bộ So Sánh Nhánh
+# VAI TRÒ:        Đo chính xác số bọt khí (bubbles = 9) cho các kịch bản rẽ nhánh tại tầng EX
+# MÔ TẢ:          Kiểm tra nhánh nhảy thật (2 bọt khí), không nhảy (0), ALU->branch (0), và lw->branch (1+2).
+# ============================================================================
 # B6 branch — nhánh quyết định ở EX (pipeline-policy §5, T3, T4):
 #   nhảy thật 2 bubble; không nhảy 0; nhánh ngay sau ALU 0 (forward vào EX); lw rồi nhánh 1 + 2 khi nhảy.
 # Tổng: bne(2) + beq(0) + beq(2) + lw→beq(1+2) + beq-không-nhảy(0) + bne(2) = 9

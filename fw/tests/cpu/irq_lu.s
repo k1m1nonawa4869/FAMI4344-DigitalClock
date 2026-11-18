@@ -1,3 +1,10 @@
+# ============================================================================
+# HỌC PHẦN:       MI4344 / IT3283 – Kiến trúc Máy tính (HUST - SAMI/SoICT)
+# TÊN FILE:       fw/tests/cpu/irq_lu.s — Kiểm Thử Ngắt Khi Pipeline Đang Stall Vì Load-Use
+# CHUYÊN ĐỀ KTMT: Chương 04 & Chương 05: Xử Lý Ngắt Trong Chu Kỳ Chèn Bọt Khí (Stall Cycle)
+# VAI TRÒ:        Đảm bảo việc giữ PC và chèn NOP trong Load-Use Stall không xung đột với ngắt CP0
+# MÔ TẢ:          Chạy vòng lặp 20 lần cặp lệnh lw + addu phụ thuộc dữ liệu khi có yêu cầu ngắt tức thời.
+# ============================================================================
 # Ngắt khi load-use đang stall (pipeline-policy §10). Vòng 20 lần lw + addu phụ thuộc; máy phát sự kiện trễ 1 chu kỳ hệ thống.
 # Ngắt phải được nhận đúng 1 lần, không làm mất/lặp lệnh. Vị trí ngắt cụ thể (G2: ngay lúc stall hay không) kiểm bằng trace.
 # nomars

@@ -1,3 +1,10 @@
+# ============================================================================
+# HỌC PHẦN:       MI4344 / IT3283 – Kiến trúc Máy tính (HUST - SAMI/SoICT)
+# TÊN FILE:       fw/tests/hazard/mmio_once.s — Kiểm Thử Pipeline G2: Bảo Toàn Truy Cập MMIO Một Lần
+# CHUYÊN ĐỀ KTMT: Chương 04 & Chương 07: Ngăn Chặn Thực Thi Suy Đoán Trên Thanh Ghi Ngoại Vi FIFO
+# VAI TRÒ:        Đảm bảo lệnh lw từ FIFO/MMIO không bị đọc thừa trong bóng nhánh sai hay lúc stall
+# MÔ TẢ:          Đếm số lần đọc bus_re thực tế khi lw MMIO đứng sau beq nhảy thật và sau lệnh div 32 chu kỳ.
+# ============================================================================
 # B6 mmio_once — lw MMIO (SW_LAP = −220($zero)) không chạy khi nằm trong bóng nhánh nhảy thật;
 # chạy đúng 1 lần khi nằm sau div (lúc busy, lệnh ở ID chờ). Testbench đếm bus_re = số lw MMIO đã retire.
 # Tổng bubble: beq nhảy 2 + div 32 = 34

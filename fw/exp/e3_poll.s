@@ -1,3 +1,10 @@
+# ============================================================================
+# HỌC PHẦN:       MI4344 / IT3283 – Kiến trúc Máy tính (HUST - SAMI/SoICT)
+# TÊN FILE:       fw/exp/e3_poll.s — Thực Nghiệm E3: Bắt Sự Kiện Bằng Thăm Dò (Polling)
+# CHUYÊN ĐỀ KTMT: Chương 05: Hệ Thống Vào/Ra & Phân Tích Độ Trễ Phản Hồi (Polling vs Interrupt)
+# VAI TRÒ:        Đo độ trễ (Latency) từ lúc bấm nút B đến khi vòng lặp chính kiểm tra được BTN_EVENT
+# MÔ TẢ:          Thực hiện khối lượng công việc nền tương đương e3_irq.s để so sánh công bằng với cơ chế ngắt.
+# ============================================================================
 # e3_poll.s — thí nghiệm E3 (chủ TV3 + TV2), cách 1: POLLING. tb/exp_e3_tb.v bấm nút B, đo lúc firmware có MS_OF_DAY.
 # Vòng chính = kiểm BTN_EVENT + việc nền W (div + 4 lệnh ALU, giống firmware thật có div khi định dạng số).
 # Stopwatch SRC = 1, RUN = 1 → mỗi lần B phần cứng chụp lap (cách 3), firmware chỉ lấy ra khỏi FIFO.

@@ -1,3 +1,10 @@
+# ============================================================================
+# HỌC PHẦN:       MI4344 / IT3283 – Kiến trúc Máy tính (HUST - SAMI/SoICT)
+# TÊN FILE:       fw/tests/soc/bus.s — Kiểm Thử Tích Hợp Bus MMIO & Thanh Ghi Ngoại Vi SoC
+# CHUYÊN ĐỀ KTMT: Chương 07: Kiến Trúc Bus Hệ Thống & Giải Mã Không Gian Địa Chỉ MMIO
+# VAI TRÒ:        Xác thực khả năng giao tiếp đọc/ghi của CPU tới toàn bộ 8 khối ngoại vi trên soc_top
+# MÔ TẢ:          Tự kiểm tra từng trường hợp bus và bật bit tương ứng trên $v0 (kỳ vọng cuối: $v0 = 0x7FFF).
+# ============================================================================
 # bus.s — kiểm bus MMIO + thanh ghi soc trên soc_top (gói C4, mmio-map §6 BUS-2, -3, -5 và §4).
 # Chạy: bash tools/run_unit.sh soc_bus. Tự kiểm: mỗi ca đúng bật 1 bit $v0; tb đòi $v0 = 0x7FFF.
 # BUS-1 (độ trễ 1 cạnh) được kiểm gián tiếp ở mọi lw; BUS-4 dùng FIFO lap của stopwatch (E3).

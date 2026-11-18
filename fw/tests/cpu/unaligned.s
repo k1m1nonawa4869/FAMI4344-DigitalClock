@@ -1,3 +1,10 @@
+# ============================================================================
+# HỌC PHẦN:       MI4344 / IT3283 – Kiến trúc Máy tính (HUST - SAMI/SoICT)
+# TÊN FILE:       fw/tests/cpu/unaligned.s — Kiểm Thử Hành Vi Căn Lề Từ Nhớ 4-Byte
+# CHUYÊN ĐỀ KTMT: Chương 02 & Chương 04: Giao Tiếp Bộ Nhớ Word-Aligned (Word Memory Access)
+# VAI TRÒ:        Kiểm chứng phần cứng tự động bỏ qua 2 bit địa chỉ thấp A[1:0] khi truy cập lw/sw
+# MÔ TẢ:          Thực hiện sw/lw tại địa chỉ lệch word (offset +1, +2, +3) để kiểm tra tính nhất quán.
+# ============================================================================
 # C3-4: lw/sw lệch 4 byte → bỏ 2 bit thấp (MARS báo lỗi căn lề nên không chạy MARS)
 # nomars
 # expect $t4=0x901

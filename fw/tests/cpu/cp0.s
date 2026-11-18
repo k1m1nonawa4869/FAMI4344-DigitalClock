@@ -1,3 +1,10 @@
+# ============================================================================
+# HỌC PHẦN:       MI4344 / IT3283 – Kiến trúc Máy tính (HUST - SAMI/SoICT)
+# TÊN FILE:       fw/tests/cpu/cp0.s — Kiểm Thử Bộ Đồng Xử Lý Hệ Thống CP0
+# CHUYÊN ĐỀ KTMT: Chương 04 & Chương 05: Ngoại Lệ, Ngắt & Thanh Ghi Điều Khiển Hệ Thống (CP0)
+# VAI TRÒ:        Kiểm chứng các lệnh mfc0, mtc0, eret trên các thanh ghi Status ($12), Cause ($13), EPC ($14)
+# MÔ TẢ:          Xác nhận trạng thái reset, quyền ghi các bit cấu hình và cơ chế nhảy phục hồi từ EPC.
+# ============================================================================
 # CP0 theo spec nhóm (isa-spec §5; MARS khác ở Status reset và bit ghi được nên không chạy MARS)
 # nomars
 # expect $t0=0

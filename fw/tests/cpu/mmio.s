@@ -1,3 +1,10 @@
+# ============================================================================
+# HỌC PHẦN:       MI4344 / IT3283 – Kiến trúc Máy tính (HUST - SAMI/SoICT)
+# TÊN FILE:       fw/tests/cpu/mmio.s — Kiểm Thử Cô Lập Bus Ngoại Vi MMIO & DMEM
+# CHUYÊN ĐỀ KTMT: Chương 07: Ánh Xạ Bộ Nhớ Ngoại Vi (Memory-Mapped I/O Bus Decoding)
+# VAI TRÒ:        Xác minh giải mã địa chỉ MMIO không ghi nhầm vào RAM dữ liệu (DMEM)
+# MÔ TẢ:          Kiểm tra truy cập sw/lw vùng MMIO, vùng ngoài phạm vi và đối chiếu tính toàn vẹn của DMEM.
+# ============================================================================
 # Đường bus MMIO (mmio-map §2): sw/lw offset âm qua $zero; tb mô hình MMIO = RAM 64 word.
 # Kiểm thêm: ghi MMIO / ngoài vùng không lọt vào DMEM (bit [11:2] trùng), đọc ngoài vùng ra 0 dù DMEM có dữ liệu.
 # nomars

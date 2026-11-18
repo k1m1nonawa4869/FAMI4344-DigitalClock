@@ -1,3 +1,10 @@
+# ============================================================================
+# HỌC PHẦN:       MI4344 / IT3283 – Kiến trúc Máy tính (HUST - SAMI/SoICT)
+# TÊN FILE:       fw/tests/soc/irq_lat.s — Kiểm Thử Đo Lường Độ Trễ Ngắt Phần Cứng SoC
+# CHUYÊN ĐỀ KTMT: Chương 05 & Chương 07: Độ Trễ Ngắt Thực Tế (Interrupt Latency Measurement)
+# VAI TRÒ:        Đo chênh lệch chu kỳ từ lúc IRQ phát sinh (IRQ_STAMP) đến lệnh đầu tiên trong ISR
+# MÔ TẢ:          Khảo sát 2 pha độc lập: vòng lặp 1 chu kỳ ($s1=0) và vòng lặp chứa lệnh div ($s1=1).
+# ============================================================================
 # irq_lat.s — C5-5: độ trễ ngắt ở D = 1526, chỉ bật 1 nguồn (TICK_1S). tb (soc_irqlat_tb) đo
 # CYCLE_COUNT lúc lệnh đầu handler xong − IRQ_STAMP, chia theo pha $s1: 0 = vòng chờ toàn lệnh 1 chu kỳ, 1 = vòng có div.
 # Chạy: bash tools/run_unit.sh soc_irqlat

@@ -1,3 +1,10 @@
+# ============================================================================
+# HỌC PHẦN:       MI4344 / IT3283 – Kiến trúc Máy tính (HUST - SAMI/SoICT)
+# TÊN FILE:       fw/tests/hazard/zero_reg.s — Kiểm Thử Pipeline G2: Bất Biến Thanh Ghi $zero ($0)
+# CHUYÊN ĐỀ KTMT: Chương 04: Bảo Vệ Thanh Ghi $0 Trong Mạng Forwarding & Hazard Unit
+# VAI TRÒ:        Ngăn chặn lỗi Forwarding Unit đẩy nhầm kết quả ALU của lệnh ghi vào đích $0
+# MÔ TẢ:          Thực hiện ghi giá trị khác 0 vào $zero rồi đọc ngay ở các lệnh kế tiếp, bảo đảm luôn bằng 0.
+# ============================================================================
 # B6 zero_reg — ghi vào $0 rồi dùng $0: không được forward giá trị vừa "ghi" (pipeline-policy §2, §3).
 # bubbles 0
 # expect $t0=5

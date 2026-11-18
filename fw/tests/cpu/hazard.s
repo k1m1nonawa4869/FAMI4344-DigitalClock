@@ -1,3 +1,10 @@
+# ============================================================================
+# HỌC PHẦN:       MI4344 / IT3283 – Kiến trúc Máy tính (HUST - SAMI/SoICT)
+# TÊN FILE:       fw/tests/cpu/hazard.s — Kiểm Thử Phụ Thuộc Dữ Liệu Tức Thời (RAW Hazard)
+# CHUYÊN ĐỀ KTMT: Chương 04: Thiết Kế Đường Dữ Liệu CPU G1 & Tương Tác Ghi-Đọc Tập Thanh Ghi
+# VAI TRÒ:        Xác nhận lệnh ghi thanh ghi và lệnh kế tiếp đọc ngay lập tức hoạt động chính xác
+# MÔ TẢ:          Kiểm tra chuỗi phụ thuộc Read-After-Write liên tiếp giữa các lệnh ALU và nạp dữ liệu.
+# ============================================================================
 # C3-5: ghi rồi đọc ngay ở lệnh sau (G1 regfile không bypass, ghi ở pha A)
         li    $t1, 0x7f0
         li    $t0, 0x10

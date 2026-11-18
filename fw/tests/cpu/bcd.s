@@ -1,3 +1,10 @@
+# ============================================================================
+# HỌC PHẦN:       MI4344 / IT3283 – Kiến trúc Máy tính (HUST - SAMI/SoICT)
+# TÊN FILE:       fw/tests/cpu/bcd.s — Kiểm Thử Lệnh Mở Rộng Phần Cứng BCD
+# CHUYÊN ĐỀ KTMT: Chương 03: Số Học Máy Tính & Mở Rộng Tập Lệnh Tùy Chỉnh (ISA Extension)
+# VAI TRÒ:        Kiểm chứng bộ chuyển đổi nhị phân sang 8 chữ số BCD và cờ phát hiện tràn số (> 99.999.999)
+# MÔ TẢ:          Kiểm tra các giá trị biên 0, 12345678, 99999999 và các số âm/tràn trả về 0xFFFFFFFF.
+# ============================================================================
 # C3-1 phần bcd (MARS không có lệnh này): kết quả kiểm bằng expect; ghi vào 0x800+
 # nomars
 # expect $s0=0x12345678

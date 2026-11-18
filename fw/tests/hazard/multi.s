@@ -1,3 +1,10 @@
+# ============================================================================
+# HỌC PHẦN:       MI4344 / IT3283 – Kiến trúc Máy tính (HUST - SAMI/SoICT)
+# TÊN FILE:       fw/tests/hazard/multi.s — Kiểm Thử Pipeline G2: Bộ Chia Tuần Tự Đa Chu Kỳ
+# CHUYÊN ĐỀ KTMT: Chương 03 & Chương 04: Tích Hợp Bộ Chia Restoring 32 Chu Kỳ Vào Đường Ống Pipeline
+# VAI TRÒ:        Đo chính xác tổng số bọt khí (bubbles = 65) khi chạy phép chia và đọc thanh ghi HI/LO
+# MÔ TẢ:          Kiểm tra div chuẩn (+32), chia 0 thoát nhanh (+0), mflo/mfhi liên hoàn (+0) và lw -> div (+33).
+# ============================================================================
 # B6 multi — div K = 33 chu kỳ EX (+32 bubble); chia 0 = 1 chu kỳ (+0); mflo/mfhi ngay sau div (+0);
 # lw → div: load-use stall 1 rồi div 32 (+33). Tổng = 32 + 0 + 33 = 65 (pipeline-policy §6, T5).
 # bubbles 65

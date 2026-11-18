@@ -1,3 +1,10 @@
+# ============================================================================
+# HỌC PHẦN:       MI4344 / IT3283 – Kiến trúc Máy tính (HUST - SAMI/SoICT)
+# TÊN FILE:       fw/tests/soc/uart.s — Kiểm Thử Truyền Thông Nối Tiếp UART Loopback
+# CHUYÊN ĐỀ KTMT: Chương 07: Giao Tiếp Nối Tiếp Bất Đồng Bộ UART 115200 8N1 & FIFO Đệm
+# VAI TRÒ:        Kiểm tra phát ký tự TX, vòng nối loopback về RX, cờ trạng thái TX_READY/RX_VALID
+# MÔ TẢ:          Chạy chế độ polling tự động kiểm tra truyền chuỗi dữ liệu qua UART (kỳ vọng: $v0 = 0x3F).
+# ============================================================================
 # uart.s — kiểm UART (gói D4, display-spec §6, mmio-map §3, §5 bit 6–7) trên soc_top.
 # Chạy: bash tools/run_unit.sh soc_uart. tb nối uart_tx → uart_rx (vòng lại), G_BIT = 8.
 # Tự kiểm: mỗi ca đúng bật 1 bit $v0; tb đòi $v0 = 0x3F. Chỉ polling, không bật ngắt.

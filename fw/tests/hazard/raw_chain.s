@@ -1,3 +1,10 @@
+# ============================================================================
+# HỌC PHẦN:       MI4344 / IT3283 – Kiến trúc Máy tính (HUST - SAMI/SoICT)
+# TÊN FILE:       fw/tests/hazard/raw_chain.s — Kiểm Thử Pipeline G2: Mạng Đẩy Dữ Liệu (Forwarding)
+# CHUYÊN ĐỀ KTMT: Chương 04: Data Forwarding EX/MEM -> EX Và MEM/WB -> EX (0 Bubble)
+# VAI TRÒ:        Xác minh chuỗi lệnh phụ thuộc RAW liên tiếp chạy ở thông lượng tối đa (bubbles = 0)
+# MÔ TẢ:          Kiểm tra quy tắc ưu tiên Forwarding từ lệnh gần nhất (tầng EX/MEM ưu tiên trước MEM/WB).
+# ============================================================================
 # B6 raw_chain — RAW liên tiếp, forwarding đủ (pipeline-policy §3, T1), 0 bubble.
 # Ca ưu tiên: addu $t0 ; addu $t0 ; addu ..,$t0 → lấy từ lệnh gần nhất (EX/MEM trước MEM/WB).
 # bubbles 0

@@ -1,3 +1,10 @@
+# ============================================================================
+# HỌC PHẦN:       MI4344 / IT3283 – Kiến trúc Máy tính (HUST - SAMI/SoICT)
+# TÊN FILE:       fw/tests/hazard/load_use.s — Kiểm Thử Pipeline G2: Xung Đột Load-Use Hazard
+# CHUYÊN ĐỀ KTMT: Chương 04: Bộ Phát Hiện Xung Đột Dữ Liệu (Hazard Detection Unit & 1-Cycle Stall)
+# VAI TRÒ:        Kiểm chứng cơ chế chèn đúng 1 bọt khí khi lệnh ngay sau lw dùng kết quả vừa nạp
+# MÔ TẢ:          Bao quát cả phụ thuộc rs, rt, ngoại lệ lw->sw (MEM-MEM forward) và ghi đè đích rt (bubbles = 3).
+# ============================================================================
 # B6 load_use — load-use 1 bubble với rs, với rt, lw→sw cùng thanh ghi; lw→addiu dùng rt làm đích (0);
 # lw rồi cách 1 lệnh (0). Theo pipeline-policy §4, T2.
 # bubbles 3

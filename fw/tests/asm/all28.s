@@ -1,3 +1,10 @@
+# ============================================================================
+# HỌC PHẦN:       MI4344 / IT3283 – Kiến trúc Máy tính (HUST - SAMI/SoICT)
+# TÊN FILE:       fw/tests/asm/all28.s — Kiểm Thử Mã Hóa 28 Lệnh MIPS & Lệnh Giả
+# CHUYÊN ĐỀ KTMT: Chương 02: Tập Lệnh Kiến Trúc MIPS (ISA) & Mã Máy Nhị Phân
+# VAI TRÒ:        Bộ vector chuẩn kiểm chứng trình dịch hợp ngữ tools/asm.py
+# MÔ TẢ:          Chứa đầy đủ 28 lệnh thực và các lệnh giả kèm mã máy Hex tính tay để đối chiếu từng dòng.
+# ============================================================================
 # all28.s — B1-1: đủ 28 lệnh + 5 lệnh giả, mã máy tính TAY (ghi sau "# =", isa-spec §2–§3, §7).
 # tools/test_asm.py dịch file này và so từng dòng với số ghi tay. Chương trình không để chạy.
 top:    addu  $t2, $t0, $t1             # = 0x01095021   rs 8, rt 9, rd 10, funct 0x21

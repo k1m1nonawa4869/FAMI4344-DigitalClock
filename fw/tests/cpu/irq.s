@@ -1,3 +1,10 @@
+# ============================================================================
+# HỌC PHẦN:       MI4344 / IT3283 – Kiến trúc Máy tính (HUST - SAMI/SoICT)
+# TÊN FILE:       fw/tests/cpu/irq.s — Kiểm Thử Toàn Diện Cơ Chế Ngắt Phần Cứng CP0
+# CHUYÊN ĐỀ KTMT: Chương 05: Cơ Chế Ngắt, Mặt Nạ Ngắt & Ngữ Cảnh Thực Thi ISR
+# VAI TRÒ:        Kiểm chứng quy trình tiếp nhận ngắt, bảo toàn EPC/Status/Cause và quay về qua eret
+# MÔ TẢ:          Phát xung ngắt từ testbench, kiểm tra trường hợp IE=0 (chặn ngắt) và ghi log vào DMEM 0x800+.
+# ============================================================================
 # Ngắt G1 (gói C5, isa-spec §5): C5-1…C5-4 + "IE = 0 thì không vào" + Status/Cause trong handler.
 # Chạy trên cpu_g1_tb: irq_ctrl thật ở −188/−184/−180; −16 = máy phát sự kiện của tb (sw {trễ[23:8], bit[7:0]}).
 # Handler ghi log vào DMEM: 0x800 = số lần vào; 0x804+4n = EPC, 0x844+4n = Status, 0x884+4n = Cause của lần n;

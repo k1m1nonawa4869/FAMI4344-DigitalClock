@@ -1,3 +1,10 @@
+# ============================================================================
+# HỌC PHẦN:       MI4344 / IT3283 – Kiến trúc Máy tính (HUST - SAMI/SoICT)
+# TÊN FILE:       fw/demo/clock.s — Firmware Demo Đồng Hồ Tối Giản (Minimal Clock Demo)
+# CHUYÊN ĐỀ KTMT: Chương 07: Hệ Thống Vào/Ra, Bộ Định Thời & Ngắt Ngoại Vi (MMIO & IRQ)
+# VAI TRÒ:        Firmware kiểm thử vòng quét thời gian thực tối giản chạy trên SoC WatchChip
+# MÔ TẢ:          Chỉ chạy chế độ TIME dùng ngắt TICK_1S để cập nhật 8 LED 7 đoạn (không nút, không nháy).
+# ============================================================================
 # clock.s — firmware demo: đồng hồ chạy trên CPU G1 thật trong soc_top (thay phần "firmware giả" của clock_demo_tb).
 # KHÔNG phải main.s (gói B7 của TV2): chỉ chế độ TIME, không nút, không nháy. Dùng ngắt TICK_1S.
 # Dịch: python tools/fw_build.py fw/demo/clock.s work/clock.hex   (MARS + vá bcd + .org)

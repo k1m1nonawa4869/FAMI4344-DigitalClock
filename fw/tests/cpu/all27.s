@@ -1,3 +1,10 @@
+# ============================================================================
+# HỌC PHẦN:       MI4344 / IT3283 – Kiến trúc Máy tính (HUST - SAMI/SoICT)
+# TÊN FILE:       fw/tests/cpu/all27.s — Kiểm Thử Thực Thi 27 Lệnh MIPS Cơ Bản Trên CPU
+# CHUYÊN ĐỀ KTMT: Chương 02: Tập Lệnh MIPS & Chương 04: Bộ Xử Lý Đơn Chu Kỳ / Pipeline
+# VAI TRÒ:        Đảm bảo mọi lệnh R-type, I-type, J-type và phép nhân/chia chạy đúng trên phần cứng
+# MÔ TẢ:          Thực thi ít nhất 1 lần mỗi lệnh MIPS tiêu chuẩn và ghi kết quả vào vùng nhớ 0x800+.
+# ============================================================================
 # C3-1 (phần 27 lệnh có trong MARS; bcd ở bcd.s): mỗi lệnh ít nhất 1 lần, kết quả cất vào 0x800+
         li    $sp, 0xff8
         li    $s0, 0x800            # con trỏ kết quả
