@@ -252,78 +252,62 @@ dw_d0_done:
         # 0: SUN (S, U, n -> 0x16, 0x18, 0x12)
         bne   $t2, $zero, dw_not_sun
         addiu $t0, $zero, 0x16          # 'S'
-        sw    $t0, D2($zero)
-        addiu $t0, $zero, 0x18          # 'U'
-        sw    $t0, D1($zero)
-        addiu $t0, $zero, 0x12          # 'n'
-        sw    $t0, D0($zero)
-        j     dr_out
+        addiu $t8, $zero, 0x18          # 'U'
+        addiu $t9, $zero, 0x12          # 'n'
+        j     dw_done
 
 dw_not_sun:
         # 1: MON (M, o, n -> 0x1B, 0x13, 0x12)
         addiu $t1, $zero, 1
         bne   $t2, $t1, dw_not_mon
         addiu $t0, $zero, CHAR_M        # 'M'
-        sw    $t0, D2($zero)
-        addiu $t0, $zero, 0x13          # 'o'
-        sw    $t0, D1($zero)
-        addiu $t0, $zero, 0x12          # 'n'
-        sw    $t0, D0($zero)
-        j     dr_out
+        addiu $t8, $zero, 0x13          # 'o'
+        addiu $t9, $zero, 0x12          # 'n'
+        j     dw_done
 
 dw_not_mon:
         # 2: TUE (t, U, E -> 0x17, 0x18, 0x0E)
         addiu $t1, $zero, 2
         bne   $t2, $t1, dw_not_tue
         addiu $t0, $zero, CHAR_T        # 't'
-        sw    $t0, D2($zero)
-        addiu $t0, $zero, 0x18          # 'U'
-        sw    $t0, D1($zero)
-        addiu $t0, $zero, 0x0E          # 'E'
-        sw    $t0, D0($zero)
-        j     dr_out
+        addiu $t8, $zero, 0x18          # 'U'
+        addiu $t9, $zero, 0x0E          # 'E'
+        j     dw_done
 
 dw_not_tue:
         # 3: WED (W, E, d -> 0x1C, 0x0E, 0x0D)
         addiu $t1, $zero, 3
         bne   $t2, $t1, dw_not_wed
         addiu $t0, $zero, CHAR_W        # 'W'
-        sw    $t0, D2($zero)
-        addiu $t0, $zero, 0x0E          # 'E'
-        sw    $t0, D1($zero)
-        addiu $t0, $zero, 0x0D          # 'd'
-        sw    $t0, D0($zero)
-        j     dr_out
+        addiu $t8, $zero, 0x0E          # 'E'
+        addiu $t9, $zero, 0x0D          # 'd'
+        j     dw_done
 
 dw_not_wed:
         # 4: THU (t, H, U -> 0x17, 0x10, 0x18)
         addiu $t1, $zero, 4
         bne   $t2, $t1, dw_not_thu
         addiu $t0, $zero, CHAR_T        # 't'
-        sw    $t0, D2($zero)
-        addiu $t0, $zero, 0x10          # 'H'
-        sw    $t0, D1($zero)
-        addiu $t0, $zero, 0x18          # 'U'
-        sw    $t0, D0($zero)
-        j     dr_out
+        addiu $t8, $zero, 0x10          # 'H'
+        addiu $t9, $zero, 0x18          # 'U'
+        j     dw_done
 
 dw_not_thu:
         # 5: FRI (F, r, 1 -> 0x0F, 0x15, 0x01)
         addiu $t1, $zero, 5
         bne   $t2, $t1, dw_sat
         addiu $t0, $zero, 0x0F          # 'F'
-        sw    $t0, D2($zero)
-        addiu $t0, $zero, 0x15          # 'r'
-        sw    $t0, D1($zero)
-        addiu $t0, $zero, 0x01          # '1'
-        sw    $t0, D0($zero)
-        j     dr_out
+        addiu $t8, $zero, 0x15          # 'r'
+        addiu $t9, $zero, 0x01          # '1'
+        j     dw_done
 
 dw_sat: # 6: SAT (S, A, t -> 0x16, 0x0A, 0x17)
         addiu $t0, $zero, 0x16          # 'S'
+        addiu $t8, $zero, 0x0A          # 'A'
+        addiu $t9, $zero, CHAR_T        # 't'
+
+dw_done:
         sw    $t0, D2($zero)
-        addiu $t0, $zero, 0x0A          # 'A'
-        sw    $t0, D1($zero)
-        addiu $t0, $zero, CHAR_T        # 't'
-        sw    $t0, D0($zero)
+        sw    $t8, D1($zero)
+        sw    $t9, D0($zero)
         j     dr_out

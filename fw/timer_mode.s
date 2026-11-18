@@ -72,11 +72,46 @@ ch_a_from_idle:
         jr    $ra
 
         # --------------------------------------------------------------------
-        # NÚT B: Khóa An Toàn Triple-Click Reset (Bấm nhanh 3 lần <= 600 ms)
+        # NÚT B: Single press tạm dừng chạy; Triple-click Reset (<= 600 ms)
         # --------------------------------------------------------------------
 tr_b:   addiu $t1, $zero, 2
         bne   $a0, $t1, tr_c
 
+        # 1. TẠM DỪNG TỨC THÌ NẾU ĐANG CHẠY (Single press B temporarily pauses running clock)
+        lw    $t6, V_TMR_SUBMODE($zero)
+        bne   $t6, $zero, tr_b_ch_pause
+
+        # Single Timer Pause check:
+        lw    $t0, REG_TMR_CTRL($zero)
+        andi  $t2, $t0, TMR_BIT_EN       # RUN ?
+        beq   $t2, $zero, tr_b_check_triple
+        # Đang chạy -> Tạm dừng ngay lập tức
+        andi  $t0, $t0, 0xc             # Xóa RUN, giữ BEEP_EN, SAT
+        sw    $t0, REG_TMR_CTRL($zero)
+        addiu $t1, $zero, 1
+        sw    $t1, V_TPAUSED($zero)     # Đánh dấu đang tạm dừng
+        j     tr_b_check_triple
+
+tr_b_ch_pause:
+        # Chess Clock Pause check:
+        lw    $t3, V_CHESS_ACT($zero)   # 1: Left, 2: Right, 0: Idle
+        beq   $t3, $zero, tr_b_check_triple
+        # Đang chạy -> Lưu thời gian bên đang chạy và dừng
+        lw    $t4, REG_TMR_VALUE($zero)
+        addiu $t1, $zero, 1
+        bne   $t3, $t1, tr_b_ch_pr
+        sw    $t4, V_CHESS_L($zero)
+        j     tr_b_ch_pdone
+tr_b_ch_pr:
+        sw    $t4, V_CHESS_R($zero)
+tr_b_ch_pdone:
+        sw    $zero, V_CHESS_ACT($zero) # Dừng chạy
+        sw    $zero, REG_TMR_CTRL($zero)# RUN = 0
+        addiu $t1, $zero, 1
+        sw    $t1, V_TPAUSED($zero)
+
+tr_b_check_triple:
+        # 2. Xử lý logic 3 lần bấm (Triple-click <= 600 ms)
         lw    $t0, REG_RTC_MS($zero)    # t_now
         lw    $t1, V_B_LAST($zero)      # t_last
         lw    $t2, V_B_CNT($zero)       # click count
@@ -97,7 +132,7 @@ tb_dt_ok:
         addiu $t2, $t2, 1               # Bấm tiếp trong cửa sổ <= 600 ms
         sw    $t2, V_B_CNT($zero)
         addiu $t4, $zero, 3
-        bne   $t2, $t4, tr_ret          # Chưa đủ 3 lần: BỎ QUA (Khóa chống bấm nhầm)
+        bne   $t2, $t4, tr_ret          # Chưa đủ 3 lần: BỎ QUA (chỉ dừng tạm thời, không reset)
 
         # ĐÃ BẤM ĐỦ 3 LẦN LIÊN TIẾP: THỰC THI RESET!
         sw    $zero, V_B_CNT($zero)     # Reset bộ đếm lần bấm
@@ -105,12 +140,11 @@ tb_dt_ok:
         bne   $t6, $zero, tr_b_chess_rst
 
         # Reset trong Single Timer:
+        lw    $t3, V_TPAUSED($zero)
         sw    $zero, V_TPAUSED($zero)   # Xóa cờ tạm dừng
-        lw    $t0, REG_TMR_CTRL($zero)  # Đọc lại trạng thái Timer
-        andi  $t2, $t0, TMR_BIT_EN       # Trích xuất cờ RUN (bit 0)
-        bne   $t2, $zero, tr_b_running  # Đang chạy: Khôi phục mốc trước khi bấm A
+        bne   $t3, $zero, tr_b_running  # Nếu vừa dừng từ trạng thái chạy: Khôi phục mốc SNAP ban đầu
 
-        # Đang dừng (NOT RUNNING): Đặt lại về toàn số 0 (Full 0s)
+        # Đang dừng tĩnh từ trước (NOT RUNNING & NOT PAUSED): Đặt lại về toàn số 0 (Full 0s)
         sw    $zero, REG_TMR_VALUE($zero)
         addiu $t0, $zero, 6             # CLR = 1, BEEP_EN = 1, RUN = 0
         sw    $t0, REG_TMR_CTRL($zero)
@@ -118,7 +152,7 @@ tb_dt_ok:
         jr    $ra
 
 tr_b_running:
-        # Đang chạy (RUNNING): Khôi phục mốc trước khi bấm A, dừng và xóa cờ ZERO
+        # Khôi phục mốc trước khi bấm A, dừng và xóa cờ ZERO
         lw    $t4, V_TMR_SNAP($zero)
         sw    $t4, REG_TMR_VALUE($zero)
         addiu $t0, $zero, 6             # CLR = 1, BEEP_EN = 1, RUN = 0
@@ -133,6 +167,7 @@ tr_b_chess_rst:
         lw    $t5, V_CHESS_R_INIT($zero)
         sw    $t5, V_CHESS_R($zero)
         sw    $zero, V_CHESS_ACT($zero) # Về trạng thái Chờ (Idle)
+        sw    $zero, V_TPAUSED($zero)
         sw    $t4, REG_TMR_VALUE($zero)
         addiu $t0, $zero, 6             # CLR = 1, BEEP_EN = 1, RUN = 0
         sw    $t0, REG_TMR_CTRL($zero)
@@ -141,7 +176,7 @@ tr_b_chess_rst:
 tb_reset_1:
         addiu $t2, $zero, 1
         sw    $t2, V_B_CNT($zero)       # Đặt lần bấm đầu tiên
-        jr    $ra                       # Thoát, chưa reset
+        jr    $ra                       # Thoát, đồng hồ đã tạm dừng
 
         # --------------------------------------------------------------------
         # NÚT C:
@@ -307,6 +342,7 @@ fcs_sub_min:
         div   $t4, $t1
         mflo  $t6                       # t6 (d1) = Centi hàng chục
         mfhi  $t7                       # t7 (d0) = Centi hàng đơn vị
+        ori   $t7, $t7, CHAR_DP         # Bật dấu chấm ở ô cuối (D4/D0) -> "SS.cc." phân biệt với "MM.SS"
         j     fcs_write
 
 fcs_neg:
@@ -334,6 +370,8 @@ fcs_neg_clamp:
         div   $t4, $t1
         mflo  $t6                       # t6 (d1) = Centi hàng chục
         mfhi  $t7                       # t7 (d0) = Centi hàng đơn vị
+        ori   $t7, $t7, CHAR_DP         # Bật dấu chấm ở ô cuối (D4/D0) -> "-S.cc."
+
 
 fcs_write:
         # Ghi các chữ số vào mảng D0..D7:

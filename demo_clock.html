@@ -1551,10 +1551,10 @@ t = 0 ms
           const rSubMin = Math.abs(STATE.chessR) < 60000;
           html = `
             <div class="sub-label-cell" style="width:260px; margin-right:32px; color:${lAct ? '#39ff14' : (lNeg ? '#f85149' : '#58a6ff')}; font-weight:${lAct ? 'bold' : 'normal'};">
-              [S7..S4: ${lNeg ? 'QUÁ GIỜ (-S.cc)' : (lSubMin ? 'GIÂY.CENTI (SS.cc)' : 'PHÚT.GIÂY (MM.SS)')}] - ĐẤU THỦ A ${lAct ? '▶ ĐANG CHẠY' : (lNeg ? '⚠️ HẾT GIỜ' : '')}
+              [S7..S4: ${lNeg ? 'QUÁ GIỜ (-S.cc.)' : (lSubMin ? 'GIÂY.CENTI (SS.cc.)' : 'PHÚT.GIÂY (MM.SS)')}] - ĐẤU THỦ A ${lAct ? '▶ ĐANG CHẠY' : (lNeg ? '⚠️ HẾT GIỜ' : '')}
             </div>
             <div class="sub-label-cell" style="width:260px; color:${rAct ? '#39ff14' : (rNeg ? '#f85149' : '#58a6ff')}; font-weight:${rAct ? 'bold' : 'normal'};">
-              [S3..S0: ${rNeg ? 'QUÁ GIỜ (-S.cc)' : (rSubMin ? 'GIÂY.CENTI (SS.cc)' : 'PHÚT.GIÂY (MM.SS)')}] - ĐẤU THỦ C ${rAct ? '▶ ĐANG CHẠY' : (rNeg ? '⚠️ HẾT GIỜ' : '')}
+              [S3..S0: ${rNeg ? 'QUÁ GIỜ (-S.cc.)' : (rSubMin ? 'GIÂY.CENTI (SS.cc.)' : 'PHÚT.GIÂY (MM.SS)')}] - ĐẤU THỦ C ${rAct ? '▶ ĐANG CHẠY' : (rNeg ? '⚠️ HẾT GIỜ' : '')}
             </div>
           `;
         } else {
@@ -1779,11 +1779,11 @@ t = 0 ms
       // 4. CHẾ ĐỘ 3: TIMER (Single: >= 1h fmtB, < 1h fmtA | Chess: 4-digit Left S7..S4 + 4-digit Right S3..S0)
       else if (m === 3) {
         if (STATE.tmrSubmode === 'chess') {
-          // CHESS DOUBLE CLOCK (TASK-21): Định dạng 3 cấp (>= 1m: MM.SS, < 1m: SS.cc, < 0: -S.cc)
+          // CHESS DOUBLE CLOCK (TASK-21): Định dạng 3 cấp (>= 1m: MM.SS, < 1m: SS.cc., < 0: -S.cc.)
           function formatChessHalf(msVal, startIdx) {
             const isNeg = msVal < 0;
             if (isNeg) {
-              // Quá giờ âm: -S.cc (kẹp tối đa -9.99s)
+              // Quá giờ âm: -S.cc. (kẹp tối đa -9.99s, chấm ở D2 và D0)
               const absVal = Math.min(Math.abs(msVal), 9990);
               const sec = Math.floor(absVal / 1000);
               const cs = Math.floor((absVal % 1000) / 10);
@@ -1792,10 +1792,11 @@ t = 0 ms
               dps[startIdx + 2] = true;
               chars[startIdx + 1] = Math.floor(cs / 10).toString();
               chars[startIdx + 0] = (cs % 10).toString();
+              dps[startIdx + 0] = true;
             } else {
               const absVal = Math.abs(msVal);
               if (absVal < 60000) {
-                // < 1 phút dương: SS.cc (độ phân giải 0.01s centi-giây)
+                // < 1 phút dương: SS.cc. (độ phân giải 0.01s centi-giây, chấm ở D2 và D0 phân biệt với MM.SS)
                 const sec = Math.floor(absVal / 1000);
                 const cs = Math.floor((absVal % 1000) / 10);
                 chars[startIdx + 3] = Math.floor(sec / 10).toString();
@@ -1803,8 +1804,9 @@ t = 0 ms
                 dps[startIdx + 2] = true;
                 chars[startIdx + 1] = Math.floor(cs / 10).toString();
                 chars[startIdx + 0] = (cs % 10).toString();
+                dps[startIdx + 0] = true;
               } else {
-                // >= 1 phút: MM.SS
+                // >= 1 phút: MM.SS (chỉ có chấm ở D2)
                 const totalSec = Math.floor(absVal / 1000);
                 const min = Math.floor(totalSec / 60) % 60;
                 const sec = totalSec % 60;
@@ -1813,6 +1815,7 @@ t = 0 ms
                 dps[startIdx + 2] = true;
                 chars[startIdx + 1] = Math.floor(sec / 10).toString();
                 chars[startIdx + 0] = (sec % 10).toString();
+                dps[startIdx + 0] = false;
               }
             }
           }
@@ -2427,7 +2430,25 @@ t = 0 ms
           updateLapTable();
           appendStreamLog(`[STPW] Đã đặt lại về 0 và xóa trắng ngăn xếp Laps.`);
         }
-      } else if (m === 3) { // TMR: Khóa an toàn Triple-Click Reset (Bấm nhanh 3 lần liên tiếp <= 600 ms)
+      } else if (m === 3) { // TMR: Phím B tạm dừng ngay lập tức; Khóa an toàn Triple-Click Reset (<= 600 ms)
+        // 1. TẠM DỪNG TỨC THÌ NẾU ĐANG CHẠY (Single press B temporarily pauses running clock)
+        if (STATE.tmrSubmode === 'chess') {
+          if (STATE.chessAct !== 0) {
+            STATE.chessAct = 0;
+            STATE.tmrPaused = true;
+            appendStreamLog(`[CHESS] Phím B: Tạm dừng đồng hồ cờ vua!`);
+          }
+        } else {
+          if (STATE.tmrRunning) {
+            STATE.tmrRunning = false;
+            STATE.tmrPaused = true;
+            STATE.tmrBeeping = false;
+            STATE.tmrOvertimeBeeping = false;
+            appendStreamLog(`[TIMER] Phím B: Tạm dừng đồng hồ đếm lùi!`);
+          }
+        }
+
+        // 2. Logic 3 lần bấm (Triple-click <= 600 ms)
         const now = performance.now();
         const delta = now - STATE.bLastClickMs;
         if (STATE.bClickCnt > 0 && delta <= 600) {
@@ -2454,7 +2475,7 @@ t = 0 ms
             const t = document.getElementById('safety-reset-toast');
             if (t) t.style.display = 'none';
           }, 650);
-          return; // Chưa đủ 3 lần: BỎ QUA! Chống bấm nhầm
+          return; // Chưa đủ 3 lần: BỎ QUA! Chống bấm nhầm (đã tạm dừng nếu đang chạy)
         }
 
         // ĐÃ BẤM ĐỦ 3 LẦN LIÊN TIẾP TRONG 600 MS: THỰC THI RESET!
@@ -2467,6 +2488,7 @@ t = 0 ms
           STATE.chessL = STATE.tmrPresetMs;
           STATE.chessR = STATE.chessRInit;
           STATE.chessAct = 0;
+          STATE.tmrPaused = false;
           playTone(1800, 0.15, 'triangle');
           setTimeout(() => playTone(2400, 0.2, 'triangle'), 100);
           appendStreamLog(`[CHESS REMATCH] Phím B x3: Đã xác nhận Tái đấu! Clock A: ${formatTimeMs(STATE.chessL)} vs Clock C: ${formatTimeMs(STATE.chessR)}. Nhấn A hoặc C để bắt đầu.`);

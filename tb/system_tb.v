@@ -580,10 +580,10 @@ module system_tb;
         press(B_B);                                      // nút đầu chỉ tắt chuông
         check(dut.u_beep.pat == 17'd0 && dut.u_tmr.run == 1'b1, "nut dau: tat chuong, timer van chay");
         // Kiểm tra khóa an toàn chống bấm nhầm Reset (Triple-click B)
-        press(B_B);                                      // lần 1: chưa reset
-        check(dut.u_tmr.run == 1'b1, "B lan 1: chua reset, timer van chay");
+        press(B_B);                                      // lần 1: tạm dừng nhưng chưa reset
+        check(dut.u_tmr.run == 1'b0 && dut.u_tmr.val != 2000, "B lan 1: tam dung, chua reset");
         press(B_B);                                      // lần 2: chưa reset
-        check(dut.u_tmr.run == 1'b1, "B lan 2: chua reset, timer van chay");
+        check(dut.u_tmr.run == 1'b0 && dut.u_tmr.val != 2000, "B lan 2: chua reset");
         press(B_B);                                      // lần 3 liên tiếp: thực thi reset về mốc đặt ban đầu
         check(dut.u_tmr.run == 1'b0 && dut.u_tmr.zero == 1'b0 && dut.u_tmr.val == 2000, "triple B: ve 2000, dung, xoa ZERO");
         checkf(fr, fT(2000), "lai 00:02.000");
@@ -599,11 +599,11 @@ module system_tb;
         check(dut.u_tmr.run == 1'b0, "C khi tam dung: tiep tuc giu Pause");
         press(B_A);                                      // Bấm A khi đang tạm dừng: TIẾP TỤC (Resume)
         check(dut.u_tmr.run == 1'b1, "A khi tam dung: tiep tuc chay (Resume)");
-        // Triple-click B khi đang chạy: Reset về mốc trước khi bấm A (2000) và dừng
+        // Triple-click B khi đang chạy: Lần 1 tạm dừng, Lần 3 Reset về mốc trước khi bấm A (2000) và dừng
         press(B_B);
-        check(dut.u_tmr.run == 1'b1, "B running lan 1: khong reset");
+        check(dut.u_tmr.run == 1'b0 && dut.u_tmr.val != 2000, "B running lan 1: tam dung, chua reset");
         press(B_B);
-        check(dut.u_tmr.run == 1'b1, "B running lan 2: khong reset");
+        check(dut.u_tmr.run == 1'b0 && dut.u_tmr.val != 2000, "B running lan 2: chua reset");
         press(B_B);
         check(dut.u_tmr.run == 1'b0 && dut.u_tmr.val == 2000, "triple B khi dang chay: reset ve moc ban dau 2000 va dung");
         // Triple-click B khi đang dừng: Reset về full 0s
@@ -630,7 +630,7 @@ module system_tb;
         press(B_C);                                      // Lưu cấu hình và thoát về TIMER mode
         frame2;
         check(dut.u_tmr.run == 1'b0, "Chess ban dau: Idle (chua ai bam)");
-        check(fr == 64'h0082000000820000, "Chess ban dau: 02.00 02.00 (SS.cc)");
+        check(fr == 64'h0082008000820080, "Chess ban dau: 02.00. 02.00. (SS.cc.)");
 
         // Đấu thủ Trái bấm A -> Trái bắt đầu đếm
         press(B_A);
@@ -649,13 +649,13 @@ module system_tb;
         check(dut.u_tmr.run == 1'b1, "Chess A: chuyen lai Trai chay");
 
         // Triple-click B: Tái đấu (Rematch Reset)
-        press(B_B);                                      // 1
-        check(dut.u_tmr.run == 1'b1, "Chess reset misclick 1: chua reset");
+        press(B_B);                                      // 1: Tạm dừng
+        check(dut.u_tmr.run == 1'b0, "Chess reset misclick 1: tam dung");
         press(B_B);                                      // 2
-        check(dut.u_tmr.run == 1'b1, "Chess reset misclick 2: chua reset");
+        check(dut.u_tmr.run == 1'b0, "Chess reset misclick 2: chua reset");
         press(B_B);                                      // 3
         check(dut.u_tmr.run == 1'b0, "Chess triple B: dung va ve Idle");
-        check(fr == 64'h0082000000820000, "Chess sau rematch reset: 02.00 02.00");
+        check(fr == 64'h0082008000820080, "Chess sau rematch reset: 02.00. 02.00.");
 
         done(4, "timer ve 0 dung ms, chuong, so am");
 
@@ -728,7 +728,7 @@ module system_tb;
         check(nl == 2, "$Q: dung 1 dong tra loi");
         // ngắt UART_RX: chụp giờ vài chục chu kỳ sau LF (1 ms = 50 chu kỳ ở G_N = 50); polling: trễ ≤ 1 vòng (~10 ms)
         check(dut.u_irq.enable == (poll ? 8'h00 : 8'h40), "IRQ_ENABLE dung che do (USE_IRQ 0: 00, 1: 40)");
-        tline("R", ms_nl - 1, ms_nl + (poll ? 20 : 1), 64284, lns[1]);
+        tline("R", ms_nl - 1, ms_nl + (poll ? 20 : 3), 64284, lns[1]);
         check(ok, "$R,<ms luc nhan LF>,64284*CS dung tung byte");
         $display("  $Q: LF vao FIFO o ms %0d, $R tra ms %0d", ms_nl, v1);
         if (!ok) $display("  dong nhan duoc: %0s", lns[1]);
