@@ -37,7 +37,6 @@
    - 7.2. Lệnh Chạy Kiểm thử Tự động
    - 7.3. Kết quả Kiểm thử Toàn diện (Regression Test Results)
 8. [Phân công Nhiệm vụ & Bản đồ Đóng góp (Role Matrix)](#8-phân-công-nhiệm-vụ--bản-đồ-đóng-góp-role-matrix)
-9. [Ngân hàng Câu hỏi & Đáp án Vấn đáp Bảo vệ Đồ án (Defense Q&A)](#9-ngân-hàng-câu-hỏi--đáp-án-vấn-đáp-bảo-vệ-đồ-án-defense-qa)
 
 ---
 
@@ -587,53 +586,6 @@ Dự án được triển khai theo quy trình phân công chuyên môn hóa cao
 | **TV3** | **Kỹ sư Số học Phần cứng & Ngoại vi Thời gian Thực** | • Thiết kế khối số học ALU 32-bit phát hiện tràn số (`alu.v`)<br>• Thiết kế bộ chia phục hồi số dư 32 chu kỳ (`muldiv.v`)<br>• Thiết kế khối đổi nhị phân sang BCD Double-Dabble (`bcd_unit.v`)<br>• Thiết kế bộ đếm thời gian thực RTC (`rtc_core.v`) và Bấm giờ (`stopwatch_core.v`) | `src/alu.v`<br>`src/muldiv.v`<br>`src/bcd_unit.v`<br>`src/rtc_core.v`<br>`src/stopwatch_core.v`<br>`tb/alu_tb.v` |
 | **TV4** | **Kỹ sư Giao tiếp Ngoại vi, Hiển thị & Truyền thông** | • Thiết kế bộ chia tần số phân số bù trôi PPM (`timebase.v`)<br>• Thiết kế ngoại vi quét LED 7 đoạn chống bóng ma (`seg7_scan.v`, `char_rom.v`)<br>• Thiết kế khối điều khiển hiển thị nhấp nháy/độ sáng (`display_ctrl.v`)<br>• Thiết kế khối lọc nhiễu phím bấm 2-FF (`buttons.v`) và UART 115200 (`uart.v`) | `src/timebase.v`<br>`src/seg7_scan.v`<br>`src/char_rom.v`<br>`src/display_ctrl.v`<br>`src/buttons.v`<br>`src/uart.v` |
 | **TV5** | **Kỹ sư Phần mềm Nhúng & Kiểm thử Toàn diện** | • Thiết kế toàn bộ firmware hợp ngữ 5 chế độ hoạt động (`fw/*.s`)<br>• Hiện thực trình phục vụ ngắt ISR Coprocessor 0 và đồng bộ NTP<br>• Xây dựng testbench tích hợp toàn diện 7 kịch bản (`system_tb.v`)<br>• Phát triển bộ công cụ dịch mã `asm.py`, mô phỏng ISS và màn hình ảo | `fw/*.s`<br>`fw/*.inc`<br>`tb/system_tb.v`<br>`tb/screen_dump.v`<br>`tools/asm.py`<br>`tools/screen.py` |
-
----
-
-## 9. NGÂN HÀNG CÂU HỎI & ĐÁP ÁN VẤN ĐÁP BẢO VỆ ĐỒ ÁN (DEFENSE Q&A)
-
-Dưới đây là 10 câu hỏi lý thuyết chuyên sâu và đáp án bảo vệ đồ án trước hội đồng chấm thi:
-
-### Câu 1: Tại sao trong CPU G1 đơn chu kỳ lại cần áp dụng xung nhịp 2 pha (Dual-Phase Clocking) hoặc chia pha đọc/ghi thanh ghi?
-* **Trả lời:** Trong CPU đơn chu kỳ, nếu lệnh đọc thanh ghi (ở công đoạn ID) và lệnh ghi thanh ghi (ở công đoạn WB) đều diễn ra tại cùng một sườn dương xung nhịp, sẽ xảy ra hiện tượng chạy đua dữ liệu (Race Condition). Giải pháp là áp dụng xung nhịp 2 pha: Tập thanh ghi được ghi ở nửa chu kỳ đầu (hoặc sườn âm), và được đọc ổn định ở nửa chu kỳ sau. Điều này đảm bảo trong cùng một chu kỳ xung nhịp, dữ liệu đọc ra luôn phản ánh giá trị mới nhất mà không bị méo tín hiệu.
-
-### Câu 2: Trình bày cơ chế hoạt động của Mạch Chuyển tiếp Dữ liệu (Forwarding Unit) trong CPU G2 pipeline. Khi nào bắt buộc phải dừng đường ống (Stall)?
-* **Trả lời:** Forwarding Unit loại bỏ xung đột dữ liệu RAW (Read-After-Write) bằng cách lấy trực tiếp kết quả từ đầu ra của tầng EX/MEM hoặc MEM/WB đưa ngược về đầu vào ALU của tầng EX, không cần đợi kết quả ghi về Regfile.  
-Trường hợp duy nhất bắt buộc phải dừng (stall 1 chu kỳ) là **Load-Use Hazard**: Lệnh trước là `lw` và lệnh ngay sau cần sử dụng thanh ghi đích đó. Vì dữ liệu đọc từ bộ nhớ chỉ có sẵn ở cuối tầng MEM, việc chuyển tiếp trong cùng chu kỳ EX là bất khả thi về mặt vật lý, do đó phần cứng buộc phải chèn 1 bong bóng NOP.
-
-### Câu 3: So sánh ưu - nhược điểm của bộ chia Phục hồi số dư (Restoring Division) so với bộ chia Không phục hồi số dư (Non-Restoring Division)?
-* **Trả lời:**
-  * Bộ chia Phục hồi (WatchChip sử dụng): Thuật toán thử trừ $R - B$. Nếu âm, phục hồi lại giá trị cũ bằng cách giữ nguyên thanh ghi. Ưu điểm: Cấu trúc điều khiển đơn giản, mạch logic rõ ràng, phần cứng nhỏ gọn. Nhược điểm: Phải thực hiện thao tác phục hồi (multiplexer chọn giữa kết quả trừ và số cũ).
-  * Bộ chia Không phục hồi: Nếu kết quả trừ bị âm, bước kế tiếp không phục hồi mà dịch trái và cộng thêm $B$. Ưu điểm: Giảm số bước tính toán logic trong 1 chu kỳ. Nhược điểm: Cần xử lý dấu phức tạp hơn ở bước cuối cùng khi số dư vẫn âm.
-
-### Câu 4: Tại sao chuyển đổi nhị phân sang BCD bằng phần cứng (Double-Dabble) lại hiệu quả hơn nhiều so với phép chia bằng phần mềm?
-* **Trả lời:** Để tách một số 32-bit thành 8 chữ số thập phân bằng phần mềm, CPU phải thực hiện ít nhất 6 đến 7 phép chia liên tiếp cho 10 (mỗi phép chia mất 32 chu kỳ trên bộ chia restoring, tổng cộng $> 200$ chu kỳ CPU). Khối phần cứng Double-Dabble hoạt động song song trên toàn bộ 8 nibble: Việc kiểm tra $\ge 5$ và cộng 3 diễn ra đồng thời bằng mạch tổ hợp cho tất cả các chữ số trong đúng 1 chu kỳ xung nhịp. Do đó, toàn bộ 27-bit được chuyển đổi trọn vẹn chỉ sau đúng 27 chu kỳ.
-
-### Câu 5: Hiện tượng bóng ma (Ghosting) trên LED 7 đoạn sinh ra do đâu và khối `seg7_scan.v` triệt tiêu nó như thế nào?
-* **Trả lời:** Do điện dung ký sinh trên đường bus phân đoạn (Cathode) và thời gian ngắt dòng của transistor điều khiển Anode không tức thời (tồn tại thời gian chuyển mạch $t_{fall}$). Khi đổi Anode từ vị trí $k$ sang $k+1$, nếu dữ liệu đoạn của chữ số mới được đưa ra ngay, lượng điện tích dư thừa của vị trí $k$ sẽ làm chữ số mới bị chồng lấn mờ hình ảnh cũ. Khối `seg7_scan.v` tạo ra khoảng ngắt làm tối (**Blanking Interval**) 100 ns: Tắt toàn bộ Anode trong 100 ns trước khi kích hoạt Anode mới, triệt tiêu hoàn toàn bóng ma.
-
-### Câu 6: Làm thế nào để đảm bảo đọc đúng giờ từ RTC mà không bị hiện tượng đọc rách dữ liệu (Torn Read) khi chuyển ngày?
-* **Trả lời:** Thời gian mili-giây (`REG_RTC_MS`) và số ngày (`REG_DAY_SHADOW`) là hai thanh ghi 32-bit độc lập. Nếu CPU đọc mili-giây lúc 23:59:59.999 và ngay trước khi đọc tiếp thanh ghi ngày thì xung nhịp chuyển sang ngày mới (00:00:00.000), CPU sẽ đọc phải ngày cũ nhưng giờ mới!  
-Khối `rtc_core.v` giải quyết bằng **Cơ chế Chốt bóng (Shadow Latching)**: Khi CPU phát tín hiệu đọc thanh ghi `REG_RTC_MS`, phần cứng lập tức đóng băng đồng thời giá trị của thanh ghi ngày vào thanh ghi bóng `DAY_SHADOW`. Khi CPU đọc tiếp thanh ghi `REG_DAY_SHADOW`, giá trị trả về là giá trị được chốt tại đúng khoảnh khắc đọc mili-giây, đảm bảo tính toàn vẹn thời gian tuyệt đối.
-
-### Câu 7: Giải thích nguyên lý mạch lọc nhiễu phím bấm (Debounce) sử dụng 2 Flip-Flop trong `buttons.v`?
-* **Trả lời:** Phím bấm cơ học luôn xuất hiện hiện tượng rung tiếp điểm (Bouncing) kéo dài vài millisecond, có thể gây ra hàng chục sườn xung giả mạo. Mạch khử rung sử dụng:
-  1. Hai tầng D-Flip-Flop đồng bộ hóa tín hiệu không đồng bộ từ nút bấm vào miền xung nhịp hệ thống, triệt tiêu hiện tượng trạng thái siêu ổn định (Metastability) với thời gian trung bình giữa các lần lỗi $MTBF \to \infty$.
-  2. Bộ đếm thời gian trễ 10 ms: Chỉ khi nút bấm giữ trạng thái ổn định liên tục trong suốt 10 ms, sườn xung mới được công nhận là một lần nhấn thật sự.
-
-### Câu 8: Tại sao hệ thống WatchChip lại chọn địa chỉ MMIO bắt đầu từ `0xFFFF0000`? Lợi thế trong tập lệnh MIPS là gì?
-* **Trả lời:** Trong kiến trúc MIPS, lệnh nạp địa chỉ tức thời `lui $t0, 0xFFFF` chỉ mất đúng 1 lệnh 32-bit để thiết lập con trỏ cơ sở tới `0xFFFF0000`. Khi đó, toàn bộ các thanh ghi ngoại vi nằm trong dải offset dương $0 \dots 65535$ có thể được truy xuất trực tiếp bằng các lệnh `lw $rt, offset($t0)` và `sw $rt, offset($t0)` với $offset \ge 0$, tương thích hoàn toàn với quy ước phần cứng chuẩn của vi xử lý MIPS R2000/R3000.
-
-### Câu 9: Trình bày quy trình xử lý ngắt chính xác (Precise Interrupt) trong CPU G2 pipeline?
-* **Trả lời:** Khi có tín hiệu ngắt phần cứng từ `irq_ctrl.v`:
-  1. CPU không hủy ngang lệnh đang nằm ở tầng MEM hoặc WB mà cho phép các lệnh đó hoàn thành bình thường.
-  2. Lệnh chưa thực thi ở tầng IF, ID, EX bị xóa (flush) bằng cách chèn bong bóng NOP.
-  3. Địa chỉ của lệnh bị gián đoạn được lưu vào thanh ghi `$epc` của Coprocessor 0.
-  4. Mã nguyên nhân ngắt được ghi vào thanh ghi `$cause`, và bit ngắt toàn cục trong `$status` được tự động khóa lại để chống ngắt lồng nhau ngoài ý muốn.
-  5. Bộ đếm chương trình $PC$ được ép nhảy về địa chỉ vector ngắt cố định `0x00000180`. Khi kết thúc ISR, lệnh `eret` phục hồi $PC \leftarrow EPC$ và khôi phục trạng thái ngắt.
-
-### Câu 10: Tinh thể thạch anh bị sai số tần số theo nhiệt độ được bù trừ như thế nào bằng thanh ghi `REG_CAL`?
-* **Trả lời:** Bộ chia tần số `timebase.v` không chia số nguyên cố định mà sử dụng bộ tích lũy phân số 28-bit. Thanh ghi `REG_CAL` là số bù hai 16-bit thể hiện độ lệch tần số (ppm). Mỗi mili-giây, giá trị $CAL$ được cộng dồn vào phần tích lũy lẻ: Nếu thạch anh chạy nhanh, giá trị $CAL$ âm sẽ kéo dài chu kỳ nạp của bộ đếm; nếu thạch anh chạy chậm, giá trị $CAL$ dương sẽ rút ngắn chu kỳ nạp. Nhờ đó, sai số tần số được san phẳng tự động theo thời gian thực mà không làm gián đoạn nhịp hoạt động của hệ thống.
 
 ---
 
