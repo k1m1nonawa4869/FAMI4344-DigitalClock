@@ -1652,9 +1652,10 @@ t = 0 ms
       } else if (m === 2) { // STOPWATCH
         const isLap = STATE.swLapIdx >= 0;
         if (!isLap) {
-          // LIVE RUNNING: Luôn 3 chữ số mili-giây
+          // LIVE RUNNING: Hiển thị Giờ (0..9) trên S7 và 3 chữ số mili-giây
+          const hr = Math.floor(STATE.swElapsedMs / 3600000) % 10;
           html = `
-            <div class="sub-label-cell" style="width:54px; margin-right:22px; color:#e3b341;">[S7: LIVE]</div>
+            <div class="sub-label-cell" style="width:54px; margin-right:22px; color:#e3b341;">[S7: GIỜ (${hr}h)]</div>
             <div class="sub-label-cell" style="width:122px; margin-right:22px;">[S6..S5: PHÚT (MM)]</div>
             <div class="sub-label-cell" style="width:122px; margin-right:22px;">[S4..S3: GIÂY (SS)]</div>
             <div class="sub-label-cell" style="width:190px; color:#39ff14;">[S2..S0: MILI-GIÂY (ms)]</div>
@@ -1696,7 +1697,7 @@ t = 0 ms
         } else {
           const isNeg = STATE.tmrRemainMs < 0;
           const absMs = Math.abs(STATE.tmrRemainMs);
-          if (absMs >= 3600000) {
+          if (absMs >= 36000000) {
             html = `
               <div class="sub-label-cell" style="width:54px; margin-right:22px; color:${isNeg ? '#f85149' : '#8b949e'};">[S7: ${isNeg ? '-' : ' '}]</div>
               <div class="sub-label-cell" style="width:54px; margin-right:22px;">[S6]</div>
@@ -1705,8 +1706,9 @@ t = 0 ms
               <div class="sub-label-cell" style="width:122px;">[S1..S0: GIÂY (SS)]</div>
             `;
           } else {
+            const hr = Math.floor(absMs / 3600000) % 10;
             html = `
-              <div class="sub-label-cell" style="width:54px; margin-right:22px; color:${isNeg ? '#f85149' : '#8b949e'};">[S7: ${isNeg ? '-' : ' '}]</div>
+              <div class="sub-label-cell" style="width:54px; margin-right:22px; color:${isNeg ? '#f85149' : '#e3b341'};">[S7: ${isNeg ? 'ÂM (-)' : `GIỜ (${hr}h)`}]</div>
               <div class="sub-label-cell" style="width:122px; margin-right:22px;">[S6..S5: PHÚT (MM)]</div>
               <div class="sub-label-cell" style="width:122px; margin-right:22px;">[S4..S3: GIÂY (SS)]</div>
               <div class="sub-label-cell" style="width:190px; color:#39ff14;">[S2..S0: MILI-GIÂY (ms)]</div>
@@ -1872,12 +1874,13 @@ t = 0 ms
       // 3. CHẾ ĐỘ 2: STOPWATCH (Live running 3 chữ số ms; Lap view 9L @ 1ms hoặc 99L @ 10ms; Option GAP + Tắt 0 đầu)
       else if (m === 2) {
         if (STATE.swLapIdx < 0) {
-          // LIVE RUNNING: Luôn hiển thị 3 chữ số mili-giây (_MM.SS.mmm) cho cả 9L và 99L!
+          // LIVE RUNNING: Hiển thị Giờ (0..9) trên D7 và 3 chữ số mili-giây (H:MM.SS.mmm) cho cả 9L và 99L!
           const curT = Math.floor(STATE.swElapsedMs);
-          const min = Math.floor(curT / 60000) % 60;
+          const hr = Math.floor(curT / 3600000) % 10;
+          const min = Math.floor((curT % 3600000) / 60000);
           const sec = Math.floor((curT % 60000) / 1000);
           const ms = curT % 1000;
-          chars[7] = ' ';
+          chars[7] = hr > 0 ? hr.toString() : ' ';
           chars[6] = Math.floor(min / 10).toString();
           chars[5] = (min % 10).toString();
           dps[5] = true;
@@ -2005,7 +2008,7 @@ t = 0 ms
           const rem = Math.floor(STATE.tmrRemainMs);
           const isNeg = rem < 0;
           const absMs = Math.abs(rem);
-          if (absMs >= 3600000) { // >= 1 giờ: Hiển thị __HH.MM.SS (fmtB)
+          if (absMs >= 36000000) { // >= 10 giờ: Hiển thị __HH.MM.SS (fmtB)
             const totalSec = Math.floor(absMs / 1000);
             const hr = Math.floor(totalSec / 3600);
             const min = Math.floor((totalSec % 3600) / 60);
@@ -2020,11 +2023,12 @@ t = 0 ms
             dps[2] = true;
             chars[1] = Math.floor(sec / 10).toString();
             chars[0] = (sec % 10).toString();
-          } else { // < 1 giờ: Hiển thị _MM.SS.mmm (fmtA)
-            const min = Math.floor(absMs / 60000) % 60;
+          } else { // < 10 giờ: Hiển thị H:MM.SS.mmm (fmtD nâng cấp)
+            const hr = Math.floor(absMs / 3600000) % 10;
+            const min = Math.floor((absMs % 3600000) / 60000);
             const sec = Math.floor((absMs % 60000) / 1000);
             const ms = absMs % 1000;
-            chars[7] = isNeg ? '-' : ' ';
+            chars[7] = isNeg ? '-' : (hr > 0 ? hr.toString() : ' ');
             chars[6] = Math.floor(min / 10).toString();
             chars[5] = (min % 10).toString();
             dps[5] = true;
@@ -2213,6 +2217,13 @@ t = 0 ms
       } else if (dps[6] && dps[4] && dps[2]) {
         // 24H + CS hoặc HH:MM:SS.cs
         textOut = `${chars[7]}${chars[6]}:${chars[5]}${chars[4]}:${chars[3]}${chars[2]}.${chars[1]}${chars[0]}`;
+      } else if (dps[5] && dps[3] && !dps[7] && !dps[6] && !dps[4] && !dps[2] && !dps[1] && !dps[0] &&
+                 chars[6] >= '0' && chars[6] <= '9' && chars[5] >= '0' && chars[5] <= '9' &&
+                 chars[4] >= '0' && chars[4] <= '9' && chars[3] >= '0' && chars[3] <= '9' &&
+                 chars[2] >= '0' && chars[2] <= '9' && chars[1] >= '0' && chars[1] <= '9' && chars[0] >= '0' && chars[0] <= '9') {
+        // Stopwatch / Timer: H:MM:SS.mmm
+        const sepH = (chars[7] >= '0' && chars[7] <= '9') ? `${chars[7]}:` : (chars[7] === '-' ? '- ' : '  ');
+        textOut = `${sepH}${chars[6]}${chars[5]}:${chars[4]}${chars[3]}.${chars[2]}${chars[1]}${chars[0]}`;
       } else {
         for (let i = 7; i >= 0; i--) {
           textOut += chars[i] + (dps[i] ? '.' : '');

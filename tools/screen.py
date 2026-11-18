@@ -113,6 +113,13 @@ def text(segs, tab):
     if dp[1] and dp[3] and dp[5]:
         return f"{c[0]}{c[1]}:{c[2]}{c[3]}:{c[4]}{c[5]}.{c[6]}{c[7]}"
 
+    # 5. Nhận diện chế độ H:MM:SS.mmm (Stopwatch / Timer single live)
+    # c[0] = H hoặc ' ' hoặc '-', c[1..2] = MM, c[3..4] = SS, c[5..7] = mmm (dp ở vị trí index 2 và 4 từ trái qua)
+    if dp[2] and dp[4] and not dp[0] and not dp[1] and not dp[3] and not dp[5] and not dp[6] and not dp[7]:
+        if "".join(c[1:]).isdigit():
+            sep_h = ":" if c[0].isdigit() else " "
+            return f"{c[0]}{sep_h}{c[1]}{c[2]}:{c[3]}{c[4]}.{c[5]}{c[6]}{c[7]}"
+
     # Mặc định ghép chuỗi nối tiếp
     out = ""
     for s in segs:

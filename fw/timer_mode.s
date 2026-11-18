@@ -240,11 +240,16 @@ dr_tr:  lw    $t6, V_TMR_SUBMODE($zero)
         ori   $a0, $a0, 0x2a00          # Ép giá trị sang định dạng vạch ngang "--.--.--"
         j     dtr2
 dtr1:   slt   $t0, $a0, $zero           # Kiểm tra số âm quá giờ
-        beq   $t0, $zero, dtr2
+        beq   $t0, $zero, dtr_pos
         addiu $t7, $zero, CHAR_DASH     # Hiển thị dấu '-' ở ô DISP7
         subu  $a0, $zero, $a0           # Lấy trị tuyệt đối: |a0| = 0 - a0
+        j     dtr2
+dtr_pos:
+        addiu $t7, $zero, 0             # 0: để fmtD tự quyết định D7 (H nếu >0, CHAR_BLANK nếu 0)
 dtr2:   jal   fmtD                      # Định dạng số mili-giây
-        sw    $t7, D7($zero)            # Ghi dấu âm hoặc khoảng trắng vào ô DISP7
+        beq   $t7, $zero, dtr_done
+        sw    $t7, D7($zero)            # Ghi dấu âm '-' vào ô DISP7
+dtr_done:
         j     dr_out
 
         # --------------------------------------------------------------------

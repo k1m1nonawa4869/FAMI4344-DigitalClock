@@ -160,16 +160,27 @@ draw:   addu  $s7, $ra, $zero
 dr_out: jal   flush
         jr    $s7
 
-# fmtD: ms >= 0 -> Nếu >= 360.000.000 ms: "--.--.--"; nếu >= 1h: fmtB; ngược lại fmtA
+# fmtD: ms >= 0 -> Nếu >= 360.000.000 ms: "--.--.--"; nếu >= 10h: fmtB; ngược lại fmtA (+ H trên D7 nếu H > 0)
 fmtD:   lui   $t1, 0x1575
         ori   $t1, $t1, 0x2a00          # 360.000.000 ms
         slt   $t0, $a0, $t1
         beq   $t0, $zero, fd_x
+        lui   $t1, 0x0225
+        ori   $t1, $t1, 0x5100          # 36.000.000 ms (10h)
+        slt   $t0, $a0, $t1
+        beq   $t0, $zero, fd_b          # >= 10h: dùng fmtB (__HH.MM.SS)
+        # < 10h: H = a0 / 3.600.000, rem = a0 % 3.600.000
         lui   $t1, 0x36
         ori   $t1, $t1, 0xee80          # 3.600.000 ms
-        slt   $t0, $a0, $t1
-        bne   $t0, $zero, fmtA
-        addu  $a1, $zero, $zero
+        div   $a0, $t1
+        mflo  $s6                       # H (0..9)
+        mfhi  $a0                       # rem (< 3.600.000)
+        addu  $s4, $ra, $zero
+        jal   fmtA
+        beq   $s6, $zero, fd_ret
+        sw    $s6, D7($zero)            # Nếu H > 0: hiển thị số Giờ (1..9) trên D7
+fd_ret: jr    $s4
+fd_b:   addu  $a1, $zero, $zero
         j     fmtB
 fd_x:   addiu $t0, $zero, CHAR_DASH
         sw    $t0, D0($zero)
