@@ -43,6 +43,12 @@ b_pre:  sw    $t0, V_PRE($zero)         # Lưu vào biến DMEM
         sw    $t0, V_CHESS_R($zero)
         sw    $zero, V_B_CNT($zero)     # Khởi tạo bộ đếm bấm nhanh phím B = 0
         sw    $zero, V_B_LAST($zero)
+        ori   $t0, $zero, 60000         # Thời lượng chuông mặc định: 60 giây (khớp system_tb.v sys_5)
+        sw    $t0, V_ALM_DUR($zero)
+        sw    $zero, V_TICK_INT($zero)  # Tắt tiếng tick định kỳ khi boot
+        addiu $t0, $zero, 1             # Số tiếng bíp tick mặc định: 1
+        sw    $t0, V_TICK_CNT($zero)
+        sw    $zero, V_TMR_STP0($zero)  # Mặc định chế độ Overtime (khớp system_tb.v sys_4)
         addiu $t0, $zero, TMR_BIT_BEEP_EN
         sw    $t0, REG_TMR_CTRL($zero)  # Cho phép tự kích còi khi đếm về 0
         lui   $t0, 0x3e00               # Báo thức 1: 07:00 (420 phút), T2 -> T6, tắt

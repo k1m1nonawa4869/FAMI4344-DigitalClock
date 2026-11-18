@@ -114,6 +114,11 @@ ringchk: mtc0 $zero, $12                # Tắt ngắt tạm thời để đọc
         andi  $t0, $t0, 0xd
         ori   $t0, $t0, 2               # Xóa cờ ZERO (W1C), bảo toàn các cờ khác
         sw    $t0, REG_TMR_CTRL($zero)
+        lw    $t2, V_TMR_STP0($zero)
+        beq   $t2, $zero, rc1_send
+        sw    $zero, REG_TMR_CTRL($zero) # STP0 = 1: Dừng bộ đếm
+        sw    $zero, REG_TMR_VALUE($zero) # Khóa tại đúng 0 ms
+rc1_send:
         addu  $s1, $ra, $zero
         addiu $a0, $zero, 0x5a          # Gửi gói tin thông báo "$Z" qua UART lên PC
         addu  $a1, $s4, $zero
@@ -166,9 +171,9 @@ rc4:    lw    $t0, V_RING($zero)        # 4) Tự động ngắt chuông sau 60 
         lui   $t1, 0x0526
         ori   $t1, $t1, 0x5c00
         addu  $t0, $t0, $t1
-rc4a:   ori   $t1, $zero, 60000
+rc4a:   lw    $t1, V_ALM_DUR($zero)
         slt   $t1, $t0, $t1
-        bne   $t1, $zero, rc5           # Chưa đủ 60s
+        bne   $t1, $zero, rc5           # Chưa đủ thời lượng chuông cài đặt
         sw    $zero, REG_BEEP_PAT($zero) # Ngắt còi PWM
         sw    $zero, V_RING($zero)      # Trở về trạng thái im lặng
 rc5:    lui   $t1, 0x36                 # 5) Phát chuông báo giờ tròn tiếng (Hourly Chime)

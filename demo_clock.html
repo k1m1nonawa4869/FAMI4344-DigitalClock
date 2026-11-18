@@ -1130,6 +1130,54 @@
         <button class="btn-load-timer" onclick="applyCustomTimerPreset()">▶️ Nạp Preset & Mở Chế Độ Timer</button>
       </div>
 
+      <!-- Advanced Alarm Duration, Stop at 0 & Zero-Aligned Running Ticks -->
+      <div style="margin-top:14px; padding-top:12px; border-top:1px dashed #30363d; display:flex; flex-wrap:wrap; gap:12px; align-items:center;">
+        <div style="display:flex; align-items:center; gap:6px;">
+          <span style="font-size:0.75rem; color:#8b949e; font-weight:700;">Thời Lượng Chuông:</span>
+          <select id="sel-alm-dur" style="background:#161b22; color:#c9d1d9; border:1px solid #30363d; border-radius:4px; padding:3px 6px; font-size:0.75rem;" onchange="setAlarmDuration(this.value)">
+            <option value="5">5 giây</option>
+            <option value="10">10 giây</option>
+            <option value="30" selected>30 giây (Mặc định)</option>
+            <option value="60">60 giây (1 phút)</option>
+          </select>
+        </div>
+
+        <button class="pill-btn" id="btn-stp0-toggle" onclick="toggleStopAtZero()">🛑 Dừng Tại 0 (STP0): TẮT (Đếm Âm)</button>
+
+        <div style="display:flex; align-items:center; gap:6px;">
+          <span style="font-size:0.75rem; color:#8b949e; font-weight:700;">Tick Định Kỳ:</span>
+          <select id="sel-tick-int" style="background:#161b22; color:#c9d1d9; border:1px solid #30363d; border-radius:4px; padding:3px 6px; font-size:0.75rem;" onchange="setTickInterval(this.value)">
+            <option value="0" selected>TẮT (OFF)</option>
+            <option value="1">1 giây</option>
+            <option value="2">2 giây</option>
+            <option value="5">5 giây</option>
+            <option value="10">10 giây</option>
+            <option value="20">20 giây</option>
+            <option value="30">30 giây</option>
+            <option value="60">60 giây (1 phút)</option>
+            <option value="120">2 phút</option>
+            <option value="300">5 phút</option>
+            <option value="600">10 phút</option>
+            <option value="1800">30 phút</option>
+            <option value="3600">60 phút (1 giờ)</option>
+          </select>
+        </div>
+
+        <div style="display:flex; align-items:center; gap:6px;">
+          <span style="font-size:0.75rem; color:#8b949e; font-weight:700;">Số Tiếng Bíp:</span>
+          <select id="sel-tick-cnt" style="background:#161b22; color:#c9d1d9; border:1px solid #30363d; border-radius:4px; padding:3px 6px; font-size:0.75rem;" onchange="setTickCount(this.value)">
+            <option value="1" selected>1 tick</option>
+            <option value="2">2 ticks</option>
+            <option value="3">3 ticks</option>
+            <option value="4">4 ticks</option>
+            <option value="5">5 ticks</option>
+          </select>
+        </div>
+      </div>
+      <div style="font-size:0.72rem; color:#8b949e; margin-top:8px; line-height:1.4;">
+        💡 <b>Đồng bộ 0s:</b> Tiếng tick định kỳ của Timer luôn được căn chỉnh để tiếng tick cuối cùng chạm chính xác mốc 0 giây. Nếu thời gian ban đầu không chia hết cho chu kỳ tick (ví dụ đặt 25s, tick 2s), chu kỳ đầu sẽ tự động bỏ qua mốc 24s để bắt đầu kêu chuẩn xác từ 22s, 20s, ..., 2s, 0s (tại 0s nếu chọn Stop-at-Zero sẽ phát chuông báo thức)!
+      </div>
+
       <!-- Banner thông báo khóa an toàn Triple Click -->
       <div id="safety-reset-toast" style="display:none; margin-top:10px; padding:8px 12px; background:rgba(218,54,51,0.15); border:1px solid #da3633; border-radius:6px; color:#f85149; font-size:0.8rem; font-weight:bold; align-items:center; gap:8px;">
         <span id="safety-reset-text">⚠️ CẢNH BÁO BẢO VỆ: Nhấn Phím B thêm 2 lần liên tiếp để xác nhận Reset!</span>
@@ -1301,6 +1349,10 @@ t = 0 ms
       tmrAlarmEn: true, // Kích hoạt còi báo động khi về 0 và quá hạn âm
       tmrOvertimeBeeping: false,
       lastOvertimeBeepSec: -1,
+      tmrStopAtZero: false, // Dừng tại 0: false = Overtime đếm âm; true = Stop at 0 & đổ chuông báo
+      tickIntervalSec: 0,   // Chu kỳ tiếng tick định kỳ: 0 (TẮT), 1s, 2s, 5s, 10s, 20s, 30s, 60s...
+      tickBeepCount: 1,     // Số tiếng bíp mỗi lần tick (1..5)
+      almDurationSec: 30,   // Thời lượng chuông báo kêu (5s, 10s, 30s, 60s)
 
       // Chess Double Clock (TASK-21: 2 đồng hồ 4-digit động 0.01s, chênh lệch giờ s1 và s2)
       chessL: 300000, // s1: Clock A / Left (mặc định 5m = 300.000 ms)
@@ -1462,6 +1514,48 @@ t = 0 ms
 
     function playClick() {
       playTone(1400, 0.02, 'sine');
+    }
+
+    // Tiếng tick định kỳ (1..5 tiếng tick liên tiếp)
+    function playTick(count) {
+      if (STATE.audioMuted) return;
+      const total = count || STATE.tickBeepCount || 1;
+      for (let i = 0; i < total; i++) {
+        setTimeout(() => {
+          playTone(2000, 0.025, 'sine');
+        }, i * 85);
+      }
+    }
+
+    function toggleStopAtZero() {
+      STATE.tmrStopAtZero = !STATE.tmrStopAtZero;
+      const btn = document.getElementById('btn-stp0-toggle');
+      if (btn) {
+        if (STATE.tmrStopAtZero) {
+          btn.className = 'pill-btn active';
+          btn.textContent = '🛑 Dừng Tại 0 (STP0): BẬT (Kêu Chuông)';
+        } else {
+          btn.className = 'pill-btn';
+          btn.textContent = '🛑 Dừng Tại 0 (STP0): TẮT (Đếm Âm)';
+        }
+      }
+      appendStreamLog(`[TIMER CONFIG] Dừng tại 0 (STP0): ${STATE.tmrStopAtZero ? 'BẬT (Khóa 00:00.000 & đổ chuông)' : 'TẮT (Đếm bù âm)'}`);
+    }
+
+    function setAlarmDuration(val) {
+      STATE.almDurationSec = parseInt(val, 10) || 30;
+      appendStreamLog(`[ALARM CONFIG] Thời lượng chuông báo cài đặt: ${STATE.almDurationSec} giây.`);
+    }
+
+    function setTickInterval(val) {
+      STATE.tickIntervalSec = parseInt(val, 10) || 0;
+      const str = STATE.tickIntervalSec === 0 ? 'TẮT (OFF)' : `${STATE.tickIntervalSec} giây (Đồng bộ mốc 0s)`;
+      appendStreamLog(`[TICK CONFIG] Chu kỳ tiếng tick định kỳ: ${str}`);
+    }
+
+    function setTickCount(val) {
+      STATE.tickBeepCount = parseInt(val, 10) || 1;
+      appendStreamLog(`[TICK CONFIG] Số tiếng bíp mỗi lần tick: ${STATE.tickBeepCount}`);
     }
 
     function toggleAudio() {
@@ -3117,47 +3211,161 @@ t = 0 ms
         appendStreamLog(`[RTC] Chuyen ngay moi: days=${STATE.days}`);
       }
 
-      // 2. Cập nhật Stopwatch
+      // 2. Cập nhật Stopwatch (Periodic Ticks khi đang chạy)
       if (STATE.swRunning) {
+        const prev = STATE.swElapsedMs;
         STATE.swElapsedMs += deltaSim;
+        if (STATE.tickIntervalSec > 0) {
+          const tIntMs = STATE.tickIntervalSec * 1000;
+          const kPrev = Math.floor(prev / tIntMs);
+          const kCurr = Math.floor(STATE.swElapsedMs / tIntMs);
+          if (kCurr > kPrev && kCurr > 0) {
+            playTick(STATE.tickBeepCount);
+            appendStreamLog(`[STPW TICK] Mốc ${kCurr * STATE.tickIntervalSec}s: phát ${STATE.tickBeepCount} tiếng tick.`);
+          }
+        }
       }
 
-      // 3. Cập nhật Timer đếm lùi & quá hạn âm (TASK-18 & TASK-21: Còi báo động khi chạm 0 & cờ vua kép)
+      // 3. Cập nhật Timer đếm lùi & quá hạn âm (Stop-at-Zero & Tiếng tick đồng bộ 0s)
       if (STATE.tmrSubmode === 'chess') {
+        const tIntMs = STATE.tickIntervalSec * 1000;
         if (STATE.chessAct === 1) { // Left đang chạy
           const prev = STATE.chessL;
-          STATE.chessL -= deltaSim;
-          if (prev >= 0 && STATE.chessL < 0) {
-            playTone(2600, 0.35, 'square');
-            appendStreamLog(`[CHESS] Đấu thủ A đã hết giờ! Bắt đầu đếm quá hạn âm (-S.cc).`);
+          const tInit = STATE.chessInit || 300000;
+          if (STATE.tmrStopAtZero) {
+            if (STATE.chessL - deltaSim <= 0) {
+              STATE.chessL = 0;
+              STATE.chessAct = 0;
+              STATE.alarmSounding = true;
+              STATE.alarmSoundStartMs = STATE.msOfDay;
+              playTone(2600, 0.4, 'square');
+              setTimeout(() => playTone(3000, 0.4, 'square'), 200);
+              appendStreamLog(`[CHESS STOP0] Đấu thủ A đã hết giờ! Khóa đồng hồ tại 0 và đổ chuông (${STATE.almDurationSec}s).`);
+            } else {
+              STATE.chessL -= deltaSim;
+            }
+          } else {
+            STATE.chessL -= deltaSim;
+            if (prev >= 0 && STATE.chessL < 0) {
+              playTone(2600, 0.35, 'square');
+              appendStreamLog(`[CHESS] Đấu thủ A đã hết giờ! Bắt đầu đếm quá hạn âm (-S.cc).`);
+            }
+          }
+
+          // Tiếng tick định kỳ đồng bộ 0s cho Left
+          if (tIntMs > 0 && prev > 0 && STATE.chessL >= 0) {
+            const maxAllowed = tInit - tIntMs;
+            if (maxAllowed >= 0) {
+              const kPrev = Math.floor(prev / tIntMs);
+              const kCurr = Math.floor(STATE.chessL / tIntMs);
+              if (kCurr < kPrev) {
+                const targetMs = kPrev * tIntMs;
+                if (targetMs <= maxAllowed && targetMs > 0) {
+                  playTick(STATE.tickBeepCount);
+                  appendStreamLog(`[CHESS A TICK] Định kỳ đồng bộ 0s (Còn ${Math.floor(targetMs / 1000)}s): ${STATE.tickBeepCount} tiếng tick.`);
+                } else if (targetMs === 0 && !STATE.tmrStopAtZero) {
+                  playTick(STATE.tickBeepCount);
+                }
+              }
+            }
           }
         } else if (STATE.chessAct === 2) { // Right đang chạy
           const prev = STATE.chessR;
-          STATE.chessR -= deltaSim;
-          if (prev >= 0 && STATE.chessR < 0) {
-            playTone(2600, 0.35, 'square');
-            appendStreamLog(`[CHESS] Đấu thủ C đã hết giờ! Bắt đầu đếm quá hạn âm (-S.cc).`);
+          const tInit = STATE.chessRInit || 300000;
+          if (STATE.tmrStopAtZero) {
+            if (STATE.chessR - deltaSim <= 0) {
+              STATE.chessR = 0;
+              STATE.chessAct = 0;
+              STATE.alarmSounding = true;
+              STATE.alarmSoundStartMs = STATE.msOfDay;
+              playTone(2600, 0.4, 'square');
+              setTimeout(() => playTone(3000, 0.4, 'square'), 200);
+              appendStreamLog(`[CHESS STOP0] Đấu thủ C đã hết giờ! Khóa đồng hồ tại 0 và đổ chuông (${STATE.almDurationSec}s).`);
+            } else {
+              STATE.chessR -= deltaSim;
+            }
+          } else {
+            STATE.chessR -= deltaSim;
+            if (prev >= 0 && STATE.chessR < 0) {
+              playTone(2600, 0.35, 'square');
+              appendStreamLog(`[CHESS] Đấu thủ C đã hết giờ! Bắt đầu đếm quá hạn âm (-S.cc).`);
+            }
+          }
+
+          // Tiếng tick định kỳ đồng bộ 0s cho Right
+          if (tIntMs > 0 && prev > 0 && STATE.chessR >= 0) {
+            const maxAllowed = tInit - tIntMs;
+            if (maxAllowed >= 0) {
+              const kPrev = Math.floor(prev / tIntMs);
+              const kCurr = Math.floor(STATE.chessR / tIntMs);
+              if (kCurr < kPrev) {
+                const targetMs = kPrev * tIntMs;
+                if (targetMs <= maxAllowed && targetMs > 0) {
+                  playTick(STATE.tickBeepCount);
+                  appendStreamLog(`[CHESS C TICK] Định kỳ đồng bộ 0s (Còn ${Math.floor(targetMs / 1000)}s): ${STATE.tickBeepCount} tiếng tick.`);
+                } else if (targetMs === 0 && !STATE.tmrStopAtZero) {
+                  playTick(STATE.tickBeepCount);
+                }
+              }
+            }
           }
         }
       } else if (STATE.tmrRunning) {
         const prev = STATE.tmrRemainMs;
-        STATE.tmrRemainMs -= deltaSim;
-        if (prev >= 0 && STATE.tmrRemainMs < 0) {
-          // Vừa chạm 0! Kích hoạt còi bíp dồn dập
-          STATE.tmrBeeping = true;
-          if (STATE.tmrAlarmEn) {
-            STATE.tmrOvertimeBeeping = true;
-            playTone(2600, 0.35, 'square');
-            setTimeout(() => playTone(3000, 0.35, 'square'), 180);
+        const tInit = STATE.tmrPresetMs;
+        const tIntMs = STATE.tickIntervalSec * 1000;
+
+        if (STATE.tmrStopAtZero) {
+          if (STATE.tmrRemainMs - deltaSim <= 0) {
+            STATE.tmrRemainMs = 0;
+            STATE.tmrRunning = false;
+            STATE.tmrBeeping = true;
+            STATE.alarmSounding = true;
+            STATE.alarmSoundStartMs = STATE.msOfDay;
+            playTone(2600, 0.4, 'square');
+            setTimeout(() => playTone(3000, 0.4, 'square'), 200);
+            appendStreamLog(`[TIMER STOP0] Đã chạm 00:00.000! Khóa dừng đồng hồ và kích hoạt chuông báo (${STATE.almDurationSec}s).`);
+          } else {
+            STATE.tmrRemainMs -= deltaSim;
           }
-          appendStreamLog(`[TIMER ALARM] Đã đếm về 0! Kích hoạt còi báo động. Chuyển sang đếm quá giờ âm.`);
+        } else {
+          STATE.tmrRemainMs -= deltaSim;
+          if (prev >= 0 && STATE.tmrRemainMs < 0) {
+            // Vừa chạm 0! Kích hoạt còi bíp dồn dập
+            STATE.tmrBeeping = true;
+            if (STATE.tmrAlarmEn) {
+              STATE.tmrOvertimeBeeping = true;
+              playTone(2600, 0.35, 'square');
+              setTimeout(() => playTone(3000, 0.35, 'square'), 180);
+            }
+            appendStreamLog(`[TIMER ALARM] Đã đếm về 0! Kích hoạt còi báo động. Chuyển sang đếm quá giờ âm.`);
+          }
+          // Nhịp bíp cảnh báo định kỳ (mỗi 1 giây) khi đang đếm quá hạn âm
+          if (STATE.tmrRemainMs < 0 && STATE.tmrOvertimeBeeping && STATE.tmrAlarmEn) {
+            const curSec = Math.floor(Math.abs(STATE.tmrRemainMs) / 1000);
+            if (curSec !== STATE.lastOvertimeBeepSec) {
+              STATE.lastOvertimeBeepSec = curSec;
+              playTone(2200, 0.12, 'square');
+            }
+          }
         }
-        // Nhịp bíp cảnh báo định kỳ (mỗi 1 giây) khi đang đếm quá hạn âm
-        if (STATE.tmrRemainMs < 0 && STATE.tmrOvertimeBeeping && STATE.tmrAlarmEn) {
-          const curSec = Math.floor(Math.abs(STATE.tmrRemainMs) / 1000);
-          if (curSec !== STATE.lastOvertimeBeepSec) {
-            STATE.lastOvertimeBeepSec = curSec;
-            playTone(2200, 0.12, 'square');
+
+        // Tiếng tick định kỳ đồng bộ 0s
+        if (tIntMs > 0 && prev > 0 && STATE.tmrRemainMs >= 0) {
+          const maxAllowed = tInit - tIntMs;
+          if (maxAllowed >= 0) {
+            const kPrev = Math.floor(prev / tIntMs);
+            const kCurr = Math.floor(STATE.tmrRemainMs / tIntMs);
+            if (kCurr < kPrev) {
+              const targetMs = kPrev * tIntMs;
+              if (targetMs <= maxAllowed && targetMs > 0) {
+                playTick(STATE.tickBeepCount);
+                appendStreamLog(`[TMR TICK] Định kỳ đồng bộ 0s (Còn ${Math.floor(targetMs / 1000)}s): ${STATE.tickBeepCount} tiếng tick.`);
+              } else if (targetMs === 0 && !STATE.tmrStopAtZero) {
+                playTick(STATE.tickBeepCount);
+                appendStreamLog(`[TMR TICK] Mốc 0s đồng bộ: ${STATE.tickBeepCount} tiếng tick.`);
+              }
+            }
           }
         }
       }
@@ -3182,10 +3390,15 @@ t = 0 ms
         appendStreamLog(`[ALARM] Het gio Snooze: Do chuong lai!`);
         playTone(2800, 0.3, 'square');
       }
-      // Tự ngắt chuông sau 60 giây
-      if (STATE.alarmSounding && (STATE.msOfDay - STATE.alarmSoundStartMs >= 60000)) {
+      // Tự ngắt chuông sau STATE.almDurationSec giây (5s, 10s, 30s, 60s)
+      const almDurMs = (STATE.almDurationSec || 30) * 1000;
+      if (STATE.alarmSounding && ((STATE.msOfDay - STATE.alarmSoundStartMs + 86400000) % 86400000 >= almDurMs)) {
         STATE.alarmSounding = false;
-        appendStreamLog(`[ALARM] Tu dong tat sau 60s`);
+        appendStreamLog(`[ALARM] Tự động ngắt chuông sau ${STATE.almDurationSec}s.`);
+      }
+      // Nhịp chuông kêu dồn dập (mỗi 500 ms) khi chuông đang đổ
+      if (STATE.alarmSounding && Math.floor(STATE.msOfDay % 500) < deltaSim) {
+        playTone(2800, 0.2, 'square');
       }
 
       // 5. Chuông điểm giờ tròn tiếng (Hourly Chime)

@@ -125,6 +125,10 @@
         .eqv  V_COLOR           0x788           # Màu LED hiển thị (0: Đỏ, 1: Xanh lá, 2: Xanh lam nhạt, 3: Vàng)
         .eqv  V_GLB_ALM_OFF     0x78c           # Cờ tắt toàn bộ báo thức (1: Global Turn Off)
         .eqv  V_SW_GAP          0x790           # Chế độ hiển thị Lap: 0: SPLIT mốc tuyệt đối, 1: GAP khoảng cách + tắt 0 đầu
+        .eqv  V_ALM_DUR         0x794           # Thời lượng chuông báo kêu (mili-giây, mặc định 60.000 ms)
+        .eqv  V_TICK_INT        0x798           # Chu kỳ tiếng tick định kỳ khi chạy (0: Tắt, >0: giây)
+        .eqv  V_TICK_CNT        0x79c           # Số lần bíp/tick liên tiếp (1..5 ticks)
+        .eqv  V_TMR_STP0        0x770           # Tùy chọn dừng tại 0 (0: Overtime đếm âm, 1: Stop at 0 dừng và kêu chuông)
         .eqv  V_TPR_M           0x7a0           # SET: Phút tạm thời cho Clock C / Đấu thủ Phải (0..59)
         .eqv  V_TPR_S           0x7a4           # SET: Giây tạm thời cho Clock C / Đấu thủ Phải (0..59)
         .eqv  V_TPSW_MODE       0x7a8           # SET: Chế độ tạm thời cho Stopwatch (0: 9L, 1: 99L)
