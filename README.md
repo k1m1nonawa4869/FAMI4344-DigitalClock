@@ -413,7 +413,9 @@ Thiết bị giao tiếp với người dùng thông qua **4 phím bấm vật l
   * **Phím B:**
     * Khi đang chạy: Chốt tức thì mốc thời gian hiện tại vào đỉnh Ngăn xếp (Stack Push). Khi mảng đầy, áp dụng cơ chế dịch trượt giữ lại các mốc mới nhất.
     * Khi đang dừng: Đặt lại toàn bộ bộ đếm về $00:00.000$ và giải phóng ngăn xếp (Reset).
-  * **Phím C:** Duyệt tuần tự qua các mốc Lap đã lưu trong ngăn xếp ($1 \dots N \to \text{Live}$).
+  * **Phím C:**
+    * Khi chưa có Lap ($V_{\text{LAPN}} = 0$) và đang dừng: **Chuyển đổi trực tiếp giữa 2 chế độ 9 Laps ($1\text{ ms}$) $\leftrightarrow$ 99 Laps ($10\text{ ms}$)** bằng hệ thống phím bấm ABCD mà không cần cấu hình bên ngoài.
+    * Khi đã có Lap trong bộ nhớ: Duyệt tuần tự qua các mốc Lap đã lưu trong ngăn xếp ($1 \dots N \to \text{Live}$).
 
 ---
 
@@ -427,12 +429,18 @@ Thiết bị giao tiếp với người dùng thông qua **4 phím bấm vật l
   * Ngay khi bộ đếm chạm mốc $0$, còi báo thức tự động kích hoạt chuông dồn dập cảnh báo người dùng.
   * Trong suốt quá trình đếm quá giờ âm bù hai (Negative Overtime Counting), còi duy trì nhịp bíp định kỳ cảnh báo (mỗi giây một tiếng bíp ngắn).
   * **Tắt chuông bằng Phím C:** Nhấn Phím C để tắt chuông báo động (Acknowledge / Silence Alarm) mà không làm gián đoạn bộ đếm quá giờ âm.
-* **Thao tác phím bấm:**
-  * **Phím A:** Bắt đầu (Run) / Tạm dừng (Pause).
-  * **Phím B:** Nạp lại giá trị đặt trước ban đầu (Reset to Preset $V_{PRE}$).
-  * **Phím C:**
+* **Cơ chế Phím bấm Chuyên dụng cho Thi đấu & Kiểm soát Thời gian Thực:**
+  * **Phím A (Start / Resume):**
+    * Khi đang dừng hoặc tạm dừng: Bắt đầu chạy (Start) hoặc Tiếp tục chạy (Resume). Đồng thời tự động chốt giá trị thời gian bắt đầu vào thanh ghi snapshot $V_{\text{TMR\_SNAP}}$ phục vụ chức năng Reset khôi phục.
+    * Khi đang chạy: Nhấn tiếp Phím A **không làm tắt hay đảo trạng thái** (bảo đảm an toàn tuyệt đối trong thi đấu, người dùng bấm nhiều lần để bảo đảm phím ăn cũng không bao giờ làm dừng hay khởi động lại bộ đếm ngoài ý muốn).
+  * **Phím B (Reset Snapshot / Reset Zero):**
+    * Khi đang chạy: **Reset về đúng mốc thời gian trước khi bấm A** ($V_{\text{TMR\_SNAP}}$) và dừng bộ đếm.
+    * Khi đang dừng: **Đặt lại về toàn số 0** ($00:00.000$ / Full 0s).
+  * **Phím C (Pause & Pause / Custom Preset in SET):**
     * Khi chuông báo động quá hạn đang kêu: Tắt còi báo động (Acknowledge).
-    * Khi Timer đang dừng: Kích hoạt **Chế độ Cài Đặt Thời Gian Tùy Chỉnh (Custom Timer Preset in SET Mode)** với định dạng `trHH.MM.SS`.
+    * Khi đang chạy: **Tạm dừng đếm lùi (Pause)**, giữ nguyên thời gian hiện tại.
+    * Khi đang tạm dừng: Nhấn tiếp C vẫn **tiếp tục giữ trạng thái Pause** (Pause & Pause — không re-enable, không bị thoát nhầm sang màn hình khác). Để tiếp tục chạy đếm lùi, người dùng bắt buộc phải nhấn Phím A.
+    * Khi đang dừng tĩnh / reset về 0: Kích hoạt **Chế độ Cài Đặt Thời Gian Tùy Chỉnh (Custom Timer Preset in SET Mode)** với định dạng `trHH.MM.SS`.
 * **Quy trình Cài đặt Thời gian Đếm lùi Tùy chỉnh (SET TIMER):**
   1. Khi Timer đang dừng, nhấn **Phím C** để vào trang cài đặt: Màn hình hiển thị `trHH.MM.SS` với trường Giờ nhấp nháy ($2\text{ Hz}$, `BLINK_MASK = 0x30`).
   2. Nhấn **Phím A** để tăng số Giờ ($0 \dots 99$, quay vòng về $00$).

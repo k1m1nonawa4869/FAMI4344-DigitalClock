@@ -120,6 +120,9 @@
 # ----------------------------------------------------------------------------
 # 10. CẤU HÌNH NGẮT & KHỐI KHỞI ĐỘNG (SYSTEM CONFIG & BOOTLOADER: 0x7E0 .. 0x7FF)
 # ----------------------------------------------------------------------------
+        .eqv  V_SW_MODE         0x7d0           # Chế độ bấm giờ: 0: 9 Laps @ 1 ms, 1: 99 Laps @ 10 ms
+        .eqv  V_TMR_SNAP        0x7d4           # Mốc thời gian trước khi nhấn A bắt đầu đếm lùi
+        .eqv  V_TPAUSED         0x7d8           # Cờ trạng thái Timer đang tạm dừng (1: Paused)
         .eqv  USE_IRQ           1               # Cấu hình ngắt: 1: Dùng ngắt UART_RX tại 0x180; 0: Polling
         .eqv  CFG_MAG           0x7e0           # Từ ma thuật kiểm tra (Magic Word): 0x534F4331 ("SOC1")
         .eqv  CFG_MS            0x7e4           # Giờ nạp cấu hình ban đầu (mili-giây trong ngày)

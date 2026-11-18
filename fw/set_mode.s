@@ -232,6 +232,8 @@ st_tm_sv: # Nút C: Tính V_PRE = ((Giờ * 60 + Phút) * 60 + Giây) * 1000
         mul   $t0, $t0, $t1             # V_PRE (mili-giây)
         sw    $t0, V_PRE($zero)         # Lưu vào biến DMEM V_PRE
         sw    $t0, REG_TMR_VALUE($zero) # Nạp thẳng vào thanh ghi Timer phần cứng
+        sw    $t0, V_TMR_SNAP($zero)    # Khởi tạo snapshot bằng preset mới
+        sw    $zero, V_TPAUSED($zero)   # Xóa cờ tạm dừng
         addiu $t0, $zero, 6             # CLR = 1, BEEP_EN = 1, RUN = 0
         sw    $t0, REG_TMR_CTRL($zero)
         sw    $zero, REG_BLINK_MASK($zero) # Tắt nhấp nháy

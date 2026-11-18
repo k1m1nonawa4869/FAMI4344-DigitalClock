@@ -1153,6 +1153,8 @@ t = 0 ms
       tmrRunning: false,
       tmrPresetMs: 90000, // Mặc định 1 phút 30 giây
       tmrRemainMs: 90000,
+      tmrStartVal: 90000, // Mốc thời gian trước khi nhấn A bắt đầu đếm lùi
+      tmrPaused: false, // Cờ trạng thái tạm dừng
       tmrBeeping: false,
       tmrAlarmEn: true, // Kích hoạt còi báo động khi về 0 và quá hạn âm
       tmrOvertimeBeeping: false,
@@ -1883,11 +1885,25 @@ t = 0 ms
         const maxL = STATE.swMode === '99lap' ? 99 : 9;
         dA.textContent = STATE.swRunning ? 'DỪNG (Stop) bấm giờ' : 'BẮT ĐẦU (Start) bấm giờ';
         dB.textContent = STATE.swRunning ? `Chốt Lap vào Stack (${STATE.laps.length}/${maxL})` : 'Đặt lại về 0 (Xóa Stack)';
-        dC.textContent = `Duyệt xem Laps đã lưu (1..${STATE.laps.length || maxL} → Live)`;
+        if (STATE.laps.length === 0 && !STATE.swRunning) {
+          dC.textContent = `Đổi chế độ: ${STATE.swMode === '9lap' ? '9 Laps (1 ms)' : '99 Laps (10 ms)'} [Phím C]`;
+        } else {
+          dC.textContent = `Duyệt xem Laps đã lưu (1..${STATE.laps.length || maxL} → Live)`;
+        }
       } else if (m === 2) { // TMR
-        dA.textContent = STATE.tmrRunning ? 'DỪNG (Stop) đếm ngược' : 'BẮT ĐẦU (Start) đếm ngược';
-        dB.textContent = 'Khôi phục về giá trị đặt trước (Reset)';
-        dC.textContent = STATE.tmrOvertimeBeeping ? '🔕 TẮT CHUÔNG BÁO ĐỘNG (Acknowledge)' : (STATE.tmrRunning ? '(Khóa khi đang chạy)' : 'Cài đặt Preset trHH.MM.SS (Vào SET)');
+        if (STATE.tmrRunning) {
+          dA.textContent = 'BẮT ĐẦU (Start) đếm ngược [Đang chạy]';
+          dB.textContent = 'Reset về mốc trước khi bấm A';
+          dC.textContent = STATE.tmrOvertimeBeeping ? '🔕 TẮT CHUÔNG BÁO ĐỘNG (Acknowledge)' : 'TẠM DỪNG (Pause) đếm ngược';
+        } else if (STATE.tmrPaused) {
+          dA.textContent = 'TIẾP TỤC (Resume) đếm ngược';
+          dB.textContent = 'Đặt lại về toàn số 0 (Reset full 0s)';
+          dC.textContent = 'Đang tạm dừng (Bấm A để chạy tiếp)';
+        } else {
+          dA.textContent = 'BẮT ĐẦU (Start) đếm ngược';
+          dB.textContent = 'Đặt lại về toàn số 0 (Reset full 0s)';
+          dC.textContent = STATE.tmrOvertimeBeeping ? '🔕 TẮT CHUÔNG BÁO ĐỘNG (Acknowledge)' : 'Cài đặt Preset trHH.MM.SS (Vào SET)';
+        }
       } else if (m === 3) { // ALM
         if (STATE.almEditing > 0) {
           dA.textContent = `Tăng giá trị trường ${STATE.almEditing === 1 ? 'Giờ (+1)' : 'Phút (+1)'}`;
@@ -1954,8 +1970,22 @@ t = 0 ms
       } else if (m === 1) { // STPW: Start / Stop
         STATE.swRunning = !STATE.swRunning;
         STATE.swLapIdx = -1;
-      } else if (m === 2) { // TMR: Start / Stop
-        STATE.tmrRunning = !STATE.tmrRunning;
+      } else if (m === 2) { // TMR: Start / Resume
+        if (STATE.tmrRunning) {
+          // Khi đang chạy: bấm A nhiều lần không đảo trạng thái (chống bấm nhầm trong thi đấu)
+          appendStreamLog(`[TIMER] Phím A: Đồng hồ đang chạy (Nhấn C để tạm dừng, B để reset).`);
+          return;
+        }
+        if (STATE.tmrPaused) {
+          STATE.tmrRunning = true;
+          STATE.tmrPaused = false;
+          appendStreamLog(`[TIMER] Phím A: Tiếp tục đếm ngược (Resume).`);
+        } else {
+          STATE.tmrStartVal = STATE.tmrRemainMs; // Lưu snapshot mốc bắt đầu
+          STATE.tmrRunning = true;
+          STATE.tmrPaused = false;
+          appendStreamLog(`[TIMER] Phím A: Bắt đầu đếm ngược từ ${formatTimeMs(STATE.tmrRemainMs)}.`);
+        }
         STATE.tmrBeeping = false;
       } else if (m === 3) { // ALM
         if (STATE.almEditing === 1) { // Tăng giờ
@@ -2029,11 +2059,25 @@ t = 0 ms
           updateLapTable();
           appendStreamLog(`[STPW] Đã đặt lại về 0 và xóa trắng ngăn xếp Laps.`);
         }
-      } else if (m === 2) { // TMR: Reset về preset
-        STATE.tmrRemainMs = STATE.tmrPresetMs;
-        STATE.tmrRunning = false;
-        STATE.tmrBeeping = false;
-        STATE.tmrOvertimeBeeping = false;
+      } else if (m === 2) { // TMR: Reset
+        if (STATE.tmrRunning) {
+          // Đang chạy: Reset về đúng thời gian trước khi bấm A
+          STATE.tmrRemainMs = STATE.tmrStartVal;
+          STATE.tmrRunning = false;
+          STATE.tmrPaused = false;
+          STATE.tmrBeeping = false;
+          STATE.tmrOvertimeBeeping = false;
+          appendStreamLog(`[TIMER] Phím B: Reset về mốc trước khi bấm A: ${formatTimeMs(STATE.tmrRemainMs)}.`);
+        } else {
+          // Đang dừng: Đặt lại về toàn số 0 (Reset full 0s)
+          STATE.tmrRemainMs = 0;
+          STATE.tmrStartVal = 0;
+          STATE.tmrRunning = false;
+          STATE.tmrPaused = false;
+          STATE.tmrBeeping = false;
+          STATE.tmrOvertimeBeeping = false;
+          appendStreamLog(`[TIMER] Phím B: Đặt lại về toàn số 0 (00:00.000). Nhấn C để cài đặt mới.`);
+        }
       } else if (m === 3) { // ALM
         if (STATE.almEditing > 0) { // Chuyển đổi giữa sửa Giờ (1) <-> Phút (2)
           STATE.almEditing = STATE.almEditing === 1 ? 2 : 1;
@@ -2063,15 +2107,20 @@ t = 0 ms
 
         const dCont = document.getElementById('digits-container');
         dCont.className = `digits-row dim-${STATE.brightness}`;
-      } else if (m === 1) { // STPW: Duyệt các Lap đã lưu trong Stack
-        if (STATE.laps.length > 0) {
+      } else if (m === 1) { // STPW: Duyệt các Lap đã lưu trong Stack hoặc Đổi chế độ
+        if (STATE.laps.length === 0 && !STATE.swRunning) {
+          // Khi chưa có Lap và đang dừng: Nút C đảo chế độ 9 Lap (1 ms) <-> 99 Lap (10 ms)
+          const newMode = STATE.swMode === '9lap' ? '99lap' : '9lap';
+          setStopwatchMode(newMode);
+          appendStreamLog(`[STPW] Phím C: Đã chuyển sang chế độ ${newMode === '9lap' ? '9 Laps (1 ms, L MM.SS.mmm)' : '99 Laps (10 ms, LL MM.SS.cc)'}.`);
+        } else if (STATE.laps.length > 0) {
           STATE.swLapIdx++;
           if (STATE.swLapIdx >= STATE.laps.length) {
             STATE.swLapIdx = -1; // Quay về xem chạy trực tiếp
           }
           updateLapTable();
         }
-      } else if (m === 2) { // TMR: Tắt chuông hoặc Vào chế độ SET TIMER
+      } else if (m === 2) { // TMR: Tạm dừng / Tắt chuông / Vào SET
         if (STATE.tmrOvertimeBeeping) {
           // Nhấn Phím C để tắt chuông báo động khi đang kêu dồn dập
           STATE.tmrOvertimeBeeping = false;
@@ -2079,7 +2128,16 @@ t = 0 ms
           render();
           return;
         }
-        if (!STATE.tmrRunning) {
+        if (STATE.tmrRunning) {
+          // Đang chạy: Nút C tạm dừng đồng hồ (Pause)
+          STATE.tmrRunning = false;
+          STATE.tmrPaused = true;
+          appendStreamLog(`[TIMER] Phím C: Tạm dừng (Pause) tại ${formatTimeMs(STATE.tmrRemainMs)}. Nhấn A để tiếp tục.`);
+        } else if (STATE.tmrPaused) {
+          // Đang tạm dừng: Bấm C tiếp tục giữ Pause (chống bấm nhiều lần nhảy nhầm vào SET trong thi đấu)
+          appendStreamLog(`[TIMER] Phím C: Vẫn đang tạm dừng (Nhấn A để tiếp tục, B để reset full 0s).`);
+        } else {
+          // Đang dừng tĩnh (chưa chạy / đã reset 0): Vào SET cài đặt thời gian
           STATE.tPage = 1;
           STATE.mode = 4; // Vào SET
           const totalSec = Math.floor(STATE.tmrPresetMs / 1000);
@@ -2110,6 +2168,8 @@ t = 0 ms
           const newPreset = ((STATE.tmrSetHr * 60 + STATE.tmrSetMin) * 60 + STATE.tmrSetSec) * 1000;
           STATE.tmrPresetMs = newPreset;
           STATE.tmrRemainMs = newPreset;
+          STATE.tmrStartVal = newPreset;
+          STATE.tmrPaused = false;
           STATE.mode = 2; // Trở về TIMER
           STATE.tPage = 0;
           appendStreamLog(`[TIMER SET] Đã lưu preset mới: ${STATE.tmrSetHr}h ${STATE.tmrSetMin}m ${STATE.tmrSetSec}s (${newPreset} ms)`);
@@ -2253,6 +2313,8 @@ t = 0 ms
 
       STATE.tmrPresetMs = totalMs;
       STATE.tmrRemainMs = totalMs;
+      STATE.tmrStartVal = totalMs;
+      STATE.tmrPaused = false;
       STATE.tmrRunning = false;
       STATE.tmrBeeping = false;
       STATE.tmrOvertimeBeeping = false;

@@ -29,6 +29,9 @@ b_wait: lw    $t0, REG_RTC_CTRL($zero)
 b_def:  ori   $t0, $zero, 60000         # Giá trị mặc định cho Timer: 60.000 ms (01:00.000)
 b_pre:  sw    $t0, V_PRE($zero)         # Lưu vào biến DMEM
         sw    $t0, REG_TMR_VALUE($zero) # Cài đặt giá trị bộ đếm lùi phần cứng
+        sw    $t0, V_TMR_SNAP($zero)    # Khởi tạo snapshot với mốc timer ban đầu
+        sw    $zero, V_TPAUSED($zero)   # Xóa cờ tạm dừng
+        sw    $zero, V_SW_MODE($zero)   # Mặc định chế độ Stopwatch 9 Laps @ 1 ms
         addiu $t0, $zero, TMR_BIT_BEEP_EN
         sw    $t0, REG_TMR_CTRL($zero)  # Cho phép tự kích còi khi đếm về 0
         lui   $t0, 0x3e00               # Báo thức 1: 07:00 (420 phút), T2 -> T6, tắt

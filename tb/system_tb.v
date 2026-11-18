@@ -426,6 +426,11 @@ module system_tb;
         press(B_MODE);
         check(dut.u_sw.src == 1'b1, "vao STOPWATCH: SRC = 1");
         checkf(fr, fA(0), "stopwatch 00:00.000");
+        press(B_C);                                      // C khi LAPN=0: chuyển sang chế độ 99 Laps (10 ms)
+        check(dut.u_cpu.dmem[12'h7d0 >> 2] == 1, "C khi LAPN=0: chuyen sang 99 Laps mode");
+        press(B_C);                                      // C lần 2: chuyển về lại 9 Laps (1 ms)
+        check(dut.u_cpu.dmem[12'h7d0 >> 2] == 0, "C lan 2: tro ve 9 Laps mode");
+        checkf(fr, fA(0), "van o 00:00.000");
         press(B_A);
         c0 = t_edge;
         while (cyc < c0 + 61728) @(negedge clk);
@@ -493,6 +498,25 @@ module system_tb;
         press(B_B);                                      // về giá trị đặt
         check(dut.u_tmr.run == 1'b0 && dut.u_tmr.zero == 1'b0 && dut.u_tmr.val == 2000, "B: ve 2000, dung, xoa ZERO");
         checkf(fr, fT(2000), "lai 00:02.000");
+
+        // Kiểm tra cải tiến nút bấm Timer (A: Start/Resume, C: Pause, B: Reset SNAP / Reset 0)
+        press(B_A);                                      // Bắt đầu chạy lại
+        check(dut.u_tmr.run == 1'b1, "A: bat dau chay countdown");
+        press(B_A);                                      // Bấm A khi đang chạy: KHÔNG tắt
+        check(dut.u_tmr.run == 1'b1, "A khi dang chay: khong tat, van tiep tuc chay");
+        press(B_C);                                      // Bấm C khi đang chạy: TẠM DỪNG (Pause)
+        check(dut.u_tmr.run == 1'b0, "C khi dang chay: tam dung (Pause)");
+        press(B_C);                                      // Bấm C khi đang tạm dừng: Vẫn giữ Pause
+        check(dut.u_tmr.run == 1'b0, "C khi tam dung: tiep tuc giu Pause");
+        press(B_A);                                      // Bấm A khi đang tạm dừng: TIẾP TỤC (Resume)
+        check(dut.u_tmr.run == 1'b1, "A khi tam dung: tiep tuc chay (Resume)");
+        press(B_B);                                      // Bấm B khi đang chạy: Reset về mốc trước khi bấm A (2000) và dừng
+        check(dut.u_tmr.run == 1'b0 && dut.u_tmr.val == 2000, "B khi dang chay: reset ve moc ban dau 2000 va dung");
+        press(B_B);                                      // Bấm B khi đang dừng: Reset về full 0s
+        check(dut.u_tmr.run == 1'b0 && dut.u_tmr.val == 0, "B khi dang dung: reset ve full 0s (00:00.000)");
+        frame2;
+        checkf(fr, fT(0), "hien full 0s 00:00.000");
+
         done(4, "timer ve 0 dung ms, chuong, so am");
 
         // ---- sys_5: báo thức 07:00 thứ 2 → kêu đúng phút; snooze 5 phút; tự tắt sau 60 s; Chủ nhật không kêu

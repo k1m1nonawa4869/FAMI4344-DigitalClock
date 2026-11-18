@@ -23,25 +23,72 @@ tr_btn: lw    $t0, REG_TMR_CTRL($zero)  # Đọc thanh ghi điều khiển Timer
         andi  $t2, $t0, TMR_BIT_EN       # Trích xuất cờ RUN (bit 0)
         addiu $t1, $zero, 1
         bne   $a0, $t1, tr_b
-        andi  $t0, $t0, 0xc             # Nút A: Đảo cờ RUN, giữ nguyên BEEP_EN và SAT
-        bne   $t2, $zero, tr_a1         # Đang chạy: Dừng lại (RUN = 0)
-        ori   $t0, $t0, TMR_BIT_EN      # Đang dừng: Bật chạy (RUN = 1)
-tr_a1:  sw    $t0, REG_TMR_CTRL($zero)
-        jr    $ra
-tr_b:   addiu $t1, $zero, 2
-        bne   $a0, $t1, tr_c
-tr_rst: lw    $t0, V_PRE($zero)         # Nút B: Khôi phục về giá trị đặt trước, dừng và xóa cờ ZERO
-        sw    $t0, REG_TMR_VALUE($zero)
-        addiu $t0, $zero, 6             # CLR = 1, BEEP_EN = 1
+
+        # --------------------------------------------------------------------
+        # NÚT A: Bắt đầu / Tiếp tục chạy (Start / Resume)
+        # Nếu đang chạy: Giữ nguyên (không dừng, bấm nhiều lần không đảo trạng thái)
+        # --------------------------------------------------------------------
+        bne   $t2, $zero, tr_ret        # Đang chạy: Bấm A không tắt đồng hồ
+        lw    $t3, V_TPAUSED($zero)
+        bne   $t3, $zero, tr_a_run      # Nếu vừa tạm dừng: Resume lại, giữ snapshot ban đầu
+        # Bắt đầu mới: Lưu giá trị hiện tại vào snapshot để reset B khôi phục
+        lw    $t4, REG_TMR_VALUE($zero)
+        sw    $t4, V_TMR_SNAP($zero)
+tr_a_run:
+        sw    $zero, V_TPAUSED($zero)   # Xóa cờ tạm dừng
+        andi  $t0, $t0, 0xc             # Giữ nguyên cờ BEEP_EN và SAT
+        ori   $t0, $t0, TMR_BIT_EN      # RUN = 1
         sw    $t0, REG_TMR_CTRL($zero)
         jr    $ra
-tr_c:   bne   $t2, $zero, tr_r          # Nút C: Chỉ có tác dụng khi Timer đang dừng
+
+        # --------------------------------------------------------------------
+        # NÚT B: 
+        # - Đang chạy: Reset về mốc trước khi bấm A (V_TMR_SNAP), dừng bộ đếm
+        # - Đang dừng: Đặt lại về toàn số 0 (Reset full 0s)
+        # --------------------------------------------------------------------
+tr_b:   addiu $t1, $zero, 2
+        bne   $a0, $t1, tr_c
+        sw    $zero, V_TPAUSED($zero)   # Xóa cờ tạm dừng
+        bne   $t2, $zero, tr_b_running  # Đang chạy: Khôi phục mốc trước khi bấm A
+
+        # Đang dừng (NOT RUNNING): Đặt lại về toàn số 0 (Full 0s)
+        sw    $zero, REG_TMR_VALUE($zero)
+        addiu $t0, $zero, 6             # CLR = 1, BEEP_EN = 1, RUN = 0
+        sw    $t0, REG_TMR_CTRL($zero)
+        sw    $zero, V_TMR_SNAP($zero)
+        jr    $ra
+
+tr_b_running:
+        # Đang chạy (RUNNING): Khôi phục mốc trước khi bấm A, dừng và xóa cờ ZERO
+        lw    $t4, V_TMR_SNAP($zero)
+        sw    $t4, REG_TMR_VALUE($zero)
+        addiu $t0, $zero, 6             # CLR = 1, BEEP_EN = 1, RUN = 0
+        sw    $t0, REG_TMR_CTRL($zero)
+        jr    $ra
+
+        # --------------------------------------------------------------------
+        # NÚT C:
+        # - Đang chạy: Tạm dừng đếm lùi (Pause), giữ nguyên giá trị hiện tại
+        # - Đang tạm dừng: Bấm C tiếp tục giữ Pause (chống lỡ tay chuyển mode)
+        # - Đang dừng/reset tĩnh: Vào chế độ SET cài đặt thời gian đếm lùi
+        # --------------------------------------------------------------------
+tr_c:   bne   $t2, $zero, tr_c_pause    # Đang chạy: Nút C tạm dừng đồng hồ
+        lw    $t3, V_TPAUSED($zero)
+        bne   $t3, $zero, tr_ret        # Đang tạm dừng: Bấm C tiếp tục giữ Pause
+
+        # Đang dừng tĩnh (chưa chạy / đã reset 0): Vào SET cài đặt thời gian
         addiu $t0, $zero, 1
         sw    $t0, V_TPAGE($zero)       # Chuyển sang trang Cài đặt Timer trong SET (V_TPAGE = 1)
         addiu $t0, $zero, MODE_SET
         sw    $t0, V_MODE($zero)        # Chuyển FSM sang chế độ SET (4)
         j     set_in                    # Gọi thủ tục khởi tạo SET
-tr_r:   jr    $ra
+
+tr_c_pause:
+        andi  $t0, $t0, 0xc             # Dừng đếm: RUN = 0, giữ cờ BEEP_EN và SAT
+        sw    $t0, REG_TMR_CTRL($zero)
+        addiu $t3, $zero, 1
+        sw    $t3, V_TPAUSED($zero)     # Bật cờ đánh dấu đang tạm dừng (Pause)
+tr_ret: jr    $ra
 
 # ----------------------------------------------------------------------------
 # 2. XỬ LÝ VẼ MÀN HÌNH CHẾ ĐỘ TIMER
