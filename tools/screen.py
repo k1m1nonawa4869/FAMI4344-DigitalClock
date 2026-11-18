@@ -23,7 +23,7 @@ import os
 import sys
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-CHARS = "0123456789AbCdEFHLnoPrStU- MW"
+CHARS = "0123456789AbCdEFHLnoPrStU- MWG"
 # ảnh tồn tại < TEAR_MS là "xé hình": firmware đang ghi dở 8 ô thì bộ quét chụp đúng 1 vòng
 # (mô phỏng: 1 vòng = 40 × 8 chu kỳ = 6,4 ms theo G_N = 50; chip thật 8 ms, mắt không thấy).
 # Ảnh thật đổi chậm nhất 250 ms (nháy) nên ngưỡng 10 ms tách được. Chế độ chữ đánh dấu, GIF/PNG bỏ qua.

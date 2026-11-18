@@ -160,4 +160,5 @@
         .eqv  CHAR_R            0x15            # Mã ký tự chữ 'r' (0x50)
         .eqv  CHAR_M            0x1B            # Mã ký tự chữ 'M' (0x37: a,b,c,e,f)
         .eqv  CHAR_W            0x1C            # Mã ký tự chữ 'W' (0x1C: c,d,e)
+        .eqv  CHAR_G            0x1D            # Mã ký tự chữ 'G' (0x7D: a,c,d,e,f,g)
         .eqv  CHAR_DP           0x80            # Mặt nạ bật dấu chấm thập phân (bit 7)

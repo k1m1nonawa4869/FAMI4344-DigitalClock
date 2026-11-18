@@ -804,8 +804,8 @@ dr_st_sw:
         j     dr_out
 
 dst_sw_gap:
-        # GAP ("GAP" -> 'G'=0x06, 'A'=0x0A, 'P'=0x14)
-        addiu $t0, $zero, 0x06          # 'G'
+        # GAP ("GAP" -> 'G'=CHAR_G (0x1D), 'A'=0x0A, 'P'=0x14)
+        addiu $t0, $zero, CHAR_G        # 'G' (0x1D: mẫu 0x7D chuẩn)
         sw    $t0, D2($zero)
         addiu $t0, $zero, 0x0A          # 'A'
         sw    $t0, D1($zero)

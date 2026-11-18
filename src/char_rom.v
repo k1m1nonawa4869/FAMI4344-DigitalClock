@@ -65,8 +65,9 @@ module char_rom (
             5'h19: seg = 7'h40;  // '-': chỉ đoạn g giữa sáng (100_0000)
             5'h1B: seg = 7'h37;  // 'M': a,b,c,e,f sáng (011_0111)
             5'h1C: seg = 7'h1C;  // 'W': c,d,e sáng (001_1100)
+            5'h1D: seg = 7'h7D;  // 'G': a,c,d,e,f,g sáng (111_1101, kiểu chữ số 6 chuẩn hóa ký tự)
             
-            // Nhóm ký tự trống (0x1A, 0x1D .. 0x1F)
+            // Nhóm ký tự trống (0x1A, 0x1E .. 0x1F)
             default: seg = 7'h00; // Tắt toàn bộ các đoạn (khoảng trắng)
         endcase
     end

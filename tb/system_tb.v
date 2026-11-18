@@ -561,7 +561,7 @@ module system_tb;
         check(fr == 64'h0909111a1a161411, "SET Stopwatch Option A: 99L  SPL");
         press(B_B);                                      // Toggle Option B -> GAP
         frame2;
-        check(fr == 64'h0909111a1a060a14, "SET Stopwatch Option B: 99L  GAP");
+        check(fr == 64'h0909111a1a1d0a14, "SET Stopwatch Option B: 99L  GAP");
         press(B_C);                                      // Lưu cấu hình & thoát về STOPWATCH (Mode 2)
         frame2;
         check(dut.u_cpu.dmem[12'h400 >> 2] == 2, "Luu SET Stopwatch: ve STOPWATCH mode");
