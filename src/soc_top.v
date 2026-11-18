@@ -358,8 +358,6 @@ module soc_top #(
     // ------------------------------------------------------------------------
     // 14. KHỐI QUÉT HIỂN THỊ LED 7 ĐOẠN ĐA HỢP (DISPLAY CONTROLLER)
     // ------------------------------------------------------------------------
-    // Chú ý: Các cổng VGA (vga_hs, vga_vs, vga_rgb) được bỏ ngỏ để tối ưu hóa
-    // tốc độ mô phỏng và loại bỏ tài nguyên phần cứng không dùng tới.
     display_ctrl #(
         .G_SLOT      (G_SLOT),
         .G_BLANK     (G_BLANK)
@@ -374,10 +372,7 @@ module soc_top #(
         .bus_rdata   (rd_disp),
         .an          (an),
         .seg         (seg),
-        .dp          (dp),
-        .vga_hs      (),
-        .vga_vs      (),
-        .vga_rgb     ()
+        .dp          (dp)
     );
 
     // ------------------------------------------------------------------------

@@ -306,40 +306,6 @@ assert sum(1 for ln in lines if "# addu" in ln) == 3
 write("control.txt", ["instr reg_write dst alu_src ext alu_ctl res_sel mem_read mem_write mem_to_reg branch jump jump_reg multi cp0_op uses_rs uses_rt",
                       "ma so: control-table.md 1.1; sinh tu bang control-table.md (sua bang -> chay lai script)"], lines)
 
-# ---------------------------------------------------------------- VGA
-SEGR = {"a": (20, 60, 8, 16), "b": (60, 68, 16, 76), "c": (60, 68, 84, 144), "d": (20, 60, 144, 152),
-        "e": (12, 20, 84, 144), "f": (12, 20, 16, 76), "g": (20, 60, 76, 84), "dp": (70, 78, 144, 152)}
-
-
-SEGI = {"-": -1, "a": 0, "b": 1, "c": 2, "d": 3, "e": 4, "f": 5, "g": 6, "dp": 7}
-
-
-def vga_classify(x, y):
-    if not (0 <= x < 640 and 160 <= y < 320):
-        return -1, "-"
-    cell = 7 - x // 80
-    u, v = x % 80, y - 160
-    hit = [s for s, (u0, u1, v0, v1) in SEGR.items() if u0 <= u < u1 and v0 <= v < v1]
-    assert len(hit) <= 1  # các đoạn không chồng nhau
-    return cell, hit[0] if hit else "-"
-
-
-pts = set()
-for cell in (7, 3, 0):
-    x0 = 80 * (7 - cell)
-    for (u0, u1, v0, v1) in SEGR.values():
-        for u in (u0 - 1, u0, u1 - 1, u1):
-            for v in (v0 - 1, v0, v1 - 1, v1):
-                pts.add((x0 + u, 160 + v))
-pts |= {(0, 159), (0, 160), (639, 319), (639, 320), (79, 200), (80, 200), (799, 524)}
-pts |= {(rng.randint(0, 639), rng.randint(0, 479)) for _ in range(300)}
-lines = []
-for x, y in sorted(pts):
-    cell, seg = vga_classify(x, y)
-    lines.append(f"{x} {y} {cell} {SEGI[seg]}")
-assert vga_classify(80 * 7 + 20, 160 + 8) == (0, "a")
-write("vga_points.txt", ["x y o(-1 = ngoai vung chu so) doan(0..6 = a..g, 7 = dp, -1 = nen)"], lines)
-
 # ---------------------------------------------------------------- FMT (bố cục màn, display-spec §8)
 BL, DASH = 0x1A, 0x19
 CH = {"_": BL, "-": DASH, "A": 0xA, "P": 0x14, "L": 0x11, "o": 0x13}

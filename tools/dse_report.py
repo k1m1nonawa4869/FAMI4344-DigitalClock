@@ -12,7 +12,7 @@
 
 Chạy từ gốc project (sau `source tools/env.sh`):
     python tools/dse_report.py            # mọi khối → bảng Markdown ra stdout, log ở work/dse_<khối>.log
-    python tools/dse_report.py soc_g1 vga # vài khối
+    python tools/dse_report.py soc_g1 alu # vài khối
 
 Luồng: synth_xilinx tới trước map_luts, rồi `abc -lut 6` (ABC cổ điển) thay abc9 — abc9 bị assertion trên bản Yosys
 trong .toolchain. Số là ước lượng Yosys (`inference`), không phải Vivado; không có Fmax.
@@ -37,9 +37,8 @@ BLOCKS = [
     ("cpu_g1", "lõi G1 (gồm CP0 + ngắt, IMEM, DMEM)", "cpu_g1", IMEM, ""),
     ("cpu_g2", "lõi G2 pipeline (gồm hazard, ngắt)", "cpu_pipe", IMEM, ""),
     ("irq", "bộ điều khiển ngắt", "irq_ctrl", "", ""),
-    ("display", "display_ctrl (quét LED + VGA)", "display_ctrl", "", ""),
+    ("display", "display_ctrl (quét LED 7 đoạn)", "display_ctrl", "", ""),
     ("seg7", "quét 7 đoạn (seg7_scan + char_rom)", "seg7_scan", "", ""),
-    ("vga", "VGA đuổi tia", "vga_digits", "", ""),
     ("timebase", "timebase + CAL", "timebase", "", ""),
     ("rtc", "RTC", "rtc", "", ""),
     ("stopwatch", "stopwatch (capture)", "stopwatch", "", ""),

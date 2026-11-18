@@ -8,7 +8,6 @@
 //                   và BRIGHT (0x80).
 //                 - Ghép nối trực tiếp với module quét động LED 7 đoạn seg7_scan.
 //                 - Hỗ trợ đồng bộ hóa pha nhấp nháy tức thời (Blink restart) khi CPU ghi cấu hình.
-//                 - Các chân VGA được tách rời và giữ ở mức an toàn phục vụ tương thích kiến trúc.
 // ============================================================================
 //
 // ----------------------------------------------------------------------------
@@ -60,12 +59,7 @@ module display_ctrl #(
     // Đầu ra kết nối tới LED 7 đoạn
     output wire [7:0]  an,         // 8 chân chọn chữ số (Anode)
     output wire [6:0]  seg,        // 7 chân dữ liệu đoạn (gfedcba)
-    output wire        dp,         // Chân dữ liệu dấu chấm thập phân
-    
-    // Các đường xuất tín hiệu tương thích kiến trúc SoC
-    output wire        vga_hs,     // Tín hiệu đồng bộ ngang (giữ 0 an toàn khi bỏ VGA)
-    output wire        vga_vs,     // Tín hiệu đồng bộ dọc (giữ 0 an toàn khi bỏ VGA)
-    output wire [11:0] vga_rgb     // Tín hiệu màu RGB (giữ 0 an toàn khi bỏ VGA)
+    output wire        dp          // Chân dữ liệu dấu chấm thập phân
 );
 
     // ------------------------------------------------------------------------
@@ -138,17 +132,6 @@ module display_ctrl #(
         .seg(seg),
         .dp(dp),
         .blink_ph(blink_ph)
-    );
-
-    // Giao diện hiển thị đồ họa VGA (đọc chung Display RAM và đồng bộ pha nháy)
-    vga_digits u_vga (
-        .clk(clk),
-        .rst(rst),
-        .disp(disp),
-        .dim(blink_mask & {8{blink_ph}}),
-        .hsync(vga_hs),
-        .vsync(vga_vs),
-        .rgb(vga_rgb)
     );
 
 endmodule

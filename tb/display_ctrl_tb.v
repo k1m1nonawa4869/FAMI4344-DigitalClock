@@ -123,10 +123,8 @@ module display_ctrl_tb;
         while (ticks < 249) begin tick_ms = 1; step; end
         tick_ms = 0; one_round;
         check(lit[0] == 30, "D-4 tick 249 sang");
-        check(dut.u_vga.dim == 8'h00, "VGA cung pha nhay: dang sang");
         tick_ms = 1; step; tick_ms = 0; one_round;
         check(lit[0] == 0, "D-4 tick 250 tat");
-        check(dut.u_vga.dim == 8'h01, "VGA cung pha nhay: o 0 chi con vet mo");
         for (i = 1; i < ND; i = i + 1) check(lit[i] == 30, "D-4 chu so khac khong doi");
         while (ticks < 499) begin tick_ms = 1; step; end
         tick_ms = 0; one_round;
