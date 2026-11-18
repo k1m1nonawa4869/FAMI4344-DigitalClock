@@ -23,13 +23,15 @@
 # 1. KHỞI TẠO VÀO CHẾ ĐỘ SET (CAPTURE CURRENT TIME TO SET BUFFERS)
 # ----------------------------------------------------------------------------
 set_in: addu  $s7, $ra, $zero           # Lưu thanh ghi $ra vào $s7
-        lw    $t0, V_TPAGE($zero)       # Kiểm tra trang cài đặt (0: RTC, 1: Timer s1, 2: Chess s2, 3: Stopwatch)
+        lw    $t0, V_TPAGE($zero)       # Kiểm tra trang cài đặt (0: RTC, 1: ALARM, 2: SW, 3: TMR, 4: CHESS R)
         beq   $t0, $zero, st_in_rtc
         addiu $t1, $zero, 1
-        beq   $t0, $t1, st_in_tmr
+        beq   $t0, $t1, st_in_alm
         addiu $t1, $zero, 2
-        beq   $t0, $t1, st_in_chess_r
-        j     st_in_sw
+        beq   $t0, $t1, st_in_sw
+        addiu $t1, $zero, 3
+        beq   $t0, $t1, st_in_tmr
+        j     st_in_chess_r
 
 st_in_rtc:
         mtc0  $zero, $12                # Tắt ngắt để đọc nguyên tử cặp MS và DAY
@@ -61,6 +63,32 @@ st_in_rtc:
 set_y:  sw    $a1, V_SY($zero)          # Năm hiện tại (độ lệch từ 2000)
         addu  $t4, $zero, $zero         # Bắt đầu từ trường 0 (Giờ)
         j     st_f
+
+st_in_alm:
+        lw    $t4, V_ALK($zero)         # Kênh đang chọn: 0..3: AL1..AL4, 4: Chime
+        sll   $t6, $t4, 2
+        addiu $t6, $t6, REG_ALARM0
+        addiu $t1, $zero, 4
+        beq   $t4, $t1, st_ia_chime
+        lw    $t0, 0($t6)
+        andi  $t0, $t0, 0x7ff          # Phút trong ngày
+        addiu $t1, $zero, 60
+        div   $t0, $t1
+        mflo  $t2
+        sw    $t2, V_AEH($zero)         # Giờ báo thức
+        mfhi  $t2
+        sw    $t2, V_AEM($zero)         # Phút báo thức
+        j     st_ia_sf
+st_ia_chime:
+        addu  $t2, $zero, $zero
+        sw    $t2, V_AEH($zero)
+        sw    $t2, V_AEM($zero)
+st_ia_sf:
+        addu  $t4, $zero, $zero         # Bắt đầu từ trường 0 (Kênh: AL1..AL4 / Chime)
+        sw    $t4, V_SF($zero)
+        addiu $t0, $zero, 0x20          # Nháy ô DISP5 (Kênh số: 1..4)
+        sw    $t0, REG_BLINK_MASK($zero)
+        jr    $s7
 
 st_in_tmr:
         lw    $t0, V_TMR_SUBMODE($zero) # Đọc chế độ Timer hiện tại (0: Single, 1: Chess)
@@ -120,10 +148,12 @@ st_btn: addu  $s7, $ra, $zero
         lw    $t0, V_TPAGE($zero)
         beq   $t0, $zero, st_btn_rtc
         addiu $t1, $zero, 1
-        beq   $t0, $t1, st_btn_tmr
+        beq   $t0, $t1, st_btn_alm
         addiu $t1, $zero, 2
-        beq   $t0, $t1, st_btn_chess_r
-        j     st_btn_sw
+        beq   $t0, $t1, st_btn_sw
+        addiu $t1, $zero, 3
+        beq   $t0, $t1, st_btn_tmr
+        j     st_btn_chess_r
 
 st_btn_rtc:
         lw    $t4, V_SF($zero)          # Trường hiện đang chỉnh sửa (0..5)
@@ -374,6 +404,109 @@ st_cr_sv: # Nút C: Lưu cấu hình s2 của Đấu thủ Phải và thoát v�
         sw    $t0, V_MODE($zero)
         jr    $s7
 
+st_btn_alm:
+        lw    $t4, V_SF($zero)          # Trường đang chỉnh: 0: Kênh, 1: Giờ, 2: Phút
+        addiu $t1, $zero, 2
+        beq   $a0, $t1, st_alm_b        # Phím B: Chuyển trường 0 -> 1 -> 2 -> 0
+        addiu $t1, $zero, 3
+        beq   $a0, $t1, st_alm_sv       # Phím C: Lưu và thoát về ALARM (Mode 1)
+
+        # Phím A: Tăng giá trị
+        bne   $t4, $zero, st_alm_a1
+        # Trường 0: Đổi kênh (0..4: AL1 -> AL2 -> AL3 -> AL4 -> Chime -> AL1)
+        lw    $t2, V_ALK($zero)
+        addiu $t2, $t2, 1
+        addiu $t1, $zero, 5
+        bne   $t2, $t1, st_alm_a0_sv
+        addu  $t2, $zero, $zero
+st_alm_a0_sv:
+        sw    $t2, V_ALK($zero)
+        # Nạp lại giờ/phút tương ứng của kênh mới
+        sll   $t6, $t2, 2
+        addiu $t6, $t6, REG_ALARM0
+        addiu $t1, $zero, 4
+        beq   $t2, $t1, st_alm_a0_ch
+        lw    $t0, 0($t6)
+        andi  $t0, $t0, 0x7ff
+        addiu $t1, $zero, 60
+        div   $t0, $t1
+        mflo  $t3
+        sw    $t3, V_AEH($zero)
+        mfhi  $t3
+        sw    $t3, V_AEM($zero)
+        jr    $s7
+st_alm_a0_ch:
+        addu  $t3, $zero, $zero
+        sw    $t3, V_AEH($zero)
+        sw    $t3, V_AEM($zero)
+        jr    $s7
+
+st_alm_a1:
+        addiu $t1, $zero, 1
+        bne   $t4, $t1, st_alm_a2
+        # Trường 1: Tăng Giờ (0..23)
+        lw    $t0, V_AEH($zero)
+        addiu $t0, $t0, 1
+        addiu $t1, $zero, 24
+        bne   $t0, $t1, st_alm_a1_sv
+        addu  $t0, $zero, $zero
+st_alm_a1_sv:
+        sw    $t0, V_AEH($zero)
+        jr    $s7
+
+st_alm_a2:
+        # Trường 2: Tăng Phút (0..59)
+        lw    $t0, V_AEM($zero)
+        addiu $t0, $t0, 1
+        addiu $t1, $zero, 60
+        bne   $t0, $t1, st_alm_a2_sv
+        addu  $t0, $zero, $zero
+st_alm_a2_sv:
+        sw    $t0, V_AEM($zero)
+        jr    $s7
+
+st_alm_b:
+        # Nút B: Xoay vòng trường (0: Kênh -> 1: Giờ -> 2: Phút -> 0)
+        addiu $t4, $t4, 1
+        addiu $t1, $zero, 3
+        bne   $t4, $t1, st_alm_b1
+        addu  $t4, $zero, $zero
+st_alm_b1:
+        sw    $t4, V_SF($zero)
+        addiu $t0, $zero, 0x20          # 0: Nháy ô DISP5 (Kênh)
+        beq   $t4, $zero, st_alm_b_mask
+        addiu $t0, $zero, 0x0c          # 1: Nháy DISP3, DISP2 (Giờ)
+        addiu $t1, $zero, 1
+        beq   $t4, $t1, st_alm_b_mask
+        addiu $t0, $zero, 0x03          # 2: Nháy DISP1, DISP0 (Phút)
+st_alm_b_mask:
+        sw    $t0, REG_BLINK_MASK($zero)
+        jr    $s7
+
+st_alm_sv:
+        # Nút C: Lưu cấu hình Báo thức và thoát về MODE_ALARM (Mode 1)
+        lw    $t4, V_ALK($zero)
+        addiu $t1, $zero, 4
+        beq   $t4, $t1, st_alm_sv_done  # Chime không cần lưu phút
+        sll   $t6, $t4, 2
+        addiu $t6, $t6, REG_ALARM0
+        lw    $t0, 0($t6)
+        lui   $t1, 0xff00
+        and   $t0, $t0, $t1             # Bảo tồn cờ EN và DAYMASK
+        lw    $t2, V_AEH($zero)
+        addiu $t1, $zero, 60
+        mul   $t2, $t2, $t1
+        lw    $t1, V_AEM($zero)
+        addu  $t2, $t2, $t1             # Tổng số phút trong ngày
+        or    $t0, $t0, $t2
+        sw    $t0, 0($t6)               # Ghi lại thanh ghi phần cứng
+st_alm_sv_done:
+        sw    $zero, REG_BLINK_MASK($zero)
+        sw    $zero, V_TPAGE($zero)
+        addiu $t0, $zero, MODE_ALARM
+        sw    $t0, V_MODE($zero)
+        jr    $s7
+
 st_btn_sw:
         addiu $t1, $zero, 3
         beq   $a0, $t1, st_sw_sv        # Nút C: Lưu Stopwatch Mode và thoát về STOPWATCH
@@ -499,10 +632,62 @@ yd3:    lw    $t0, V_SD($zero)
 dr_st:  lw    $t0, V_TPAGE($zero)
         beq   $t0, $zero, dr_st_rtc
         addiu $t1, $zero, 1
-        beq   $t0, $t1, dr_st_tmr
+        beq   $t0, $t1, dr_st_alm
         addiu $t1, $zero, 2
-        beq   $t0, $t1, dr_st_chess_r
-        j     dr_st_sw
+        beq   $t0, $t1, dr_st_sw
+        addiu $t1, $zero, 3
+        beq   $t0, $t1, dr_st_tmr
+        j     dr_st_chess_r
+
+dr_st_alm:
+        # Hiển thị AL k  HH.MM (hoặc CH o    cho Chime)
+        lw    $t4, V_ALK($zero)
+        addiu $t1, $zero, 4
+        beq   $t4, $t1, dr_sta_chime
+        addiu $t0, $zero, 0x0a          # 'A'
+        sw    $t0, D7($zero)
+        addiu $t0, $zero, 0x11          # 'L'
+        sw    $t0, D6($zero)
+        addiu $t0, $t4, 1               # Kênh 1..4
+        sw    $t0, D5($zero)
+        addiu $t0, $zero, CHAR_BLANK
+        sw    $t0, D4($zero)
+        # Giờ (D3, D2 có dấu chấm)
+        lw    $t0, V_AEH($zero)
+        addiu $t1, $zero, 10
+        div   $t0, $t1
+        mflo  $t2
+        sw    $t2, D3($zero)
+        mfhi  $t2
+        ori   $t2, $t2, CHAR_DP
+        sw    $t2, D2($zero)
+        # Phút (D1, D0)
+        lw    $t0, V_AEM($zero)
+        div   $t0, $t1
+        mflo  $t2
+        sw    $t2, D1($zero)
+        mfhi  $t2
+        sw    $t2, D0($zero)
+        j     dr_out
+dr_sta_chime:
+        addiu $t0, $zero, 0x0c          # 'C'
+        sw    $t0, D7($zero)
+        addiu $t0, $zero, 0x10          # 'H'
+        sw    $t0, D6($zero)
+        addiu $t0, $zero, CHAR_BLANK
+        sw    $t0, D5($zero)
+        lw    $t2, V_CHIME($zero)
+        addiu $t0, $zero, CHAR_BLANK
+        beq   $t2, $zero, dr_sta_ch1
+        addiu $t0, $zero, 0x13          # 'o'
+dr_sta_ch1:
+        sw    $t0, D4($zero)
+        addiu $t0, $zero, CHAR_BLANK
+        sw    $t0, D3($zero)
+        sw    $t0, D2($zero)
+        sw    $t0, D1($zero)
+        sw    $t0, D0($zero)
+        j     dr_out
 
 dr_st_rtc:
         lw    $t0, V_SF($zero)

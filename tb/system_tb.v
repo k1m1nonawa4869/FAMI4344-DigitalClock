@@ -422,6 +422,56 @@ module system_tb;
         press(B_B);                                      // về giờ
         done(1, "nua dem, ngay/thu, 12h, giay.ms, trang ngay");
 
+        // ---- sys_5: báo thức 07:00 thứ 2 → kêu đúng phút; snooze 5 phút; tự tắt sau 60 s; Chủ nhật không kêu
+        press(B_MODE);
+        checkf(fr, fAL(1, 0, 420), "ALARM: AL1 07.00 tat");
+        press(B_A);
+        checkf(fr, fAL(1, 1, 420), "A: AL1 bat");
+        k = nal;
+        warp(25199990, 9774, 1);                         // Thứ 2 05/10/2026 06:59:59.990
+        v2 = cyc;
+        while (nal == k && cyc < v2 + 5000) @(negedge clk);
+        check(dut.ms == 25200000 && dut.dow == 1, "HIT dung 07:00:00.000 thu 2");
+        while (dut.u_beep.pat != P_ALARM && dut.ms < 25200000 + 40) @(negedge clk);
+        check(dut.u_beep.pat == P_ALARM, "firmware keu 0x10F0F trong 40 ms");
+        $display("  bao thuc: HIT o ms %0d, chuong o ms %0d", 25200000, dut.ms);
+        press(B_C);                                      // snooze
+        v1 = ms_edge;
+        check(dut.u_beep.pat == 17'd0, "C: tat chuong (snooze)");
+        warp(v1 + 300000 - 20, 9774, 1);
+        while (dut.u_beep.pat != P_ALARM && dut.ms < v1 + 300000 + 100) @(negedge clk);
+        ring_ms = dut.ms;
+        check(ring_ms >= v1 + 300000 && ring_ms <= v1 + 300000 + 40, "snooze: keu lai 5 phut sau luc nhan C");
+        $display("  snooze: nhan C o ms %0d, keu lai o ms %0d (+%0d ms)", v1, ring_ms, ring_ms - v1);
+        warp(ring_ms + 60000 - 20, 9774, 1);
+        while (dut.u_beep.pat != 17'd0 && dut.ms < ring_ms + 60000 + 100) @(negedge clk);
+        off_ms = dut.ms;
+        check(dut.u_beep.pat == 17'd0 && off_ms >= ring_ms + 59999 && off_ms <= ring_ms + 60040,
+              "chuong tu tat sau 60 s");
+        k = nal;
+        warp(25199990, 9780, 0);                         // Chủ nhật 11/10/2026 06:59:59.990
+        wait_ms(100);
+        check(nal == k && dut.u_beep.pat != P_ALARM, "Chu nhat: khong keu (DAYMASK)");
+        for (i = 0; i < 4; i = i + 1) press(B_B);        // → trang chuông giờ
+        checkf(fr, {8'h0C, 8'h10, 8'h1A, 8'h1A, 8'h1A, 8'h1A, 8'h1A, 8'h1A}, "trang chuong gio (tat)");
+        press(B_A);
+        check(fr[39:32] == 8'h13, "A: chuong gio bat");
+        warp(28799990, 9780, 0);                         // 07:59:59.990
+        while (dut.u_beep.pat != 17'h00005 && dut.ms < 28800000 + 60) @(negedge clk);
+        check(dut.u_beep.pat == 17'h00005 && dut.ms >= 28800000, "chuong gio 0x00005 khi qua 08:00");
+        press(B_B);                                      // về AL1
+        press(B_C);                                      // sửa giờ báo thức AL1 (đang bật, 07:00)
+        check(dut.u_disp.blink_mask == 8'h0C, "sua bao thuc: gio nhay (0x0C)");
+        press(B_A);
+        press(B_B);
+        check(dut.u_disp.blink_mask == 8'h03, "sua bao thuc: phut nhay (0x03)");
+        press(B_A);
+        checkf(fr, fAL(1, 1, 481), "dang sua: 08.01");
+        press(B_C);
+        check(dut.u_disp.blink_mask == 8'h00, "luu: het nhay");
+        checkf(fr, fAL(1, 1, 481), "luu: AL1 doc lai tu ALARM0 = 08.01, van bat");
+        done(5, "bao thuc, snooze, tu tat, Chu nhat, chuong gio, sua gio");
+
         // ---- sys_2: stopwatch start/stop cách nhau 1234,56 ms (61 728 chu kỳ), nút có rung
         press(B_MODE);
         check(dut.u_sw.src == 1'b1, "vao STOPWATCH: SRC = 1");
@@ -574,56 +624,6 @@ module system_tb;
         check(fr == 64'h0082000000820000, "Chess sau rematch reset: 02.00 02.00");
 
         done(4, "timer ve 0 dung ms, chuong, so am");
-
-        // ---- sys_5: báo thức 07:00 thứ 2 → kêu đúng phút; snooze 5 phút; tự tắt sau 60 s; Chủ nhật không kêu
-        press(B_MODE);
-        checkf(fr, fAL(1, 0, 420), "ALARM: AL1 07.00 tat");
-        press(B_A);
-        checkf(fr, fAL(1, 1, 420), "A: AL1 bat");
-        k = nal;
-        warp(25199990, 9774, 1);                         // Thứ 2 05/10/2026 06:59:59.990
-        v2 = cyc;
-        while (nal == k && cyc < v2 + 5000) @(negedge clk);
-        check(dut.ms == 25200000 && dut.dow == 1, "HIT dung 07:00:00.000 thu 2");
-        while (dut.u_beep.pat != P_ALARM && dut.ms < 25200000 + 40) @(negedge clk);
-        check(dut.u_beep.pat == P_ALARM, "firmware keu 0x10F0F trong 40 ms");
-        $display("  bao thuc: HIT o ms %0d, chuong o ms %0d", 25200000, dut.ms);
-        press(B_C);                                      // snooze
-        v1 = ms_edge;
-        check(dut.u_beep.pat == 17'd0, "C: tat chuong (snooze)");
-        warp(v1 + 300000 - 20, 9774, 1);
-        while (dut.u_beep.pat != P_ALARM && dut.ms < v1 + 300000 + 100) @(negedge clk);
-        ring_ms = dut.ms;
-        check(ring_ms >= v1 + 300000 && ring_ms <= v1 + 300000 + 40, "snooze: keu lai 5 phut sau luc nhan C");
-        $display("  snooze: nhan C o ms %0d, keu lai o ms %0d (+%0d ms)", v1, ring_ms, ring_ms - v1);
-        warp(ring_ms + 60000 - 20, 9774, 1);
-        while (dut.u_beep.pat != 17'd0 && dut.ms < ring_ms + 60000 + 100) @(negedge clk);
-        off_ms = dut.ms;
-        check(dut.u_beep.pat == 17'd0 && off_ms >= ring_ms + 59999 && off_ms <= ring_ms + 60040,
-              "chuong tu tat sau 60 s");
-        k = nal;
-        warp(25199990, 9780, 0);                         // Chủ nhật 11/10/2026 06:59:59.990
-        wait_ms(100);
-        check(nal == k && dut.u_beep.pat != P_ALARM, "Chu nhat: khong keu (DAYMASK)");
-        for (i = 0; i < 4; i = i + 1) press(B_B);        // → trang chuông giờ
-        checkf(fr, {8'h0C, 8'h10, 8'h1A, 8'h1A, 8'h1A, 8'h1A, 8'h1A, 8'h1A}, "trang chuong gio (tat)");
-        press(B_A);
-        check(fr[39:32] == 8'h13, "A: chuong gio bat");
-        warp(28799990, 9780, 0);                         // 07:59:59.990
-        while (dut.u_beep.pat != 17'h00005 && dut.ms < 28800000 + 60) @(negedge clk);
-        check(dut.u_beep.pat == 17'h00005 && dut.ms >= 28800000, "chuong gio 0x00005 khi qua 08:00");
-        press(B_B);                                      // về AL1
-        press(B_C);                                      // sửa giờ báo thức AL1 (đang bật, 07:00)
-        check(dut.u_disp.blink_mask == 8'h0C, "sua bao thuc: gio nhay (0x0C)");
-        press(B_A);
-        press(B_B);
-        check(dut.u_disp.blink_mask == 8'h03, "sua bao thuc: phut nhay (0x03)");
-        press(B_A);
-        checkf(fr, fAL(1, 1, 481), "dang sua: 08.01");
-        press(B_C);
-        check(dut.u_disp.blink_mask == 8'h00, "luu: het nhay");
-        checkf(fr, fAL(1, 1, 481), "luu: AL1 doc lai tu ALARM0 = 08.01, van bat");
-        done(5, "bao thuc, snooze, tu tat, Chu nhat, chuong gio, sua gio");
 
         // ---- sys_6: SET: trường nháy (BLINK_MASK), giờ 23 + 1 → 0, lưu; ngày +1 → thứ đúng
         warp(84615000, 9780, 0);                         // 23:30:15.000

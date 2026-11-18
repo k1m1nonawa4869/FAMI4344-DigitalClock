@@ -84,14 +84,14 @@ ev_norm: addiu $t1, $zero, 1
         lw    $t3, V_MODE($zero)
         bne   $a0, $zero, ev_btn        # Các nút A, B, C: Định tuyến vào chế độ hiện tại
 
-        # Nếu đang ở SET (Mode 4): Nút MODE chuyển giữa các trang SET (0 -> 1 -> 2 -> 3 -> Mode 0)
+        # Nếu đang ở SET (Mode 4): Nút MODE chuyển giữa các trang SET (0 -> 1 -> 2 -> 3 -> 4 -> Mode 0)
         addiu $t1, $zero, 4
         bne   $t3, $t1, em_mode_norm
         lw    $t4, V_TPAGE($zero)
         addiu $t4, $t4, 1
-        addiu $t1, $zero, 4
+        addiu $t1, $zero, 5
         bne   $t4, $t1, em_set_page
-        # Quá trang 3: Thoát SET về TIME (Mode 0)
+        # Quá trang 4 (5 trang: 0..4): Thoát SET về TIME (Mode 0)
         sw    $zero, V_MODE($zero)
         sw    $zero, V_TPAGE($zero)
         sw    $zero, REG_BLINK_MASK($zero)
@@ -101,8 +101,8 @@ em_set_page:
         j     set_in                    # Nạp ngữ cảnh tương ứng cho trang mới
 
 em_mode_norm:
-        # Nút MODE: Chuyển đổi trạng thái FSM (TIME -> SW -> TMR -> ALARM -> SET -> TIME)
-        addiu $t1, $zero, 1
+        # Nút MODE: Chuyển đổi trạng thái FSM (TIME 0 -> ALARM 1 -> SW 2 -> TMR 3 -> SET 4 -> TIME 0)
+        addiu $t1, $zero, 2             # Rời STOPWATCH: Mode 2
         bne   $t3, $t1, em1
         lw    $t0, REG_SW_CTRL($zero)   # Rời STOPWATCH: Tắt SRC=0, giữ nguyên cờ RUN
         andi  $t0, $t0, 1
@@ -116,7 +116,7 @@ em1:    sw    $zero, REG_BLINK_MASK($zero) # Tắt nhấp nháy LED
         bne   $t3, $t1, em2
         addu  $t3, $zero, $zero         # Quá 4: Quay về chế độ 0 (TIME)
 em2:    sw    $t3, V_MODE($zero)
-        addiu $t1, $zero, 1
+        addiu $t1, $zero, 2             # Vào STOPWATCH: Mode 2
         bne   $t3, $t1, em3
         addiu $t0, $zero, 4
         sw    $t0, REG_SW_CTRL($zero)   # Vào STOPWATCH: Bật SRC=1 (phần cứng capture trực tiếp)
@@ -125,14 +125,14 @@ em3:    addiu $t1, $zero, 4
         beq   $t3, $t1, set_in          # Vào SET: Nạp giờ hiện tại vào các trường chỉnh sửa
         jr    $ra
 
-ev_btn: beq   $t3, $zero, tm_btn        # Chế độ TIME
+ev_btn: beq   $t3, $zero, tm_btn        # Chế độ 0: TIME
         addiu $t1, $zero, 1
-        beq   $t3, $t1, sw_btn          # Chế độ STOPWATCH
+        beq   $t3, $t1, al_btn          # Chế độ 1: ALARM (ngay sau TIME)
         addiu $t1, $zero, 2
-        beq   $t3, $t1, tr_btn          # Chế độ TIMER
+        beq   $t3, $t1, sw_btn          # Chế độ 2: STOPWATCH
         addiu $t1, $zero, 3
-        beq   $t3, $t1, al_btn          # Chế độ ALARM
-        j     st_btn                    # Chế độ SET
+        beq   $t3, $t1, tr_btn          # Chế độ 3: TIMER / CHESS
+        j     st_btn                    # Chế độ 4: SET
 
 # ============================================================================
 # NHÚNG CÁC MÔ-ĐUN HỢP NGỮ THEO CHẾ ĐỘ HOẠT ĐỘNG
@@ -149,14 +149,14 @@ ev_btn: beq   $t3, $zero, tm_btn        # Chế độ TIME
 # ============================================================================
 draw:   addu  $s7, $ra, $zero
         lw    $t3, V_MODE($zero)
-        beq   $t3, $zero, dr_tm
+        beq   $t3, $zero, dr_tm         # Chế độ 0: TIME
         addiu $t1, $zero, 1
-        beq   $t3, $t1, dr_sw
+        beq   $t3, $t1, dr_al           # Chế độ 1: ALARM
         addiu $t1, $zero, 2
-        beq   $t3, $t1, dr_tr
+        beq   $t3, $t1, dr_sw           # Chế độ 2: STOPWATCH
         addiu $t1, $zero, 3
-        beq   $t3, $t1, dr_al
-        j     dr_st
+        beq   $t3, $t1, dr_tr           # Chế độ 3: TIMER
+        j     dr_st                     # Chế độ 4: SET
 dr_out: jal   flush
         jr    $s7
 

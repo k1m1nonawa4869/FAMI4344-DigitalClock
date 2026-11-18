@@ -24,9 +24,9 @@
 # 1. CÁC HẰNG SỐ CHẾ ĐỘ MÁY TRẠNG THÁI (FSM MODES)
 # ----------------------------------------------------------------------------
         .eqv  MODE_TIME         0               # Chế độ 0: Xem và hiển thị đồng hồ thời gian thực
-        .eqv  MODE_STOPWATCH    1               # Chế độ 1: Bấm giờ thể thao lưu 8 Lap cứng
-        .eqv  MODE_TIMER        2               # Chế độ 2: Hẹn giờ đếm lùi bù âm
-        .eqv  MODE_ALARM        3               # Chế độ 3: Quản lý 4 mốc báo thức và chuông giờ
+        .eqv  MODE_ALARM        1               # Chế độ 1: Quản lý 4 mốc báo thức và chuông giờ (ngay sau TIME)
+        .eqv  MODE_STOPWATCH    2               # Chế độ 2: Bấm giờ thể thao lưu Lap (Upward Timer)
+        .eqv  MODE_TIMER        3               # Chế độ 3: Hẹn giờ đếm lùi bù âm & Cờ vua (Downward Timer)
         .eqv  MODE_SET          4               # Chế độ 4: Chỉnh giờ thủ công nhấp nháy 2 Hz
 
 # ----------------------------------------------------------------------------

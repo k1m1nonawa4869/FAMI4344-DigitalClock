@@ -157,8 +157,8 @@ tr_c:   lw    $t6, V_TMR_SUBMODE($zero)
         bne   $t3, $zero, tr_ret        # Đang tạm dừng: Bấm C tiếp tục giữ Pause
 
         # Đang dừng tĩnh (chưa chạy / đã reset 0): Vào SET cài đặt thời gian
-        addiu $t0, $zero, 1
-        sw    $t0, V_TPAGE($zero)       # Chuyển sang trang Cài đặt Timer trong SET (V_TPAGE = 1)
+        addiu $t0, $zero, 3
+        sw    $t0, V_TPAGE($zero)       # Chuyển sang trang Cài đặt Timer trong SET (V_TPAGE = 3)
         addiu $t0, $zero, MODE_SET
         sw    $t0, V_MODE($zero)        # Chuyển FSM sang chế độ SET (4)
         j     set_in                    # Gọi thủ tục khởi tạo SET
