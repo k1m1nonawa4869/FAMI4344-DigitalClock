@@ -20,7 +20,7 @@ Với mỗi chương trình:
   2. Icarus chạy tb/cpu_g1_tb.v → dump 32 GPR, DMEM, số lệnh; trace isa-spec §8 → work/cosim/<tên>.csv
   3. MARS chạy cùng file (smc, bước giới hạn) → 32 GPR, vùng nhớ, số lệnh (ic).
   4. So: GPR $1..$31, vùng nhớ (mặc định 0x800-0xff8), số lệnh; file `# nomars` chỉ so `# expect`.
-Dòng cuối: PASS cosim_mars <n> hoặc FAIL. Luật viết chương trình: fw/tests/cpu/README.md.
+Dòng cuối: PASS cosim_mars <n> hoặc FAIL. Luật viết chương trình: docs/PROJECT_KNOWLEDGE_MAP.md (§5).
 """
 import os
 import random
