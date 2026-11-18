@@ -241,69 +241,56 @@ dw_d0_done:
         sw    $t0, D3($zero)
 
         # D2, D1, D0: 3 ký tự viết tắt ngày trong tuần (MON, TUE, WED, THU, FRI, SAT, SUN)
+        # Tối ưu hóa đóng gói 3 mã ký tự vào từ 24-bit: (D2 << 16) | (D1 << 8) | D0
         lw    $t4, REG_DAY_SHADOW($zero)
         sra   $t2, $t4, 16
         andi  $t2, $t2, 7
 
-        # 0: SUN (S, U, n -> 0x16, 0x18, 0x12)
-        bne   $t2, $zero, dw_not_sun
-        addiu $t0, $zero, 0x16          # 'S'
-        addiu $t8, $zero, 0x18          # 'U'
-        addiu $t9, $zero, 0x12          # 'n'
-        j     dw_done
+        # 0: SUN (S=0x16, U=0x18, n=0x12 -> 0x00161812)
+        lui   $t0, 0x16
+        ori   $t0, $t0, 0x1812
+        beq   $t2, $zero, dw_done
 
-dw_not_sun:
-        # 1: MON (M, o, n -> 0x1B, 0x13, 0x12)
+        # 1: MON (M=0x1B, o=0x13, n=0x12 -> 0x001B1312)
         addiu $t1, $zero, 1
-        bne   $t2, $t1, dw_not_mon
-        addiu $t0, $zero, CHAR_M        # 'M'
-        addiu $t8, $zero, 0x13          # 'o'
-        addiu $t9, $zero, 0x12          # 'n'
-        j     dw_done
+        lui   $t0, 0x1B
+        ori   $t0, $t0, 0x1312
+        beq   $t2, $t1, dw_done
 
-dw_not_mon:
-        # 2: TUE (t, U, E -> 0x17, 0x18, 0x0E)
+        # 2: TUE (t=0x17, U=0x18, E=0x0E -> 0x0017180E)
         addiu $t1, $zero, 2
-        bne   $t2, $t1, dw_not_tue
-        addiu $t0, $zero, CHAR_T        # 't'
-        addiu $t8, $zero, 0x18          # 'U'
-        addiu $t9, $zero, 0x0E          # 'E'
-        j     dw_done
+        lui   $t0, 0x17
+        ori   $t0, $t0, 0x180E
+        beq   $t2, $t1, dw_done
 
-dw_not_tue:
-        # 3: WED (W, E, d -> 0x1C, 0x0E, 0x0D)
+        # 3: WED (W=0x1C, E=0x0E, d=0x0D -> 0x001C0E0D)
         addiu $t1, $zero, 3
-        bne   $t2, $t1, dw_not_wed
-        addiu $t0, $zero, CHAR_W        # 'W'
-        addiu $t8, $zero, 0x0E          # 'E'
-        addiu $t9, $zero, 0x0D          # 'd'
-        j     dw_done
+        lui   $t0, 0x1C
+        ori   $t0, $t0, 0x0E0D
+        beq   $t2, $t1, dw_done
 
-dw_not_wed:
-        # 4: THU (t, H, U -> 0x17, 0x10, 0x18)
+        # 4: THU (t=0x17, H=0x10, U=0x18 -> 0x00171018)
         addiu $t1, $zero, 4
-        bne   $t2, $t1, dw_not_thu
-        addiu $t0, $zero, CHAR_T        # 't'
-        addiu $t8, $zero, 0x10          # 'H'
-        addiu $t9, $zero, 0x18          # 'U'
-        j     dw_done
+        lui   $t0, 0x17
+        ori   $t0, $t0, 0x1018
+        beq   $t2, $t1, dw_done
 
-dw_not_thu:
-        # 5: FRI (F, r, 1 -> 0x0F, 0x15, 0x01)
+        # 5: FRI (F=0x0F, r=0x15, 1=0x01 -> 0x000F1501)
         addiu $t1, $zero, 5
-        bne   $t2, $t1, dw_sat
-        addiu $t0, $zero, 0x0F          # 'F'
-        addiu $t8, $zero, 0x15          # 'r'
-        addiu $t9, $zero, 0x01          # '1'
-        j     dw_done
+        lui   $t0, 0x0F
+        ori   $t0, $t0, 0x1501
+        beq   $t2, $t1, dw_done
 
-dw_sat: # 6: SAT (S, A, t -> 0x16, 0x0A, 0x17)
-        addiu $t0, $zero, 0x16          # 'S'
-        addiu $t8, $zero, 0x0A          # 'A'
-        addiu $t9, $zero, CHAR_T        # 't'
+        # 6: SAT (S=0x16, A=0x0A, t=0x17 -> 0x00160A17)
+        lui   $t0, 0x16
+        ori   $t0, $t0, 0x0A17
 
 dw_done:
-        sw    $t0, D2($zero)
-        sw    $t8, D1($zero)
+        andi  $t9, $t0, 0xff
         sw    $t9, D0($zero)
+        sra   $t0, $t0, 8
+        andi  $t9, $t0, 0xff
+        sw    $t9, D1($zero)
+        sra   $t0, $t0, 8
+        sw    $t0, D2($zero)
         j     dr_out

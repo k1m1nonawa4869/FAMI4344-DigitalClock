@@ -235,6 +235,15 @@ st_sv:  jal   ymd2d                     # Nút C: Tính tổng số ngày từ 0
         sw    $zero, REG_BLINK_MASK($zero) # Tắt nhấp nháy LED
         jr    $s7
 
+# inc_var: Helper dùng chung tăng trường modulo $t1 cho biến tại $a2
+inc_var:
+        lw    $t0, 0($a2)
+        addiu $t0, $t0, 1
+        bne   $t0, $t1, iv1
+        addu  $t0, $zero, $zero
+iv1:    sw    $t0, 0($a2)
+        jr    $s7
+
 st_btn_tmr:
         lw    $t4, V_SF($zero)          # 0: Giờ, 1: Phút, 2: Giây, 3: Chế độ t1/t2
         addiu $t1, $zero, 2
@@ -242,40 +251,25 @@ st_btn_tmr:
         addiu $t1, $zero, 3
         beq   $a0, $t1, st_tm_sv        # Nút C: Lưu preset và thoát về TIMER
 
-        # Nút A: Tăng giá trị (+1) trường đang chọn
+        # Nút A: Tăng giá trị (+1) trường đang chọn (dùng helper inc_var)
         bne   $t4, $zero, st_tm_a_m
-        lw    $t0, V_TPH($zero)         # Tăng Giờ (0..99)
-        addiu $t0, $t0, 1
+        addiu $a2, $zero, V_TPH
         addiu $t1, $zero, 100
-        bne   $t0, $t1, st_tm_a_h1
-        addu  $t0, $zero, $zero
-st_tm_a_h1:
-        sw    $t0, V_TPH($zero)
-        jr    $s7
+        j     inc_var
 
 st_tm_a_m:
         addiu $t1, $zero, 1
         bne   $t4, $t1, st_tm_a_s
-        lw    $t0, V_TPM($zero)         # Tăng Phút (0..59)
-        addiu $t0, $t0, 1
+        addiu $a2, $zero, V_TPM
         addiu $t1, $zero, 60
-        bne   $t0, $t1, st_tm_a_m1
-        addu  $t0, $zero, $zero
-st_tm_a_m1:
-        sw    $t0, V_TPM($zero)
-        jr    $s7
+        j     inc_var
 
 st_tm_a_s:
         addiu $t1, $zero, 2
         bne   $t4, $t1, st_tm_a_sub
-        lw    $t0, V_TPS($zero)         # Tăng Giây (0..59)
-        addiu $t0, $t0, 1
+        addiu $a2, $zero, V_TPS
         addiu $t1, $zero, 60
-        bne   $t0, $t1, st_tm_a_s1
-        addu  $t0, $zero, $zero
-st_tm_a_s1:
-        sw    $t0, V_TPS($zero)
-        jr    $s7
+        j     inc_var
 
 st_tm_a_sub:
         # Trường 3: Đảo chế độ Timer (0: Single t1 <-> 1: Chess t2)
@@ -357,26 +351,16 @@ st_btn_chess_r:
         addiu $t1, $zero, 3
         beq   $a0, $t1, st_cr_sv        # Nút C: Lưu s2 và thoát về TIMER
 
-        # Nút A: Tăng giá trị (+1) trường đang chọn
+        # Nút A: Tăng giá trị (+1) trường đang chọn (dùng helper inc_var)
         bne   $t4, $zero, st_cr_a_s
-        lw    $t0, V_TPR_M($zero)       # Tăng Phút (0..59)
-        addiu $t0, $t0, 1
+        addiu $a2, $zero, V_TPR_M
         addiu $t1, $zero, 60
-        bne   $t0, $t1, st_cr_a_m1
-        addu  $t0, $zero, $zero
-st_cr_a_m1:
-        sw    $t0, V_TPR_M($zero)
-        jr    $s7
+        j     inc_var
 
 st_cr_a_s:
-        lw    $t0, V_TPR_S($zero)       # Tăng Giây (0..59)
-        addiu $t0, $t0, 1
+        addiu $a2, $zero, V_TPR_S
         addiu $t1, $zero, 60
-        bne   $t0, $t1, st_cr_a_s1
-        addu  $t0, $zero, $zero
-st_cr_a_s1:
-        sw    $t0, V_TPR_S($zero)
-        jr    $s7
+        j     inc_var
 
 st_cr_b: # Nút B: Đổi trường xoay vòng (0 <-> 1)
         addiu $t1, $zero, 1
@@ -445,26 +429,14 @@ st_alm_a0_ch:
 st_alm_a1:
         addiu $t1, $zero, 1
         bne   $t4, $t1, st_alm_a2
-        # Trường 1: Tăng Giờ (0..23)
-        lw    $t0, V_AEH($zero)
-        addiu $t0, $t0, 1
+        addiu $a2, $zero, V_AEH
         addiu $t1, $zero, 24
-        bne   $t0, $t1, st_alm_a1_sv
-        addu  $t0, $zero, $zero
-st_alm_a1_sv:
-        sw    $t0, V_AEH($zero)
-        jr    $s7
+        j     inc_var
 
 st_alm_a2:
-        # Trường 2: Tăng Phút (0..59)
-        lw    $t0, V_AEM($zero)
-        addiu $t0, $t0, 1
+        addiu $a2, $zero, V_AEM
         addiu $t1, $zero, 60
-        bne   $t0, $t1, st_alm_a2_sv
-        addu  $t0, $zero, $zero
-st_alm_a2_sv:
-        sw    $t0, V_AEM($zero)
-        jr    $s7
+        j     inc_var
 
 st_alm_b:
         # Nút B: Xoay vòng trường (0: Kênh -> 1: Giờ -> 2: Phút -> 0)
@@ -667,23 +639,10 @@ dr_st_alm:
         sw    $t0, D5($zero)
         addiu $t0, $zero, CHAR_BLANK
         sw    $t0, D4($zero)
-        # Giờ (D3, D2 có dấu chấm)
+        # Giờ (D3, D2 có DP) và Phút (D1, D0): Tái sử dụng thường trình dùng chung dr_st_mmss
         lw    $t0, V_AEH($zero)
-        addiu $t1, $zero, 10
-        div   $t0, $t1
-        mflo  $t2
-        sw    $t2, D3($zero)
-        mfhi  $t2
-        ori   $t2, $t2, CHAR_DP
-        sw    $t2, D2($zero)
-        # Phút (D1, D0)
-        lw    $t0, V_AEM($zero)
-        div   $t0, $t1
-        mflo  $t2
-        sw    $t2, D1($zero)
-        mfhi  $t2
-        sw    $t2, D0($zero)
-        j     dr_out
+        lw    $a2, V_AEM($zero)
+        j     dr_st_mmss
 dr_sta_chime:
         addiu $t0, $zero, 0x0c          # 'C'
         sw    $t0, D7($zero)
