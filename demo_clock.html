@@ -1148,8 +1148,8 @@
             <input type="number" id="inp-tmr-hr" min="0" max="99" value="0">
           </div>
           <div class="timer-input-item">
-            <label>Phút (0..59)</label>
-            <input type="number" id="inp-tmr-min" min="0" max="59" value="5">
+            <label>Phút (0..99)</label>
+            <input type="number" id="inp-tmr-min" min="0" max="99" value="5">
           </div>
           <div class="timer-input-item">
             <label>Giây (0..59)</label>
@@ -1172,6 +1172,7 @@
           <span style="font-size:0.72rem; color:#e3b341; align-self:center; font-weight:bold; margin-left:6px;">Cờ Vua (FIDE & Chấp giờ):</span>
           <button class="timer-pill" style="border-color:#e3b341; color:#f0e6d2;" onclick="quickFillChess(3)">♟️ 3m Blitz</button>
           <button class="timer-pill" style="border-color:#e3b341; color:#f0e6d2;" onclick="quickFillChess(5)">♟️ 5m Blitz</button>
+          <button class="timer-pill" style="border-color:#e3b341; color:#f0e6d2;" onclick="quickFillChess(99)">♟️ 99m Max</button>
           <button class="timer-pill" style="border-color:#e3b341; color:#f0e6d2;" onclick="quickFillChessOdds(5, 3)">⚡ Chấp: 5m vs 3m</button>
           <button class="timer-pill" style="border-color:#e3b341; color:#f0e6d2;" onclick="quickFillChessOdds(3, 1)">⚡ Chấp: 3m vs 1m</button>
         </div>
@@ -1744,16 +1745,16 @@ t = 0 ms
           if (chessDiv) chessDiv.classList.add('active');
           const tag = document.getElementById('chess-divider-tag');
           if (tag) {
-            tag.textContent = STATE.tmrChessActive === 1 ? '◄ L' : (STATE.tmrChessActive === 2 ? 'R ►' : 'VS');
-            tag.style.color = STATE.tmrChessActive === 1 ? '#39ff14' : (STATE.tmrChessActive === 2 ? '#38bdf8' : '#8b949e');
+            tag.textContent = STATE.chessAct === 1 ? '◄ L' : (STATE.chessAct === 2 ? 'R ►' : 'VS');
+            tag.style.color = STATE.chessAct === 1 ? '#39ff14' : (STATE.chessAct === 2 ? '#38bdf8' : '#8b949e');
           }
           setSep('sep-7-6', 'none');
-          const isLMin = Math.abs(STATE.tmrChessLRemainMs) >= 60000;
+          const isLMin = Math.abs(STATE.chessL) >= 60000;
           setSep('sep-6-5', isLMin ? 'colon' : 'dot', true);
           setSep('sep-5-4', 'none');
           setSep('sep-4-3', 'none');
           setSep('sep-3-2', 'none');
-          const isRMin = Math.abs(STATE.tmrChessRRemainMs) >= 60000;
+          const isRMin = Math.abs(STATE.chessR) >= 60000;
           setSep('sep-2-1', isRMin ? 'colon' : 'dot', true);
         } else {
           const absMs = Math.abs(STATE.tmrRemainMs);
@@ -1917,10 +1918,10 @@ t = 0 ms
           const rSubMin = Math.abs(STATE.chessR) < 60000;
           html = `
             <div class="sub-label-cell" style="width:260px; margin-right:32px; color:${lAct ? '#39ff14' : (lNeg ? '#f85149' : '#58a6ff')}; font-weight:${lAct ? 'bold' : 'normal'};">
-              [S7..S4: ${lNeg ? 'QUÁ GIỜ (-S.cc.)' : (lSubMin ? 'GIÂY.CENTI (SS.cc.)' : 'PHÚT.GIÂY (MM.SS)')}] - ĐẤU THỦ A ${lAct ? '▶ ĐANG CHẠY' : (lNeg ? '⚠️ HẾT GIỜ' : '')}
+              [S7..S4: ${lNeg ? 'QUÁ GIỜ (-S.cc)' : (lSubMin ? 'GIÂY.CENTI (SS.cc)' : 'PHÚT:GIÂY (MM:SS)')}] - ĐẤU THỦ A ${lAct ? '▶ ĐANG CHẠY' : (lNeg ? '⚠️ HẾT GIỜ' : '')}
             </div>
             <div class="sub-label-cell" style="width:260px; color:${rAct ? '#39ff14' : (rNeg ? '#f85149' : '#58a6ff')}; font-weight:${rAct ? 'bold' : 'normal'};">
-              [S3..S0: ${rNeg ? 'QUÁ GIỜ (-S.cc.)' : (rSubMin ? 'GIÂY.CENTI (SS.cc.)' : 'PHÚT.GIÂY (MM.SS)')}] - ĐẤU THỦ C ${rAct ? '▶ ĐANG CHẠY' : (rNeg ? '⚠️ HẾT GIỜ' : '')}
+              [S3..S0: ${rNeg ? 'QUÁ GIỜ (-S.cc)' : (rSubMin ? 'GIÂY.CENTI (SS.cc)' : 'PHÚT:GIÂY (MM:SS)')}] - ĐẤU THỦ C ${rAct ? '▶ ĐANG CHẠY' : (rNeg ? '⚠️ HẾT GIỜ' : '')}
             </div>
           `;
         } else {
@@ -2218,9 +2219,9 @@ t = 0 ms
                 chars[startIdx + 0] = (cs % 10).toString();
                 dps[startIdx + 0] = true;
               } else {
-                // >= 1 phút: MM.SS (chỉ có chấm ở D2)
+                // >= 1 phút: MM:SS (chỉ có chấm/hai chấm ở D2, tối đa 99 phút)
                 const totalSec = Math.floor(absVal / 1000);
-                const min = Math.floor(totalSec / 60) % 60;
+                const min = Math.min(Math.floor(totalSec / 60), 99);
                 const sec = totalSec % 60;
                 chars[startIdx + 3] = Math.floor(min / 10).toString();
                 chars[startIdx + 2] = (min % 10).toString();
@@ -2566,6 +2567,23 @@ t = 0 ms
         document.getElementById(`ann-${m}`).classList.toggle('active', STATE.mode === idx);
       });
       document.getElementById('ann-bell').classList.toggle('active', STATE.hourlyChime);
+
+      const flagEl = document.getElementById('flag-fmt');
+      if (flagEl) {
+        if (STATE.mode === 0) {
+          const viewNames = ['12H AM/PM', '24H + CS (0.01s)', 'NGÀY (DD.MM.YYYY)', 'TUẦN & THỨ (W## DOW)'];
+          flagEl.textContent = `${viewNames[STATE.timeView]} | THỜI GIAN THẬT`;
+        } else if (STATE.mode === 1) {
+          flagEl.textContent = 'ALARM | BÁO THỨC & CHIME';
+        } else if (STATE.mode === 2) {
+          flagEl.textContent = `STOPWATCH | ${STATE.swMode === '99lap' ? '99 LAPS' : '09 LAPS'}`;
+        } else if (STATE.mode === 3) {
+          flagEl.textContent = STATE.tmrSubmode === 'chess' ? 'CỜ VUA KÉP (CHESS) | ĐẤU THỦ A & C' : 'TIMER | ĐẾM LÙI';
+        } else if (STATE.mode === 4) {
+          flagEl.textContent = `CÀI ĐẶT (SET) | TRANG ${STATE.tPage + 1}`;
+        }
+      }
+
       updateButtonDescriptions();
     }
 
@@ -2603,9 +2621,9 @@ t = 0 ms
         }
       } else if (m === 3) { // TMR
         if (STATE.tmrSubmode === 'chess') {
-          dA.textContent = STATE.tmrChessActive === 1 ? 'ĐẤU THỦ TRÁI [Đang chạy] - Bấm C để chuyển lượt' : 'ĐẤU THỦ TRÁI: Nhấn để Chạy / Chuyển lượt [Phím A]';
+          dA.textContent = STATE.chessAct === 1 ? 'ĐẤU THỦ TRÁI [Đang chạy] - Bấm C để chuyển lượt' : 'ĐẤU THỦ TRÁI: Nhấn để Chạy / Chuyển lượt [Phím A]';
           dB.textContent = '1 lần = Tạm dừng cả 2 | 3 lần nhanh = Tái đấu (Rematch Reset)';
-          dC.textContent = STATE.tmrChessActive === 2 ? 'ĐẤU THỦ PHẢI [Đang chạy] - Bấm A để chuyển lượt' : 'ĐẤU THỦ PHẢI: Nhấn để Chạy / Chuyển lượt [Phím C]';
+          dC.textContent = STATE.chessAct === 2 ? 'ĐẤU THỦ PHẢI [Đang chạy] - Bấm A để chuyển lượt' : 'ĐẤU THỦ PHẢI: Nhấn để Chạy / Chuyển lượt [Phím C]';
         } else {
           if (STATE.tmrRunning) {
             dA.textContent = 'BẮT ĐẦU (Start) đếm ngược [Đang chạy]';
@@ -2811,7 +2829,8 @@ t = 0 ms
           if (STATE.setField === 0) {
             STATE.tmrSetHr = (STATE.tmrSetHr + 1) % 100;
           } else if (STATE.setField === 1) {
-            STATE.tmrSetMin = (STATE.tmrSetMin + 1) % 60;
+            const maxM = STATE.tmrSubmode === 'chess' ? 100 : 60;
+            STATE.tmrSetMin = (STATE.tmrSetMin + 1) % maxM;
           } else if (STATE.setField === 2) {
             STATE.tmrSetSec = (STATE.tmrSetSec + 1) % 60;
           } else if (STATE.setField === 3) {
@@ -2822,7 +2841,7 @@ t = 0 ms
           }
         } else if (STATE.tPage === 4) { // SET CHESS s2 (Clock C / Đấu thủ Phải)
           if (STATE.setField === 0) {
-            STATE.chessRSetMin = (STATE.chessRSetMin + 1) % 60;
+            STATE.chessRSetMin = (STATE.chessRSetMin + 1) % 100; // Hỗ trợ tối đa 99 phút (0..99)
           } else {
             STATE.chessRSetSec = (STATE.chessRSetSec + 1) % 60;
           }

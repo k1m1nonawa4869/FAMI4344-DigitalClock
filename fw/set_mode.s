@@ -120,6 +120,11 @@ st_in_chess_r:
         ori   $t1, $zero, 60000
         div   $t0, $t1
         mflo  $t2                       # Phút = V_CHESS_R_INIT / 60.000
+        ori   $t4, $zero, 99
+        slt   $t3, $t4, $t2
+        beq   $t3, $zero, st_in_cr_ok
+        addu  $t2, $zero, $t4           # Bão hòa tại 99 phút
+st_in_cr_ok:
         sw    $t2, V_TPR_M($zero)
         mfhi  $t0                       # Số ms dư trong phút
         ori   $t1, $zero, 1000
@@ -261,7 +266,12 @@ st_tm_a_m:
         addiu $t1, $zero, 1
         bne   $t4, $t1, st_tm_a_s
         addiu $a2, $zero, V_TPM
-        addiu $t1, $zero, 60
+        lw    $t2, V_TP_SUB($zero)
+        beq   $t2, $zero, st_tm_a_m60
+        addiu $t1, $zero, 100           # Tối đa 99 phút (0..99) cho cờ vua kép
+        j     inc_var
+st_tm_a_m60:
+        addiu $t1, $zero, 60            # 0..59 cho single timer
         j     inc_var
 
 st_tm_a_s:
@@ -354,7 +364,7 @@ st_btn_chess_r:
         # Nút A: Tăng giá trị (+1) trường đang chọn (dùng helper inc_var)
         bne   $t4, $zero, st_cr_a_s
         addiu $a2, $zero, V_TPR_M
-        addiu $t1, $zero, 60
+        addiu $t1, $zero, 100           # Tối đa 99 phút (0..99) cho cờ vua kép
         j     inc_var
 
 st_cr_a_s:

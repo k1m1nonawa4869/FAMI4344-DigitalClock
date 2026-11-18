@@ -307,8 +307,13 @@ fmt_chess_side:
         mflo  $t0                       # t0 = tổng số giây
         addiu $t1, $zero, 60
         div   $t0, $t1
-        mflo  $t2                       # t2 = Phút (0..59)
+        mflo  $t2                       # t2 = Phút (0..99)
         mfhi  $t3                       # t3 = Giây (0..59)
+        ori   $t4, $zero, 99
+        slt   $t5, $t4, $t2
+        beq   $t5, $zero, fcs_min_ok
+        addu  $t2, $zero, $t4           # Bão hòa tại tối đa 99 phút
+fcs_min_ok:
 
         addiu $t1, $zero, 10
         div   $t2, $t1
