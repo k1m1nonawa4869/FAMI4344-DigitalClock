@@ -3,21 +3,24 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>WatchChip SoC — Trình Mô Phỏng Vi Mạch Đồng Hồ Số (Zero-Install Interactive Web Demo)</title>
+  <title>WatchChip SoC — Trình Mô Phỏng Vi Mạch Đồng Hồ Số (Interactive Web Demo)</title>
   <style>
     :root {
-      --bg-color: #0d1117;
-      --card-bg: #161b22;
-      --border-color: #30363d;
-      --led-off: rgba(255, 30, 30, 0.06);
+      --bg-color: #0b0f14;
+      --card-bg: #141922;
+      --border-color: #2b3240;
+      --led-off: rgba(255, 42, 42, 0.05);
       --led-on: #ff2a2a;
-      --led-glow: rgba(255, 42, 42, 0.6);
-      --led-green-off: rgba(40, 255, 100, 0.06);
+      --led-glow: rgba(255, 42, 42, 0.65);
+      --led-green-off: rgba(57, 255, 20, 0.05);
       --led-green-on: #39ff14;
-      --led-green-glow: rgba(57, 255, 20, 0.6);
+      --led-green-glow: rgba(57, 255, 20, 0.65);
       --accent: #58a6ff;
+      --accent-glow: rgba(88, 166, 255, 0.35);
       --text: #c9d1d9;
       --text-muted: #8b949e;
+      --term-bg: #05070a;
+      --term-text: #39ff14;
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -34,13 +37,15 @@
 
     header {
       text-align: center;
-      max-width: 900px;
+      max-width: 920px;
       margin-bottom: 24px;
     }
     header h1 {
-      font-size: 1.8rem;
+      font-size: 1.85rem;
       color: #f0f6fc;
       margin-bottom: 8px;
+      font-weight: 800;
+      letter-spacing: -0.5px;
     }
     header p {
       font-size: 0.95rem;
@@ -52,23 +57,23 @@
       background: #238636;
       color: #fff;
       font-size: 0.75rem;
-      font-weight: 600;
-      padding: 3px 8px;
+      font-weight: 700;
+      padding: 4px 10px;
       border-radius: 12px;
-      margin-bottom: 8px;
+      margin-bottom: 10px;
       text-transform: uppercase;
-      letter-spacing: 0.5px;
+      letter-spacing: 0.6px;
     }
 
     /* Watch Chassis */
     .watch-case {
-      background: linear-gradient(145deg, #21262d, #161b22);
-      border: 3px solid #30363d;
+      background: linear-gradient(160deg, #1c222d, #12161f);
+      border: 3px solid #2d3545;
       border-radius: 20px;
-      padding: 32px 28px;
-      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8), inset 0 1px 1px rgba(255,255,255,0.1);
+      padding: 28px 24px;
+      box-shadow: 0 24px 60px rgba(0, 0, 0, 0.85), inset 0 1px 2px rgba(255,255,255,0.08);
       width: 100%;
-      max-width: 860px;
+      max-width: 900px;
       position: relative;
     }
 
@@ -77,50 +82,52 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
-      border-bottom: 2px solid #30363d;
-      padding-bottom: 12px;
-      margin-bottom: 20px;
+      border-bottom: 2px solid var(--border-color);
+      padding-bottom: 14px;
+      margin-bottom: 18px;
     }
     .brand-logo {
-      font-weight: 800;
-      letter-spacing: 1.5px;
+      font-weight: 900;
+      letter-spacing: 2px;
       color: #f0f6fc;
-      font-size: 1.1rem;
+      font-size: 1.15rem;
     }
     .brand-logo span { color: #f85149; }
     .mode-annunciators {
       display: flex;
-      gap: 10px;
+      gap: 8px;
     }
     .ann-item {
-      font-size: 0.75rem;
+      font-size: 0.72rem;
       font-weight: 700;
       color: #484f58;
-      padding: 2px 8px;
+      padding: 3px 9px;
       border-radius: 4px;
-      border: 1px solid #30363d;
+      border: 1px solid #28303e;
+      background: #0d1117;
       transition: all 0.15s ease;
+      letter-spacing: 0.5px;
     }
     .ann-item.active {
       color: #58a6ff;
       border-color: #58a6ff;
       background: rgba(88, 166, 255, 0.15);
-      box-shadow: 0 0 10px rgba(88, 166, 255, 0.3);
+      box-shadow: 0 0 12px var(--accent-glow);
     }
     .ann-item.bell.active {
       color: #ffab70;
       border-color: #ffab70;
       background: rgba(255, 171, 112, 0.15);
-      box-shadow: 0 0 10px rgba(255, 171, 112, 0.3);
+      box-shadow: 0 0 12px rgba(255, 171, 112, 0.35);
     }
 
     /* Screen Bezel */
     .screen-bezel {
-      background: #05070a;
-      border: 2px solid #21262d;
-      border-radius: 12px;
-      padding: 24px 20px 20px;
-      box-shadow: inset 0 4px 15px rgba(0, 0, 0, 0.9);
+      background: #040608;
+      border: 2px solid #1a202c;
+      border-radius: 14px;
+      padding: 22px 18px 18px;
+      box-shadow: inset 0 4px 20px rgba(0, 0, 0, 0.95);
       position: relative;
     }
 
@@ -128,129 +135,153 @@
       display: flex;
       justify-content: space-between;
       color: #484f58;
-      font-size: 0.78rem;
-      font-weight: 600;
-      margin-bottom: 12px;
-      text-transform: uppercase;
-      letter-spacing: 1px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      margin-bottom: 14px;
+      letter-spacing: 0.8px;
     }
     .status-flag.on {
       color: #39ff14;
-      text-shadow: 0 0 8px rgba(57, 255, 20, 0.5);
+      text-shadow: 0 0 8px rgba(57, 255, 20, 0.6);
     }
 
-    /* 7-Segment SVG Display */
+    /* 7-Segment SVG Display Row (8 digits, zero artificial colons) */
     .digits-row {
       display: flex;
       justify-content: center;
       align-items: center;
-      gap: 8px;
+      gap: 12px;
       user-select: none;
+      padding: 10px 0;
     }
-    .digit-group {
+
+    .digit-col {
       display: flex;
-      gap: 4px;
-    }
-    .separator {
-      font-size: 2.5rem;
-      color: #ff2a2a;
-      opacity: 0.9;
-      font-weight: bold;
-      margin-top: -10px;
-      text-shadow: 0 0 12px rgba(255, 42, 42, 0.7);
-    }
-    .separator.off {
-      opacity: 0.1;
-      text-shadow: none;
+      flex-direction: column;
+      align-items: center;
+      width: 54px;
     }
 
     /* SVG Segments Styling */
     .seg-digit {
-      width: 58px;
-      height: 98px;
-      display: inline-block;
+      width: 54px;
+      height: 88px;
+      display: block;
+      transform: skewX(-5deg);
+      overflow: visible;
     }
     .seg-digit polygon, .seg-digit circle {
       fill: var(--led-off);
-      transition: fill 0.05s ease;
+      transition: fill 0.04s ease;
     }
     .seg-digit.theme-green polygon, .seg-digit.theme-green circle {
       fill: var(--led-green-off);
     }
     .seg-digit polygon.lit {
       fill: var(--led-on);
-      filter: drop-shadow(0 0 4px var(--led-glow));
+      filter: drop-shadow(0 0 5px var(--led-glow));
     }
     .seg-digit.theme-green polygon.lit {
       fill: var(--led-green-on);
-      filter: drop-shadow(0 0 4px var(--led-green-glow));
+      filter: drop-shadow(0 0 5px var(--led-green-glow));
     }
     .seg-digit circle.lit {
       fill: var(--led-on);
-      filter: drop-shadow(0 0 4px var(--led-glow));
+      filter: drop-shadow(0 0 5px var(--led-glow));
     }
     .seg-digit.theme-green circle.lit {
       fill: var(--led-green-on);
-      filter: drop-shadow(0 0 4px var(--led-green-glow));
+      filter: drop-shadow(0 0 5px var(--led-green-glow));
     }
 
-    /* Sub-indicator labels */
-    .sub-labels {
+    /* Brightness level multiplier */
+    .dim-15 { opacity: 1.0; }
+    .dim-9  { opacity: 0.65; }
+    .dim-3  { opacity: 0.35; }
+
+    /* Aligned Dynamic Sub-Labels directly below each digit */
+    .sub-labels-row {
       display: flex;
-      justify-content: space-around;
+      justify-content: center;
+      align-items: center;
+      gap: 12px;
+      margin-top: 8px;
+    }
+    .sub-label-cell {
+      width: 54px;
+      text-align: center;
       color: #6e7681;
-      font-size: 0.7rem;
-      margin-top: 10px;
-      font-weight: 600;
-      letter-spacing: 0.8px;
+      font-size: 0.68rem;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      white-space: nowrap;
+      height: 18px;
+      line-height: 18px;
+    }
+    .sub-label-cell.span-2 {
+      width: 120px; /* 54*2 + 12 = 120px */
+    }
+    .sub-label-cell.span-3 {
+      width: 186px; /* 54*3 + 12*2 = 186px */
     }
 
-    /* Pushbuttons Grid */
+    /* Dynamic Sub-Labels Container */
+    #sublabels-container {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 12px;
+      margin-top: 10px;
+    }
+
+    /* Pushbuttons Grid (4 buttons: MODE, A, B, C) */
     .controls-panel {
       display: grid;
       grid-template-columns: repeat(4, 1fr);
-      gap: 16px;
-      margin-top: 28px;
+      gap: 14px;
+      margin-top: 24px;
     }
     .btn-card {
-      background: #1c2128;
-      border: 1px solid #30363d;
+      background: #181d26;
+      border: 1px solid #2b3240;
       border-radius: 12px;
       padding: 14px 10px;
       display: flex;
       flex-direction: column;
       align-items: center;
       text-align: center;
-      transition: transform 0.05s ease, background 0.15s ease;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4);
+      transition: all 0.15s ease;
     }
     .btn-card:hover {
-      border-color: #58a6ff;
+      border-color: #444d60;
+      background: #1c222d;
     }
     .hardware-btn {
-      width: 60px;
-      height: 60px;
+      width: 56px;
+      height: 56px;
       border-radius: 50%;
-      border: 3px solid #484f58;
-      background: linear-gradient(145deg, #30363d, #21262d);
+      background: linear-gradient(145deg, #28303d, #1a202a);
+      border: 2px solid #3d4758;
+      box-shadow: 0 6px 0 #0d1117, 0 8px 12px rgba(0,0,0,0.6);
       color: #f0f6fc;
-      font-size: 1.1rem;
+      font-size: 1.05rem;
       font-weight: 800;
       cursor: pointer;
-      box-shadow: 0 6px 0 #161b22, 0 8px 12px rgba(0,0,0,0.5);
-      transition: all 0.08s ease;
       display: flex;
       align-items: center;
       justify-content: center;
       outline: none;
       margin-bottom: 8px;
       user-select: none;
+      transition: transform 0.06s ease, box-shadow 0.06s ease, background 0.06s ease;
     }
     .hardware-btn:active, .hardware-btn.pressed {
-      transform: translateY(5px);
-      box-shadow: 0 1px 0 #161b22, 0 3px 6px rgba(0,0,0,0.6);
+      transform: translateY(4px);
+      box-shadow: 0 2px 0 #0d1117, 0 4px 6px rgba(0,0,0,0.6);
       border-color: #58a6ff;
-      background: #58a6ff;
-      color: #0d1117;
+      background: #1f6feb;
+      color: #fff;
     }
     .btn-name {
       font-size: 0.82rem;
@@ -261,16 +292,16 @@
     .btn-desc {
       font-size: 0.7rem;
       color: var(--text-muted);
-      line-height: 1.25;
-      min-height: 28px;
+      line-height: 1.3;
+      min-height: 32px;
     }
     .btn-key {
       display: inline-block;
       margin-top: 6px;
       font-size: 0.65rem;
-      background: #30363d;
+      background: #28303e;
       color: #8b949e;
-      padding: 2px 6px;
+      padding: 2px 7px;
       border-radius: 4px;
       font-family: monospace;
     }
@@ -281,74 +312,169 @@
       flex-wrap: wrap;
       justify-content: space-between;
       align-items: center;
-      margin-top: 24px;
-      padding-top: 16px;
-      border-top: 1px solid #30363d;
+      margin-top: 20px;
+      padding-top: 14px;
+      border-top: 1px solid #28303e;
       gap: 12px;
     }
     .sim-group {
       display: flex;
       align-items: center;
       gap: 8px;
-      font-size: 0.85rem;
+      font-size: 0.82rem;
     }
     .pill-btn {
-      background: #21262d;
-      border: 1px solid #30363d;
+      background: #1c222d;
+      border: 1px solid #2d3545;
       color: var(--text);
-      padding: 6px 12px;
+      padding: 5px 12px;
       border-radius: 6px;
-      font-size: 0.8rem;
+      font-size: 0.78rem;
+      font-weight: 600;
       cursor: pointer;
       transition: all 0.15s ease;
     }
     .pill-btn:hover {
-      background: #30363d;
+      background: #28303e;
       color: #fff;
     }
     .pill-btn.active {
       background: #1f6feb;
       border-color: #58a6ff;
       color: #fff;
+      box-shadow: 0 0 10px rgba(88, 166, 255, 0.4);
+    }
+
+    /* Live Terminal Console (tools/screen.py Exact Mirror) */
+    .terminal-card {
+      width: 100%;
+      max-width: 900px;
+      margin-top: 24px;
+      background: var(--term-bg);
+      border: 2px solid #22272e;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 16px 40px rgba(0, 0, 0, 0.75);
+    }
+    .terminal-header {
+      background: #161b22;
+      border-bottom: 1px solid #30363d;
+      padding: 10px 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .terminal-title {
+      font-size: 0.82rem;
+      font-weight: 700;
+      color: #c9d1d9;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-family: monospace;
+    }
+    .terminal-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      display: inline-block;
+    }
+    .dot-red { background: #f85149; }
+    .dot-yellow { background: #e3b341; }
+    .dot-green { background: #238636; }
+    .terminal-controls {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+    .term-btn {
+      background: #21262d;
+      border: 1px solid #30363d;
+      color: #8b949e;
+      font-size: 0.72rem;
+      padding: 3px 8px;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    .term-btn:hover, .term-btn.active {
+      background: #30363d;
+      color: #f0f6fc;
+    }
+    .terminal-body {
+      padding: 16px;
+      font-family: "Courier New", Courier, Consolas, Monaco, monospace;
+      color: var(--term-text);
+      font-size: 0.85rem;
+      line-height: 1.45;
+      background: radial-gradient(circle at 50% 50%, #080c10 0%, #030406 100%);
+      min-height: 130px;
+    }
+    .ascii-big-display {
+      white-space: pre;
+      color: #39ff14;
+      font-size: 1.05rem;
+      line-height: 1.15;
+      font-weight: bold;
+      text-shadow: 0 0 6px rgba(57, 255, 20, 0.4);
+      user-select: text;
+    }
+    .terminal-stream-log {
+      max-height: 140px;
+      overflow-y: auto;
+      font-size: 0.78rem;
+      line-height: 1.4;
+      color: #8b949e;
+      display: none;
+    }
+    .terminal-stream-log .log-line {
+      white-space: pre;
+    }
+    .terminal-stream-log .log-line.active {
+      color: #39ff14;
+      font-weight: bold;
+    }
+    .terminal-stream-log .log-line.tear {
+      color: #ff7b72;
     }
 
     /* Presets Quick Testing */
     .presets-card {
       width: 100%;
-      max-width: 860px;
+      max-width: 900px;
       margin-top: 24px;
       background: var(--card-bg);
       border: 1px solid var(--border-color);
       border-radius: 12px;
-      padding: 20px;
+      padding: 18px 20px;
     }
     .presets-card h3 {
-      font-size: 1.05rem;
+      font-size: 1.0rem;
       color: #f0f6fc;
       margin-bottom: 12px;
       display: flex;
       align-items: center;
       gap: 8px;
+      font-weight: 700;
     }
     .presets-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
       gap: 10px;
     }
     .preset-btn {
-      background: #21262d;
-      border: 1px solid #30363d;
+      background: #181d26;
+      border: 1px solid #2b3240;
       color: #c9d1d9;
       padding: 10px 12px;
       border-radius: 8px;
       text-align: left;
-      font-size: 0.8rem;
+      font-size: 0.78rem;
       cursor: pointer;
       transition: all 0.15s ease;
     }
     .preset-btn:hover {
       border-color: #58a6ff;
-      background: #1c2128;
+      background: #1e2430;
       color: #58a6ff;
     }
     .preset-title {
@@ -358,325 +484,340 @@
     }
 
     /* Hardware Register Inspector */
-    .inspector-card {
+    .registers-card {
       width: 100%;
-      max-width: 860px;
-      margin-top: 20px;
+      max-width: 900px;
+      margin-top: 24px;
       background: var(--card-bg);
       border: 1px solid var(--border-color);
       border-radius: 12px;
-      padding: 20px;
+      padding: 18px 20px;
     }
-    .inspector-card h3 {
-      font-size: 1.05rem;
+    .registers-card h3 {
+      font-size: 1.0rem;
       color: #f0f6fc;
-      margin-bottom: 14px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
+      margin-bottom: 12px;
+      font-weight: 700;
     }
     .reg-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
-      gap: 10px;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 8px;
       font-family: monospace;
-      font-size: 0.8rem;
+      font-size: 0.78rem;
     }
-    .reg-box {
+    .reg-cell {
       background: #0d1117;
-      border: 1px solid #30363d;
+      border: 1px solid #21262d;
+      padding: 7px 10px;
       border-radius: 6px;
-      padding: 8px 10px;
+      display: flex;
+      justify-content: space-between;
     }
-    .reg-label { color: #8b949e; font-size: 0.72rem; }
-    .reg-val { color: #7ee787; font-weight: 700; font-size: 0.95rem; margin-top: 2px; }
+    .reg-name { color: #8b949e; }
+    .reg-val { color: #58a6ff; font-weight: bold; }
 
     footer {
-      margin-top: 32px;
+      margin-top: 36px;
       text-align: center;
-      font-size: 0.8rem;
       color: var(--text-muted);
-      line-height: 1.6;
+      font-size: 0.8rem;
+      max-width: 900px;
+      line-height: 1.5;
     }
-    footer a { color: var(--accent); text-decoration: none; }
-    footer a:hover { text-decoration: underline; }
 
-    @media (max-width: 700px) {
-      .seg-digit { width: 38px; height: 68px; }
-      .separator { font-size: 1.8rem; }
+    @media (max-width: 680px) {
+      .digits-row { gap: 6px; }
+      .digit-col { width: 38px; }
+      .seg-digit { width: 38px; height: 62px; }
       .controls-panel { grid-template-columns: repeat(2, 1fr); }
-      .hardware-btn { width: 50px; height: 50px; }
+      .sub-label-cell { font-size: 0.58rem; width: 38px; }
     }
   </style>
 </head>
 <body>
 
   <header>
-    <div class="badge">HUST MI4344 / IT3283 – Kiến trúc Máy tính</div>
+    <div class="badge">HUST MI4344 / IT3283 — KIẾN TRÚC MÁY TÍNH</div>
     <h1>WatchChip SoC — Trình Mô Phỏng Vi Mạch Đồng Hồ Số</h1>
-    <p>Trải nghiệm tương tác trực tiếp 100% thời gian thực không cần cài đặt công cụ. Mô phỏng chính xác hoạt động của SoC MIPS 32-bit: Quét LED 7 thanh đa hợp, 5 chế độ hoạt động, bắt sự kiện 0-ns, đếm quá giờ âm và hiệu chỉnh tinh thể PPM.</p>
+    <p>Trải nghiệm tương tác trực tiếp 100% thời gian thực không cần cài đặt. Mô phỏng chính xác kiến trúc vi xử lý MIPS 32-bit: Quét LED 7 thanh đa hợp, 5 chế độ hoạt động FSM, bắt sự kiện 0-ns, đếm quá giờ âm và bám sát hiển thị terminal <code>tools/screen.py</code>.</p>
   </header>
 
-  <!-- Main Watch Case -->
-  <div class="watch-case">
-    <!-- Brand & Annunciators -->
+  <!-- Watch Chassis -->
+  <main class="watch-case">
+    <!-- Top Brand Plate -->
     <div class="brand-plate">
-      <div class="brand-logo">WATCH<span>CHIP</span> <span style="font-size:0.75rem; color:#8b949e; font-weight:normal;">SoC v2.0</span></div>
+      <div class="brand-logo">WATCH<span>CHIP</span> SoC <span style="font-size:0.75rem; color:#8b949e; font-weight:normal;">v2.0</span></div>
       <div class="mode-annunciators">
-        <div id="ann-time" class="ann-item active">TIME</div>
-        <div id="ann-stpw" class="ann-item">STPW</div>
-        <div id="ann-tmr"  class="ann-item">TMR</div>
-        <div id="ann-alm"  class="ann-item">ALM</div>
-        <div id="ann-set"  class="ann-item">SET</div>
-        <div id="ann-bell" class="ann-item bell">🔔 CHIME</div>
+        <div class="ann-item active" id="ann-time">TIME</div>
+        <div class="ann-item" id="ann-stpw">STPW</div>
+        <div class="ann-item" id="ann-tmr">TMR</div>
+        <div class="ann-item" id="ann-alm">ALM</div>
+        <div class="ann-item" id="ann-set">SET</div>
+        <div class="ann-item bell" id="ann-bell">🔔 CHIME</div>
       </div>
     </div>
 
     <!-- Screen Bezel -->
     <div class="screen-bezel">
+      <!-- Status flags bar -->
       <div class="status-bar">
-        <div><span id="flag-24h" class="status-flag on">24H</span> | <span id="flag-secms" class="status-flag">SEC.MS</span></div>
-        <div><span id="flag-alarm-active" class="status-flag">ALARM ON</span> | <span id="flag-sound" class="status-flag">AUDIO ON</span></div>
+        <span id="flag-fmt" class="status-flag on">24H | THỜI GIAN THẬT</span>
+        <span id="flag-alm" class="status-flag on">BÁO THỨC: BẬT | AUDIO ON</span>
       </div>
 
-      <!-- 8-Digit Display Row -->
-      <div class="digits-row" id="display-row">
-        <!-- Digit 7 -->
-        <svg class="seg-digit" id="d7" viewBox="0 0 60 100">
-          <polygon id="d7-a" points="12,8  48,8  42,16 18,16" />
-          <polygon id="d7-b" points="49,10 56,17 52,48 45,43" />
-          <polygon id="d7-c" points="49,52 56,57 51,90 44,83" />
-          <polygon id="d7-d" points="12,92 48,92 42,84 18,84" />
-          <polygon id="d7-e" points="4,57  11,52 16,83  9,90" />
-          <polygon id="d7-f" points="4,17  11,10 16,43  9,48" />
-          <polygon id="d7-g" points="14,46 46,46 42,53 18,53" />
-          <circle  id="d7-dp" cx="54" cy="92" r="3.5" />
-        </svg>
-        <!-- Digit 6 -->
-        <svg class="seg-digit" id="d6" viewBox="0 0 60 100">
-          <polygon id="d6-a" points="12,8  48,8  42,16 18,16" />
-          <polygon id="d6-b" points="49,10 56,17 52,48 45,43" />
-          <polygon id="d6-c" points="49,52 56,57 51,90 44,83" />
-          <polygon id="d6-d" points="12,92 48,92 42,84 18,84" />
-          <polygon id="d6-e" points="4,57  11,52 16,83  9,90" />
-          <polygon id="d6-f" points="4,17  11,10 16,43  9,48" />
-          <polygon id="d6-g" points="14,46 46,46 42,53 18,53" />
-          <circle  id="d6-dp" cx="54" cy="92" r="3.5" />
-        </svg>
-
-        <div class="separator" id="sep1">:</div>
-
-        <!-- Digit 5 -->
-        <svg class="seg-digit" id="d5" viewBox="0 0 60 100">
-          <polygon id="d5-a" points="12,8  48,8  42,16 18,16" />
-          <polygon id="d5-b" points="49,10 56,17 52,48 45,43" />
-          <polygon id="d5-c" points="49,52 56,57 51,90 44,83" />
-          <polygon id="d5-d" points="12,92 48,92 42,84 18,84" />
-          <polygon id="d5-e" points="4,57  11,52 16,83  9,90" />
-          <polygon id="d5-f" points="4,17  11,10 16,43  9,48" />
-          <polygon id="d5-g" points="14,46 46,46 42,53 18,53" />
-          <circle  id="d5-dp" cx="54" cy="92" r="3.5" />
-        </svg>
-        <!-- Digit 4 -->
-        <svg class="seg-digit" id="d4" viewBox="0 0 60 100">
-          <polygon id="d4-a" points="12,8  48,8  42,16 18,16" />
-          <polygon id="d4-b" points="49,10 56,17 52,48 45,43" />
-          <polygon id="d4-c" points="49,52 56,57 51,90 44,83" />
-          <polygon id="d4-d" points="12,92 48,92 42,84 18,84" />
-          <polygon id="d4-e" points="4,57  11,52 16,83  9,90" />
-          <polygon id="d4-f" points="4,17  11,10 16,43  9,48" />
-          <polygon id="d4-g" points="14,46 46,46 42,53 18,53" />
-          <circle  id="d4-dp" cx="54" cy="92" r="3.5" />
-        </svg>
-
-        <div class="separator" id="sep2">:</div>
-
-        <!-- Digit 3 -->
-        <svg class="seg-digit" id="d3" viewBox="0 0 60 100">
-          <polygon id="d3-a" points="12,8  48,8  42,16 18,16" />
-          <polygon id="d3-b" points="49,10 56,17 52,48 45,43" />
-          <polygon id="d3-c" points="49,52 56,57 51,90 44,83" />
-          <polygon id="d3-d" points="12,92 48,92 42,84 18,84" />
-          <polygon id="d3-e" points="4,57  11,52 16,83  9,90" />
-          <polygon id="d3-f" points="4,17  11,10 16,43  9,48" />
-          <polygon id="d3-g" points="14,46 46,46 42,53 18,53" />
-          <circle  id="d3-dp" cx="54" cy="92" r="3.5" />
-        </svg>
-        <!-- Digit 2 -->
-        <svg class="seg-digit" id="d2" viewBox="0 0 60 100">
-          <polygon id="d2-a" points="12,8  48,8  42,16 18,16" />
-          <polygon id="d2-b" points="49,10 56,17 52,48 45,43" />
-          <polygon id="d2-c" points="49,52 56,57 51,90 44,83" />
-          <polygon id="d2-d" points="12,92 48,92 42,84 18,84" />
-          <polygon id="d2-e" points="4,57  11,52 16,83  9,90" />
-          <polygon id="d2-f" points="4,17  11,10 16,43  9,48" />
-          <polygon id="d2-g" points="14,46 46,46 42,53 18,53" />
-          <circle  id="d2-dp" cx="54" cy="92" r="3.5" />
-        </svg>
-
-        <div class="separator" id="sep3" style="font-size:1.8rem; margin-top:15px; opacity:0.1;">.</div>
-
-        <!-- Digit 1 -->
-        <svg class="seg-digit" id="d1" viewBox="0 0 60 100">
-          <polygon id="d1-a" points="12,8  48,8  42,16 18,16" />
-          <polygon id="d1-b" points="49,10 56,17 52,48 45,43" />
-          <polygon id="d1-c" points="49,52 56,57 51,90 44,83" />
-          <polygon id="d1-d" points="12,92 48,92 42,84 18,84" />
-          <polygon id="d1-e" points="4,57  11,52 16,83  9,90" />
-          <polygon id="d1-f" points="4,17  11,10 16,43  9,48" />
-          <polygon id="d1-g" points="14,46 46,46 42,53 18,53" />
-          <circle  id="d1-dp" cx="54" cy="92" r="3.5" />
-        </svg>
-        <!-- Digit 0 -->
-        <svg class="seg-digit" id="d0" viewBox="0 0 60 100">
-          <polygon id="d0-a" points="12,8  48,8  42,16 18,16" />
-          <polygon id="d0-b" points="49,10 56,17 52,48 45,43" />
-          <polygon id="d0-c" points="49,52 56,57 51,90 44,83" />
-          <polygon id="d0-d" points="12,92 48,92 42,84 18,84" />
-          <polygon id="d0-e" points="4,57  11,52 16,83  9,90" />
-          <polygon id="d0-f" points="4,17  11,10 16,43  9,48" />
-          <polygon id="d0-g" points="14,46 46,46 42,53 18,53" />
-          <circle  id="d0-dp" cx="54" cy="92" r="3.5" />
-        </svg>
+      <!-- 8 Uniform 7-Segment Digits (S7..S0 from left to right, NO artificial colons) -->
+      <div class="digits-row dim-15" id="digits-container">
+        <!-- Digit 7 (S7) -->
+        <div class="digit-col">
+          <svg class="seg-digit" id="d7" viewBox="0 0 54 88">
+            <polygon id="d7-a" points="7,3.25 10.25,0 43.75,0 47,3.25 43.75,6.5 10.25,6.5" />
+            <polygon id="d7-b" points="48.75,4.5 52,7.75 52,39.25 48.75,42.5 45.5,39.25 45.5,7.75" />
+            <polygon id="d7-c" points="48.75,45.5 52,48.75 52,80.25 48.75,83.5 45.5,80.25 45.5,48.75" />
+            <polygon id="d7-d" points="7,84.75 10.25,81.5 43.75,81.5 47,84.75 43.75,88 10.25,88" />
+            <polygon id="d7-e" points="5.25,45.5 8.5,48.75 8.5,80.25 5.25,83.5 2,80.25 2,48.75" />
+            <polygon id="d7-f" points="5.25,4.5 8.5,7.75 8.5,39.25 5.25,42.5 2,39.25 2,7.75" />
+            <polygon id="d7-g" points="7,44 10.25,40.75 43.75,40.75 47,44 43.75,47.25 10.25,47.25" />
+            <circle id="d7-dp" cx="50" cy="85" r="3.2" />
+          </svg>
+        </div>
+        <!-- Digit 6 (S6) -->
+        <div class="digit-col">
+          <svg class="seg-digit" id="d6" viewBox="0 0 54 88">
+            <polygon id="d6-a" points="7,3.25 10.25,0 43.75,0 47,3.25 43.75,6.5 10.25,6.5" />
+            <polygon id="d6-b" points="48.75,4.5 52,7.75 52,39.25 48.75,42.5 45.5,39.25 45.5,7.75" />
+            <polygon id="d6-c" points="48.75,45.5 52,48.75 52,80.25 48.75,83.5 45.5,80.25 45.5,48.75" />
+            <polygon id="d6-d" points="7,84.75 10.25,81.5 43.75,81.5 47,84.75 43.75,88 10.25,88" />
+            <polygon id="d6-e" points="5.25,45.5 8.5,48.75 8.5,80.25 5.25,83.5 2,80.25 2,48.75" />
+            <polygon id="d6-f" points="5.25,4.5 8.5,7.75 8.5,39.25 5.25,42.5 2,39.25 2,7.75" />
+            <polygon id="d6-g" points="7,44 10.25,40.75 43.75,40.75 47,44 43.75,47.25 10.25,47.25" />
+            <circle id="d6-dp" cx="50" cy="85" r="3.2" />
+          </svg>
+        </div>
+        <!-- Digit 5 (S5) -->
+        <div class="digit-col">
+          <svg class="seg-digit" id="d5" viewBox="0 0 54 88">
+            <polygon id="d5-a" points="7,3.25 10.25,0 43.75,0 47,3.25 43.75,6.5 10.25,6.5" />
+            <polygon id="d5-b" points="48.75,4.5 52,7.75 52,39.25 48.75,42.5 45.5,39.25 45.5,7.75" />
+            <polygon id="d5-c" points="48.75,45.5 52,48.75 52,80.25 48.75,83.5 45.5,80.25 45.5,48.75" />
+            <polygon id="d5-d" points="7,84.75 10.25,81.5 43.75,81.5 47,84.75 43.75,88 10.25,88" />
+            <polygon id="d5-e" points="5.25,45.5 8.5,48.75 8.5,80.25 5.25,83.5 2,80.25 2,48.75" />
+            <polygon id="d5-f" points="5.25,4.5 8.5,7.75 8.5,39.25 5.25,42.5 2,39.25 2,7.75" />
+            <polygon id="d5-g" points="7,44 10.25,40.75 43.75,40.75 47,44 43.75,47.25 10.25,47.25" />
+            <circle id="d5-dp" cx="50" cy="85" r="3.2" />
+          </svg>
+        </div>
+        <!-- Digit 4 (S4) -->
+        <div class="digit-col">
+          <svg class="seg-digit" id="d4" viewBox="0 0 54 88">
+            <polygon id="d4-a" points="7,3.25 10.25,0 43.75,0 47,3.25 43.75,6.5 10.25,6.5" />
+            <polygon id="d4-b" points="48.75,4.5 52,7.75 52,39.25 48.75,42.5 45.5,39.25 45.5,7.75" />
+            <polygon id="d4-c" points="48.75,45.5 52,48.75 52,80.25 48.75,83.5 45.5,80.25 45.5,48.75" />
+            <polygon id="d4-d" points="7,84.75 10.25,81.5 43.75,81.5 47,84.75 43.75,88 10.25,88" />
+            <polygon id="d4-e" points="5.25,45.5 8.5,48.75 8.5,80.25 5.25,83.5 2,80.25 2,48.75" />
+            <polygon id="d4-f" points="5.25,4.5 8.5,7.75 8.5,39.25 5.25,42.5 2,39.25 2,7.75" />
+            <polygon id="d4-g" points="7,44 10.25,40.75 43.75,40.75 47,44 43.75,47.25 10.25,47.25" />
+            <circle id="d4-dp" cx="50" cy="85" r="3.2" />
+          </svg>
+        </div>
+        <!-- Digit 3 (S3) -->
+        <div class="digit-col">
+          <svg class="seg-digit" id="d3" viewBox="0 0 54 88">
+            <polygon id="d3-a" points="7,3.25 10.25,0 43.75,0 47,3.25 43.75,6.5 10.25,6.5" />
+            <polygon id="d3-b" points="48.75,4.5 52,7.75 52,39.25 48.75,42.5 45.5,39.25 45.5,7.75" />
+            <polygon id="d3-c" points="48.75,45.5 52,48.75 52,80.25 48.75,83.5 45.5,80.25 45.5,48.75" />
+            <polygon id="d3-d" points="7,84.75 10.25,81.5 43.75,81.5 47,84.75 43.75,88 10.25,88" />
+            <polygon id="d3-e" points="5.25,45.5 8.5,48.75 8.5,80.25 5.25,83.5 2,80.25 2,48.75" />
+            <polygon id="d3-f" points="5.25,4.5 8.5,7.75 8.5,39.25 5.25,42.5 2,39.25 2,7.75" />
+            <polygon id="d3-g" points="7,44 10.25,40.75 43.75,40.75 47,44 43.75,47.25 10.25,47.25" />
+            <circle id="d3-dp" cx="50" cy="85" r="3.2" />
+          </svg>
+        </div>
+        <!-- Digit 2 (S2) -->
+        <div class="digit-col">
+          <svg class="seg-digit" id="d2" viewBox="0 0 54 88">
+            <polygon id="d2-a" points="7,3.25 10.25,0 43.75,0 47,3.25 43.75,6.5 10.25,6.5" />
+            <polygon id="d2-b" points="48.75,4.5 52,7.75 52,39.25 48.75,42.5 45.5,39.25 45.5,7.75" />
+            <polygon id="d2-c" points="48.75,45.5 52,48.75 52,80.25 48.75,83.5 45.5,80.25 45.5,48.75" />
+            <polygon id="d2-d" points="7,84.75 10.25,81.5 43.75,81.5 47,84.75 43.75,88 10.25,88" />
+            <polygon id="d2-e" points="5.25,45.5 8.5,48.75 8.5,80.25 5.25,83.5 2,80.25 2,48.75" />
+            <polygon id="d2-f" points="5.25,4.5 8.5,7.75 8.5,39.25 5.25,42.5 2,39.25 2,7.75" />
+            <polygon id="d2-g" points="7,44 10.25,40.75 43.75,40.75 47,44 43.75,47.25 10.25,47.25" />
+            <circle id="d2-dp" cx="50" cy="85" r="3.2" />
+          </svg>
+        </div>
+        <!-- Digit 1 (S1) -->
+        <div class="digit-col">
+          <svg class="seg-digit" id="d1" viewBox="0 0 54 88">
+            <polygon id="d1-a" points="7,3.25 10.25,0 43.75,0 47,3.25 43.75,6.5 10.25,6.5" />
+            <polygon id="d1-b" points="48.75,4.5 52,7.75 52,39.25 48.75,42.5 45.5,39.25 45.5,7.75" />
+            <polygon id="d1-c" points="48.75,45.5 52,48.75 52,80.25 48.75,83.5 45.5,80.25 45.5,48.75" />
+            <polygon id="d1-d" points="7,84.75 10.25,81.5 43.75,81.5 47,84.75 43.75,88 10.25,88" />
+            <polygon id="d1-e" points="5.25,45.5 8.5,48.75 8.5,80.25 5.25,83.5 2,80.25 2,48.75" />
+            <polygon id="d1-f" points="5.25,4.5 8.5,7.75 8.5,39.25 5.25,42.5 2,39.25 2,7.75" />
+            <polygon id="d1-g" points="7,44 10.25,40.75 43.75,40.75 47,44 43.75,47.25 10.25,47.25" />
+            <circle id="d1-dp" cx="50" cy="85" r="3.2" />
+          </svg>
+        </div>
+        <!-- Digit 0 (S0) -->
+        <div class="digit-col">
+          <svg class="seg-digit" id="d0" viewBox="0 0 54 88">
+            <polygon id="d0-a" points="7,3.25 10.25,0 43.75,0 47,3.25 43.75,6.5 10.25,6.5" />
+            <polygon id="d0-b" points="48.75,4.5 52,7.75 52,39.25 48.75,42.5 45.5,39.25 45.5,7.75" />
+            <polygon id="d0-c" points="48.75,45.5 52,48.75 52,80.25 48.75,83.5 45.5,80.25 45.5,48.75" />
+            <polygon id="d0-d" points="7,84.75 10.25,81.5 43.75,81.5 47,84.75 43.75,88 10.25,88" />
+            <polygon id="d0-e" points="5.25,45.5 8.5,48.75 8.5,80.25 5.25,83.5 2,80.25 2,48.75" />
+            <polygon id="d0-f" points="5.25,4.5 8.5,7.75 8.5,39.25 5.25,42.5 2,39.25 2,7.75" />
+            <polygon id="d0-g" points="7,44 10.25,40.75 43.75,40.75 47,44 43.75,47.25 10.25,47.25" />
+            <circle id="d0-dp" cx="50" cy="85" r="3.2" />
+          </svg>
+        </div>
       </div>
 
-      <div class="sub-labels">
-        <span id="sub-l1">GIỜ (HH)</span>
-        <span id="sub-l2">PHÚT (MM)</span>
-        <span id="sub-l3">GIÂY (SS)</span>
-        <span id="sub-l4">MILI-GIÂY (ms)</span>
+      <!-- Synchronized Dynamic Sub-Labels -->
+      <div id="sublabels-container">
+        <!-- Rendered dynamically by updateSubLabels() to align perfectly with active mode -->
       </div>
     </div>
 
-    <!-- 4 Tactile Pushbuttons -->
+    <!-- Pushbuttons Controls Panel (4 hardware keys: MODE, A, B, C) -->
     <div class="controls-panel">
+      <!-- Button MODE -->
+      <div class="btn-card">
+        <button class="hardware-btn" id="btn-mode" onclick="pressMODE()">M</button>
+        <div class="btn-name">NÚT MODE</div>
+        <div class="btn-desc" id="desc-mode">Chuyển chế độ FSM (TIME → STPW → TMR → ALM → SET)</div>
+        <div class="btn-key">Phím [M] hoặc [1]</div>
+      </div>
+
       <!-- Button A -->
       <div class="btn-card">
-        <button class="hardware-btn" id="btn-a" title="Chuyển chế độ (Mode)">A</button>
-        <div class="btn-name">NÚT A: MODE</div>
-        <div class="btn-desc" id="desc-a">Chuyển chế độ (TIME → STPW → TMR → ALM → SET)</div>
-        <div class="btn-key">Phím [A] hoặc [1]</div>
+        <button class="hardware-btn" id="btn-a" onclick="pressA()">A</button>
+        <div class="btn-name">NÚT A</div>
+        <div class="btn-desc" id="desc-a">Chuyển đổi 12H / 24H</div>
+        <div class="btn-key">Phím [A] hoặc [2]</div>
       </div>
 
       <!-- Button B -->
       <div class="btn-card">
-        <button class="hardware-btn" id="btn-b" title="Start / Lap / Sec.ms / +">B</button>
-        <div class="btn-name">NÚT B: CHỨC NĂNG</div>
-        <div class="btn-desc" id="desc-b">Bật/tắt xem Giây.ms (TIME) / Bắt đầu (STPW, TMR)</div>
-        <div class="btn-key">Phím [B] hoặc [2]</div>
+        <button class="hardware-btn" id="btn-b" onclick="pressB()">B</button>
+        <div class="btn-name">NÚT B</div>
+        <div class="btn-desc" id="desc-b">Đổi trang (HH:MM:SS → mm:ss.ms → dd-mm-yy)</div>
+        <div class="btn-key">Phím [B] hoặc [3]</div>
       </div>
 
       <!-- Button C -->
       <div class="btn-card">
-        <button class="hardware-btn" id="btn-c" title="Reset / Split / Snooze / -">C</button>
-        <div class="btn-name">NÚT C: ĐẶT LẠI / TÙY CHỈNH</div>
-        <div class="btn-desc" id="desc-c">Đổi 12h/24h (TIME) / Chốt Lap (STPW) / Đặt lại</div>
-        <div class="btn-key">Phím [C] hoặc [3]</div>
-      </div>
-
-      <!-- Button D -->
-      <div class="btn-card">
-        <button class="hardware-btn" id="btn-d" title="Field / Recall / Chime">D</button>
-        <div class="btn-name">NÚT D: XEM CHI TIẾT</div>
-        <div class="btn-desc" id="desc-d">Xem Ngày/Tháng (TIME) / Xem Lap 0..7 / Đổi trường</div>
-        <div class="btn-key">Phím [D] hoặc [4]</div>
+        <button class="hardware-btn" id="btn-c" onclick="pressC()">C</button>
+        <div class="btn-name">NÚT C</div>
+        <div class="btn-desc" id="desc-c">Độ sáng LED (15 → 9 → 3)</div>
+        <div class="btn-key">Phím [C] hoặc [4]</div>
       </div>
     </div>
 
-    <!-- Simulation Toolbar -->
+    <!-- Simulation Speed, Theme & Audio Toolbar -->
     <div class="sim-bar">
       <div class="sim-group">
         <span>Tốc độ:</span>
-        <button class="pill-btn active" id="spd-1x">1x Thực</button>
-        <button class="pill-btn" id="spd-10x">10x Nhanh</button>
-        <button class="pill-btn" id="spd-60x">60x Cực nhanh</button>
+        <button class="pill-btn active" onclick="setSpeed(1, this)">1x Thực</button>
+        <button class="pill-btn" onclick="setSpeed(10, this)">10x Nhanh</button>
+        <button class="pill-btn" onclick="setSpeed(60, this)">60x Cực nhanh</button>
       </div>
 
       <div class="sim-group">
         <span>Màu LED:</span>
-        <button class="pill-btn active" id="col-red">Ruby Đỏ</button>
-        <button class="pill-btn" id="col-green">Emerald Xanh</button>
+        <button class="pill-btn" onclick="setTheme('red', this)">Ruby Đỏ</button>
+        <button class="pill-btn active" onclick="setTheme('green', this)">Emerald Xanh</button>
       </div>
 
       <div class="sim-group">
-        <span>Âm thanh Còi Bíp:</span>
-        <button class="pill-btn active" id="btn-audio">🔊 Đang Bật</button>
+        <span>Còi Bíp:</span>
+        <button class="pill-btn active" id="btn-audio-toggle" onclick="toggleAudio()">🔊 Đang Bật</button>
       </div>
     </div>
-  </div>
+  </main>
 
-  <!-- Interactive Presets -->
-  <div class="presets-card">
+  <!-- Live Terminal Console (tools/screen.py Mirror) -->
+  <section class="terminal-card">
+    <div class="terminal-header">
+      <div class="terminal-title">
+        <span class="terminal-dot dot-red"></span>
+        <span class="terminal-dot dot-yellow"></span>
+        <span class="terminal-dot dot-green"></span>
+        <span>MÔ PHỎNG TERMINAL (Console Mirror &mdash; tools/screen.py)</span>
+      </div>
+      <div class="terminal-controls">
+        <button class="term-btn active" id="tab-big" onclick="switchTermView('big')">Chữ số lớn (--big)</button>
+        <button class="term-btn" id="tab-stream" onclick="switchTermView('stream')">Dòng log quét (Log Stream)</button>
+        <button class="term-btn" onclick="clearTermLog()">Xóa Log</button>
+      </div>
+    </div>
+    <div class="terminal-body">
+      <!-- View 1: Big ASCII Display (tools/screen.py --big) -->
+      <div class="ascii-big-display" id="term-big-content">
+t = 0 ms
+         _   _   _   _   _   _  
+         _|  _| |_  |_| |_  |_| 
+        |_   _|. _|  _|. _| |_| 
+      </div>
+      <!-- View 2: Stream Log Lines (tools/screen.py text log) -->
+      <div class="terminal-stream-log" id="term-stream-content">
+        <div class="log-line"># Khoi tao ket noi mach quet tb/screen_dump.v ...</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 1-Click Fast Test Scenarios -->
+  <section class="presets-card">
     <h3>⚡ Kịch Bản Mô Phỏng Kiểm Thử Nhanh (1-Click Test Scenarios)</h3>
     <div class="presets-grid">
-      <button class="preset-btn" id="p-midnight">
-        <div class="preset-title">1. Chuyển Giao Nửa Đêm</div>
-        Nhảy đến 23:59:55 Thứ Sáu để quan sát sang 00:00:00 Thứ Bảy và đổi ngày.
+      <button class="preset-btn" onclick="runScenarioMidnight()">
+        <div class="preset-title">1. Nhảy Nửa Đêm & Năm Nhuận</div>
+        <div>Đặt 23:59:55 ngày 28/02/2024. Quan sát nhảy qua 00:00:00 ngày 29/02/2024.</div>
       </button>
-      <button class="preset-btn" id="p-lap">
-        <div class="preset-title">2. Chốt 8 Lap Bấm Giờ</div>
-        Chuyển sang Stopwatch, chạy và tự động chốt 3 vòng đo đạc (0-ns capture).
-      </button>
-      <button class="preset-btn" id="p-timer">
-        <div class="preset-title">3. Đếm Ngược Quá Giờ Âm</div>
-        Nạp Timer 5 giây, đếm lùi về 0, kích còi bíp và nhảy sang đếm quá giờ âm.
-      </button>
-      <button class="preset-btn" id="p-alarm">
-        <div class="preset-title">4. Báo Thức 4 Kênh & Snooze</div>
-        Kích hoạt chuông báo thức tức thì và thử tính năng tạm hoãn Snooze +5 phút.
-      </button>
-      <button class="preset-btn" id="p-ntp">
-        <div class="preset-title">5. Đồng Bộ NTP UART ($Z, $T)</div>
-        Giả lập gói tin hiệu chỉnh giờ từ cổng nối tiếp UART 115200 baud.
-      </button>
-    </div>
-  </div>
 
-  <!-- Live Hardware Register Inspector -->
-  <div class="inspector-card">
-    <h3>
-      <span>🔍 Trực Quan Hóa Thanh Ghi Phần Cứng MMIO (WatchChip Register Peek)</span>
-      <span style="font-size:0.75rem; color:#8b949e; font-weight:normal;">Bus 32-bit @ 0xFFFF0000</span>
-    </h3>
-    <div class="reg-grid">
-      <div class="reg-box">
-        <div class="reg-label">0xFFFF0004: REG_RTC_MS</div>
-        <div class="reg-val" id="reg-rtc-ms">0x00000000</div>
-      </div>
-      <div class="reg-box">
-        <div class="reg-label">0xFFFF0008: REG_DAY_SHADOW</div>
-        <div class="reg-val" id="reg-day">0x0000262B (9771)</div>
-      </div>
-      <div class="reg-box">
-        <div class="reg-label">0xFFFF0020: REG_SW_TIME</div>
-        <div class="reg-val" id="reg-sw-ms">0x00000000</div>
-      </div>
-      <div class="reg-box">
-        <div class="reg-label">0xFFFF0028: REG_TIMER_VAL</div>
-        <div class="reg-val" id="reg-tmr-val">0x0000EA60 (60s)</div>
-      </div>
-      <div class="reg-box">
-        <div class="reg-label">0xFFFF0030: REG_ALARM0</div>
-        <div class="reg-val" id="reg-alarm0">0x000001A4 (07:00)</div>
-      </div>
-      <div class="reg-box">
-        <div class="reg-label">0xFFFF007C: REG_BLINK_MASK</div>
-        <div class="reg-val" id="reg-blink">0x00000000</div>
-      </div>
-      <div class="reg-box">
-        <div class="reg-label">0xFFFF001C: REG_CAL_PPM</div>
-        <div class="reg-val" id="reg-cal">+0 ppm (0x0000)</div>
-      </div>
-      <div class="reg-box">
-        <div class="reg-label">0xFFFF0080: CYCLE_COUNT</div>
-        <div class="reg-val" id="reg-cycles">0x00000000</div>
-      </div>
+      <button class="preset-btn" onclick="runScenarioStopwatchLap()">
+        <div class="preset-title">2. Bấm Giờ 0-ns & 3 Lap</div>
+        <div>Khởi động Stopwatch, chụp nhanh 3 vòng Lap bằng phần cứng và xem lại.</div>
+      </button>
+
+      <button class="preset-btn" onclick="runScenarioTimerOvertime()">
+        <div class="preset-title">3. Đếm Lùi & Quá Giờ Âm</div>
+        <div>Nạp Timer 3s, đếm về 0, kích hoạt còi bíp và tiếp tục đếm quá hạn âm.</div>
+      </button>
+
+      <button class="preset-btn" onclick="runScenarioAlarmSnooze()">
+        <div class="preset-title">4. Báo Thức AL1 & Snooze</div>
+        <div>Đặt giờ tới 06:59:58 (AL1 đặt 07:00). Đổ chuông dồn dập và hoãn +5 phút.</div>
+      </button>
+
+      <button class="preset-btn" onclick="runScenarioNtpSync()">
+        <div class="preset-title">5. Đồng Bộ NTP (UART)</div>
+        <div>Gửi chuỗi đồng bộ @SET:2026-10-02 12:30:00# cập nhật nguyên tử RTC.</div>
+      </button>
     </div>
-  </div>
+  </section>
+
+  <!-- Hardware Register Inspector -->
+  <section class="registers-card">
+    <h3>🔍 Giám Sát Thanh Ghi Phần Cứng (Hardware MMIO Registers)</h3>
+    <div class="reg-grid">
+      <div class="reg-cell"><span class="reg-name">REG_RTC_MS (0x00):</span><span class="reg-val" id="reg-rtc-ms">0x00000000</span></div>
+      <div class="reg-cell"><span class="reg-name">DAY_SHADOW (0x10):</span><span class="reg-val" id="reg-day-shadow">0x00000000</span></div>
+      <div class="reg-cell"><span class="reg-name">REG_SW_VAL (0x20):</span><span class="reg-val" id="reg-sw-val">0x00000000</span></div>
+      <div class="reg-cell"><span class="reg-name">REG_SW_LAP (0x24):</span><span class="reg-val" id="reg-sw-lap">0x00000000</span></div>
+      <div class="reg-cell"><span class="reg-name">REG_TMR_VAL (0x30):</span><span class="reg-val" id="reg-tmr-val">0x00000000</span></div>
+      <div class="reg-cell"><span class="reg-name">REG_ALARM0 (0x40):</span><span class="reg-val" id="reg-alarm0">0x00000000</span></div>
+      <div class="reg-cell"><span class="reg-name">REG_BRIGHT (0x60):</span><span class="reg-val" id="reg-bright">0x0000000F</span></div>
+      <div class="reg-cell"><span class="reg-name">REG_BLINK (0x64):</span><span class="reg-val" id="reg-blink">0x00000000</span></div>
+      <div class="reg-cell"><span class="reg-name">REG_BEEP_PAT (0x70):</span><span class="reg-val" id="reg-beep">0x00000000</span></div>
+      <div class="reg-cell"><span class="reg-name">FSM ACTIVE:</span><span class="reg-val" id="reg-fsm-mode">TIME</span></div>
+    </div>
+  </section>
 
   <footer>
-    <p>Đồ án Thiết kế Vi mạch SoC Đồng hồ Số Đa Chức Năng — HUST MI4344 / IT3283.</p>
-    <p>Mô phỏng 100% độc lập, tương thích cấu trúc thanh ghi MMIO và mã nguồn Verilog trong thư mục <code>src/</code>.</p>
+    <p>Học phần MI4344 / IT3283 &mdash; Kiến trúc Máy tính &mdash; Đại học Bách khoa Hà Nội (HUST)</p>
+    <p>Mô hình tham chiếu phần cứng WatchChip SoC: CPU MIPS 32-bit pipelined, Bus đa hợp MMIO, BCD Hardware, GPIO & Timers.</p>
   </footer>
 
   <script>
@@ -684,95 +825,139 @@
     // BỘ MÃ MÔ PHỎNG WATCHCHIP SOC TRÊN JAVASCRIPT THỜI GIAN THỰC
     // ============================================================================
 
-    // 1. Cấu hình bảng mã 7 đoạn (Segments: a,b,c,d,e,f,g)
-    const SEG_MAP = {
-      '0': [1,1,1,1,1,1,0],
-      '1': [0,1,1,0,0,0,0],
-      '2': [1,1,0,1,1,0,1],
-      '3': [1,1,1,1,0,0,1],
-      '4': [0,1,1,0,0,1,1],
-      '5': [1,0,1,1,0,1,1],
-      '6': [1,0,1,1,1,1,1],
-      '7': [1,1,1,0,0,0,0],
-      '8': [1,1,1,1,1,1,1],
-      '9': [1,1,1,1,0,1,1],
-      'A': [1,1,1,0,1,1,1],
-      'b': [0,0,1,1,1,1,1],
-      'C': [1,0,0,1,1,1,0],
-      'd': [0,1,1,1,1,0,1],
-      'E': [1,0,0,1,1,1,1],
-      'F': [1,0,0,0,1,1,1],
-      'H': [0,1,1,0,1,1,1],
-      'L': [0,0,0,1,1,1,0],
-      'n': [0,0,1,0,1,0,1],
-      'o': [0,0,1,1,1,0,1],
-      'P': [1,1,0,0,1,1,1],
-      'r': [0,0,0,0,1,0,1],
-      'S': [1,0,1,1,0,1,1],
-      't': [0,0,0,1,1,1,1],
-      'U': [0,1,1,1,1,1,0],
-      '-': [0,0,0,0,0,0,1],
-      ' ': [0,0,0,0,0,0,0]
+    // 1. Cấu hình bảng mã 7 đoạn phần cứng (Bit: 0=a, 1=b, 2=c, 3=d, 4=e, 5=f, 6=g, 7=dp)
+    // Tương ứng chính xác với tb/vectors/seg7.txt
+    const SEG_PATTERNS = {
+      '0': 0x3F, '1': 0x06, '2': 0x5B, '3': 0x4F, '4': 0x66,
+      '5': 0x6D, '6': 0x7D, '7': 0x07, '8': 0x7F, '9': 0x6F,
+      'A': 0x77, 'b': 0x7C, 'C': 0x39, 'd': 0x5E, 'E': 0x79, 'F': 0x71,
+      'H': 0x76, 'L': 0x38, 'n': 0x54, 'o': 0x5C, 'P': 0x73, 'r': 0x50,
+      'S': 0x6D, 't': 0x78, 'U': 0x3E, '-': 0x40, ' ': 0x00
     };
 
-    // 2. Trạng thái phần cứng (Hardware Registers)
+    // 2. Trạng thái phần cứng WatchChip (Hardware Registers & MMIO)
     const STATE = {
       // RTC
       msOfDay: (23 * 3600 + 59 * 60 + 50) * 1000, // Khởi tạo 23:59:50
-      days: 9771, // 02/10/2026 (Thứ Sáu)
+      days: 8824, // Mốc 28/02/2024 (Năm nhuận)
       calPpm: 0,
-      
-      // Modes: 0: TIME, 1: STPW, 2: TMR, 3: ALM, 4: SET
+
+      // Chế độ FSM chính: 0: TIME, 1: STPW, 2: TMR, 3: ALM, 4: SET
       mode: 0,
+
+      // Cấu hình chế độ TIME
+      timeView: 0, // 0: HH.MM.SS, 1: MM.SS.mmm, 2: DD-MM-YY
       is24h: true,
-      showSecMs: false,
-      showDate: false,
-      hourlyChime: true,
-      
-      // Stopwatch (0-ns capture)
+      brightness: 15, // 15, 9, 3
+
+      // Stopwatch
       swRunning: false,
       swElapsedMs: 0,
-      swStartStamp: 0,
       laps: [],
-      swViewLapIdx: -1,
-      
-      // Countdown Timer
+      swLapIdx: -1, // -1: xem giờ chạy trực tiếp, 0..7: xem Lap đã lưu
+
+      // Timer
       tmrRunning: false,
-      tmrInitSec: 60,
+      tmrPresetMs: 60000,
       tmrRemainMs: 60000,
       tmrBeeping: false,
-      
-      // Alarm (4 channels, in minutes of day)
+
+      // Alarm (4 kênh + Hourly Chime)
       alarms: [
-        { min: 7 * 60, en: true },
-        { min: 12 * 60, en: false },
-        { min: 18 * 60 + 30, en: false },
-        { min: 22 * 60, en: false }
+        { minOfDay: 7 * 60, en: true },
+        { minOfDay: 12 * 60, en: false },
+        { minOfDay: 18 * 60 + 30, en: false },
+        { minOfDay: 22 * 60, en: false }
       ],
-      almChannel: 0,
+      almChannel: 0, // 0..3: AL1..AL4, 4: Chime
+      almEditing: 0, // 0: Không sửa, 1: Sửa Giờ, 2: Sửa Phút
+      almEditH: 7,
+      almEditM: 0,
+      hourlyChime: true,
       alarmSounding: false,
+      alarmSoundStartMs: 0,
       snoozeUntilMs: -1,
-      
-      // SET Mode
+
+      // SET Mode (FSM 6 trường)
       setField: 0, // 0: Hour, 1: Min, 2: Sec, 3: Day, 4: Month, 5: Year
-      setVals: { hr: 23, min: 59, sec: 50, day: 2, mon: 10, yr: 26 },
-      blinkPhase: false,
-      
-      // Time scale & sound
+      setVals: { hr: 23, min: 59, sec: 50, day: 28, mon: 2, yr: 24 },
+      blinkPhase: false, // 2 Hz nhấp nháy
+      blinkTimer: 0,
+
+      // System Clock & Simulation speed
       speed: 1,
       audioMuted: false,
-      cycles: 0
+      simTimeMs: 0,
+      termView: 'big', // 'big' hoặc 'stream'
+      lastLogSec: -1
     };
 
-    // Web Audio Synthesis (Không dùng bất kỳ tệp ngoài nào)
+    // Bảng tính số ngày trong tháng (bù năm nhuận chia hết cho 4)
+    function getMonthLength(m, yOffset) {
+      if (m === 2) {
+        return (yOffset % 4 === 0) ? 29 : 28;
+      }
+      return 30 + ((m + Math.floor(m / 8)) % 2);
+    }
+
+    // Chuyển đổi số ngày từ 01/01/2000 sang Ngày, Tháng, Năm (d2ymd trong fw/set_mode.s)
+    function daysToDate(d) {
+      let a0 = d;
+      if (a0 >= 36584) a0 += 1; // bù 2100
+      const cycle4 = Math.floor(a0 / 1461);
+      let rem = a0 % 1461;
+      let yr = cycle4 * 4;
+      if (rem < 366) {
+        // năm nhuận đầu tiên
+      } else {
+        rem -= 366;
+        yr += 1;
+        while (rem >= 365) {
+          rem -= 365;
+          yr += 1;
+        }
+      }
+      let mon = 1;
+      while (true) {
+        const ml = getMonthLength(mon, yr);
+        if (rem < ml) break;
+        rem -= ml;
+        mon++;
+      }
+      const day = rem + 1;
+      return { day, mon, yr: yr % 100 };
+    }
+
+    // Chuyển đổi Ngày, Tháng, Năm sang số ngày từ 01/01/2000 (ymd2d)
+    function dateToDays(day, mon, yr) {
+      const c4 = Math.floor(yr / 4);
+      let d = c4 * 1461;
+      const remY = yr % 4;
+      if (remY > 0) {
+        d += 366 + (remY - 1) * 365;
+      }
+      for (let m = 1; m < mon; m++) {
+        d += getMonthLength(m, yr);
+      }
+      d += (day - 1);
+      return d;
+    }
+
+    // ============================================================================
+    // WEB AUDIO API SYNTHESIZER (Không dùng bất kỳ tệp ngoài nào)
+    // ============================================================================
     let audioCtx = null;
     function initAudio() {
       if (!audioCtx) {
-        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        audioCtx = new AudioContext();
+      }
+      if (audioCtx.state === 'suspended') {
+        audioCtx.resume();
       }
     }
 
-    function beep(freq = 2400, duration = 0.08, type = 'square') {
+    function playTone(freq, durationSec, type = 'square') {
       if (STATE.audioMuted) return;
       try {
         initAudio();
@@ -780,630 +965,873 @@
         const gain = audioCtx.createGain();
         osc.type = type;
         osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
-        gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+        gain.gain.setValueAtTime(0.08, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + durationSec);
         osc.connect(gain);
         gain.connect(audioCtx.destination);
         osc.start();
-        osc.stop(audioCtx.currentTime + duration);
+        osc.stop(audioCtx.currentTime + durationSec);
       } catch (e) {}
     }
 
-    function clickSound() {
-      beep(1200, 0.02, 'sine');
+    function playClick() {
+      playTone(1400, 0.02, 'sine');
     }
 
-    // Cập nhật hiển thị một chữ số LED 7 đoạn
-    function setDigit(dId, char, dp = false) {
-      const segs = SEG_MAP[char] || SEG_MAP[' '];
-      const names = ['a', 'b', 'c', 'd', 'e', 'f', 'g'];
-      names.forEach((name, idx) => {
-        const el = document.getElementById(`${dId}-${name}`);
+    function toggleAudio() {
+      STATE.audioMuted = !STATE.audioMuted;
+      const btn = document.getElementById('btn-audio-toggle');
+      if (STATE.audioMuted) {
+        btn.classList.remove('active');
+        btn.textContent = '🔇 Đã Tắt';
+        document.getElementById('flag-alm').textContent = 'BÁO THỨC: BẬT | AUDIO OFF';
+      } else {
+        btn.classList.add('active');
+        btn.textContent = '🔊 Đang Bật';
+        document.getElementById('flag-alm').textContent = 'BÁO THỨC: BẬT | AUDIO ON';
+        playClick();
+      }
+    }
+
+    // ============================================================================
+    // HIỂN THỊ 7 THANH & CẬP NHẬT SUB-LABELS ĐỒNG BỘ
+    // ============================================================================
+
+    // Bật tắt từng thanh đoạn trên SVG
+    function renderDigitSvg(dIndex, char, dp = false) {
+      const pat = (SEG_PATTERNS[char] !== undefined ? SEG_PATTERNS[char] : 0) | (dp ? 0x80 : 0);
+      const segs = ['a', 'b', 'c', 'd', 'e', 'f', 'g'];
+      for (let i = 0; i < 7; i++) {
+        const el = document.getElementById(`d${dIndex}-${segs[i]}`);
         if (el) {
-          if (segs[idx]) el.classList.add('lit');
+          if ((pat >> i) & 1) el.classList.add('lit');
           else el.classList.remove('lit');
         }
-      });
-      const dpEl = document.getElementById(`${dId}-dp`);
+      }
+      const dpEl = document.getElementById(`d${dIndex}-dp`);
       if (dpEl) {
-        if (dp) dpEl.classList.add('lit');
+        if ((pat >> 7) & 1) dpEl.classList.add('lit');
         else dpEl.classList.remove('lit');
       }
+      return pat;
     }
 
-    // Tính ngày trong tuần từ số ngày (Day 0 = 01/01/2000 là Thứ Bảy)
-    function getDayOfWeek(d) {
-      const w = (d + 6) % 7; // 0: CN, 1: T2, ..., 6: T7
-      return w === 0 ? 'CN' : `T${w + 1}`;
-    }
+    // Tạo HTML các nhãn phụ tương ứng chính xác với từng chế độ
+    function updateSubLabels() {
+      const container = document.getElementById('sublabels-container');
+      const m = STATE.mode;
+      let html = '';
 
-    // Đổi ngày thành Ngày/Tháng/Năm
-    function daysToDate(d) {
-      let y = 2000;
-      while (true) {
-        const isLeap = (y % 4 === 0 && y % 100 !== 0) || (y % 400 === 0);
-        const daysInYear = isLeap ? 366 : 365;
-        if (d < daysInYear) break;
-        d -= daysInYear;
-        y++;
-      }
-      const isLeap = (y % 4 === 0 && y % 100 !== 0) || (y % 400 === 0);
-      const mDays = [31, isLeap ? 29 : 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
-      let m = 0;
-      while (d >= mDays[m]) {
-        d -= mDays[m];
-        m++;
-      }
-      return { day: d + 1, mon: m + 1, yr: y % 100 };
-    }
-
-    // Cập nhật toàn bộ 8 chữ số theo trạng thái hiện tại
-    function renderDisplay() {
-      const blinkOn = STATE.blinkPhase;
-      let d = [' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '];
-      let dp = [false, false, false, false, false, false, false, false];
-      let sepColon = true;
-
-      // MODE 0: TIME
-      if (STATE.mode === 0) {
-        const totalSec = Math.floor(STATE.msOfDay / 1000);
-        let hr = Math.floor(totalSec / 3600);
-        const min = Math.floor((totalSec % 3600) / 60);
-        const sec = totalSec % 60;
-        const ms = STATE.msOfDay % 1000;
-
-        if (STATE.showDate) {
-          // Hiện Ngày / Tháng / Năm / Thứ
-          const dt = daysToDate(STATE.days);
-          const dow = (STATE.days + 6) % 7;
-          d[7] = Math.floor(dt.day / 10).toString();
-          d[6] = (dt.day % 10).toString();
-          d[5] = '-';
-          d[4] = Math.floor(dt.mon / 10).toString();
-          d[3] = (dt.mon % 10).toString();
-          d[2] = '-';
-          d[1] = Math.floor(dt.yr / 10).toString();
-          d[0] = (dt.yr % 10).toString();
-          sepColon = false;
-        } else if (STATE.showSecMs) {
-          // Hiện Giây . Mili-giây (SS.mmm)
-          d[7] = ' ';
-          d[6] = ' ';
-          d[5] = Math.floor(sec / 10).toString();
-          d[4] = (sec % 10).toString();
-          dp[4] = true;
-          d[3] = Math.floor(ms / 100).toString();
-          d[2] = Math.floor((ms % 100) / 10).toString();
-          d[1] = (ms % 10).toString();
-          d[0] = ' ';
-          sepColon = false;
+      if (m === 0) { // TIME
+        if (STATE.timeView === 0) { // HH.MM.SS
+          html = `
+            <div class="sub-label-cell span-2" style="color:#58a6ff;">[S7..S6: ${STATE.is24h ? '24H' : '12H'}]</div>
+            <div class="sub-label-cell span-2">[S5..S4: GIỜ (HH)]</div>
+            <div class="sub-label-cell span-2">[S3..S2: PHÚT (MM)]</div>
+            <div class="sub-label-cell span-2">[S1..S0: GIÂY (SS)]</div>
+          `;
+        } else if (STATE.timeView === 1) { // MM.SS.mmm
+          html = `
+            <div class="sub-label-cell">[S7: Trống]</div>
+            <div class="sub-label-cell span-2">[S6..S5: PHÚT (MM)]</div>
+            <div class="sub-label-cell span-2">[S4..S3: GIÂY (SS)]</div>
+            <div class="sub-label-cell span-3" style="color:#39ff14;">[S2..S0: MILI-GIÂY (ms)]</div>
+          `;
+        } else { // DD-MM-YY
+          html = `
+            <div class="sub-label-cell span-2">[S7..S6: NGÀY (DD)]</div>
+            <div class="sub-label-cell">[S5: -]</div>
+            <div class="sub-label-cell span-2">[S4..S3: THÁNG (MM)]</div>
+            <div class="sub-label-cell">[S2: -]</div>
+            <div class="sub-label-cell span-2">[S1..S0: NĂM (YY)]</div>
+          `;
+        }
+      } else if (m === 1) { // STOPWATCH
+        const isLap = STATE.swLapIdx >= 0;
+        html = `
+          <div class="sub-label-cell" style="color:#e3b341;">[S7: ${isLap ? 'LAP ' + (STATE.swLapIdx + 1) : 'LIVE'}]</div>
+          <div class="sub-label-cell span-2">[S6..S5: PHÚT (MM)]</div>
+          <div class="sub-label-cell span-2">[S4..S3: GIÂY (SS)]</div>
+          <div class="sub-label-cell span-3" style="color:#39ff14;">[S2..S0: MILI-GIÂY (ms)]</div>
+        `;
+      } else if (m === 2) { // TIMER
+        const isNeg = STATE.tmrRemainMs < 0;
+        html = `
+          <div class="sub-label-cell" style="color:${isNeg ? '#f85149' : '#8b949e'};">[S7: ${isNeg ? 'DẤU (-)' : 'TRỐNG'}]</div>
+          <div class="sub-label-cell span-2">[S6..S5: PHÚT (MM)]</div>
+          <div class="sub-label-cell span-2">[S4..S3: GIÂY (SS)]</div>
+          <div class="sub-label-cell span-3" style="color:#39ff14;">[S2..S0: MILI-GIÂY (ms)]</div>
+        `;
+      } else if (m === 3) { // ALARM
+        if (STATE.almChannel < 4) {
+          const alm = STATE.alarms[STATE.almChannel];
+          html = `
+            <div class="sub-label-cell span-3" style="color:#e3b341;">[S7..S5: ALARM ${STATE.almChannel + 1}]</div>
+            <div class="sub-label-cell" style="color:${alm.en ? '#39ff14' : '#8b949e'};">[S4: ${alm.en ? 'BẬT (o)' : 'TẮT'}]</div>
+            <div class="sub-label-cell span-2">[S3..S2: GIỜ (HH)]</div>
+            <div class="sub-label-cell span-2">[S1..S0: PHÚT (MM)]</div>
+          `;
         } else {
-          // Giờ thường: HH:MM:SS (hoặc 12h AM/PM)
+          html = `
+            <div class="sub-label-cell span-2" style="color:#e3b341;">[S7..S6: CHIME]</div>
+            <div class="sub-label-cell">[S5: Trống]</div>
+            <div class="sub-label-cell" style="color:${STATE.hourlyChime ? '#39ff14' : '#8b949e'};">[S4: ${STATE.hourlyChime ? 'BẬT (o)' : 'TẮT'}]</div>
+            <div class="sub-label-cell span-2">[S3..S2: Trống]</div>
+            <div class="sub-label-cell span-2">[S1..S0: Trống]</div>
+          `;
+        }
+      } else if (m === 4) { // SET
+        if (STATE.setField < 3) { // Setting Time
+          html = `
+            <div class="sub-label-cell span-2">[S7..S6: CÀI ĐẶT]</div>
+            <div class="sub-label-cell span-2" style="${STATE.setField === 0 ? 'color:#58a6ff;' : ''}">[S5..S4: GIỜ (HH)]</div>
+            <div class="sub-label-cell span-2" style="${STATE.setField === 1 ? 'color:#58a6ff;' : ''}">[S3..S2: PHÚT (MM)]</div>
+            <div class="sub-label-cell span-2" style="${STATE.setField === 2 ? 'color:#58a6ff;' : ''}">[S1..S0: GIÂY (SS)]</div>
+          `;
+        } else { // Setting Date
+          html = `
+            <div class="sub-label-cell span-2" style="${STATE.setField === 3 ? 'color:#58a6ff;' : ''}">[S7..S6: NGÀY (DD)]</div>
+            <div class="sub-label-cell">[S5: -]</div>
+            <div class="sub-label-cell span-2" style="${STATE.setField === 4 ? 'color:#58a6ff;' : ''}">[S4..S3: THÁNG (MM)]</div>
+            <div class="sub-label-cell">[S2: -]</div>
+            <div class="sub-label-cell span-2" style="${STATE.setField === 5 ? 'color:#58a6ff;' : ''}">[S1..S0: NĂM (YY)]</div>
+          `;
+        }
+      }
+
+      container.innerHTML = html;
+    }
+
+    // ============================================================================
+    // VẼ MÀN HÌNH CHÍNH (RENDER HARDWARE DISPLAY PIPELINE)
+    // ============================================================================
+    function render() {
+      // 8 ký tự và 8 dấu chấm cho S7..S0
+      const chars = [' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '];
+      const dps = [false, false, false, false, false, false, false, false];
+
+      const m = STATE.mode;
+      const blinkMask = (STATE.blinkPhase) ? 0 : 1; // 0: tắt chữ số đang nháy
+
+      // 1. CHẾ ĐỘ 0: TIME
+      if (m === 0) {
+        if (STATE.timeView === 0) { // HH.MM.SS (fmtB)
+          const totalSec = Math.floor(STATE.msOfDay / 1000);
+          let hr = Math.floor(totalSec / 3600) % 24;
+          const min = Math.floor((totalSec % 3600) / 60);
+          const sec = totalSec % 60;
           let ampm = ' ';
           if (!STATE.is24h) {
             ampm = hr >= 12 ? 'P' : 'A';
             hr = hr % 12;
             if (hr === 0) hr = 12;
           }
-          d[7] = Math.floor(hr / 10) === 0 ? ' ' : Math.floor(hr / 10).toString();
-          d[6] = (hr % 10).toString();
-          d[5] = Math.floor(min / 10).toString();
-          d[4] = (min % 10).toString();
-          d[3] = Math.floor(sec / 10).toString();
-          d[2] = (sec % 10).toString();
-          d[1] = ' ';
-          d[0] = STATE.is24h ? ' ' : ampm;
+          chars[7] = STATE.is24h ? ' ' : ampm;
+          chars[6] = ' ';
+          chars[5] = Math.floor(hr / 10).toString();
+          chars[4] = (hr % 10).toString();
+          dps[4] = true; // Dấu chấm sau Giờ
+          chars[3] = Math.floor(min / 10).toString();
+          chars[2] = (min % 10).toString();
+          dps[2] = true; // Dấu chấm sau Phút
+          chars[1] = Math.floor(sec / 10).toString();
+          chars[0] = (sec % 10).toString();
+        } else if (STATE.timeView === 1) { // MM.SS.mmm (fmtA)
+          const remMs = STATE.msOfDay % 3600000;
+          const min = Math.floor(remMs / 60000);
+          const sec = Math.floor((remMs % 60000) / 1000);
+          const ms = remMs % 1000;
+          chars[7] = ' ';
+          chars[6] = Math.floor(min / 10).toString();
+          chars[5] = (min % 10).toString();
+          dps[5] = true;
+          chars[4] = Math.floor(sec / 10).toString();
+          chars[3] = (sec % 10).toString();
+          dps[3] = true;
+          chars[2] = Math.floor(ms / 100).toString();
+          chars[1] = Math.floor((ms % 100) / 10).toString();
+          chars[0] = (ms % 10).toString();
+        } else { // DD-MM-YY (dt_dy)
+          const dt = daysToDate(STATE.days);
+          chars[7] = Math.floor(dt.day / 10).toString();
+          chars[6] = (dt.day % 10).toString();
+          chars[5] = '-';
+          chars[4] = Math.floor(dt.mon / 10).toString();
+          chars[3] = (dt.mon % 10).toString();
+          chars[2] = '-';
+          chars[1] = Math.floor(dt.yr / 10).toString();
+          chars[0] = (dt.yr % 10).toString();
         }
       }
 
-      // MODE 1: STOPWATCH
-      else if (STATE.mode === 1) {
+      // 2. CHẾ ĐỘ 1: STOPWATCH (fmtD -> fmtA)
+      else if (m === 1) {
         let t = STATE.swElapsedMs;
-        if (STATE.swViewLapIdx >= 0 && STATE.laps[STATE.swViewLapIdx] !== undefined) {
-          t = STATE.laps[STATE.swViewLapIdx];
+        if (STATE.swLapIdx >= 0 && STATE.laps[STATE.swLapIdx] !== undefined) {
+          t = STATE.laps[STATE.swLapIdx];
         }
-        const s = Math.floor(t / 1000);
-        const m = Math.floor(s / 60);
-        const sec = s % 60;
-        const cs = Math.floor((t % 1000) / 10); // Centiseconds
-
-        if (STATE.swViewLapIdx >= 0) {
-          d[7] = 'L';
-          d[6] = (STATE.swViewLapIdx + 1).toString();
-        } else {
-          d[7] = Math.floor(m / 10).toString();
-          d[6] = (m % 10).toString();
-        }
-        d[5] = Math.floor(sec / 10).toString();
-        d[4] = (sec % 10).toString();
-        dp[4] = true;
-        d[3] = Math.floor(cs / 10).toString();
-        d[2] = (cs % 10).toString();
-        d[1] = ' ';
-        d[0] = STATE.swRunning ? ' ' : 'o'; // 'o' for stopped
+        const min = Math.floor(t / 60000) % 60;
+        const sec = Math.floor((t % 60000) / 1000);
+        const ms = t % 1000;
+        chars[7] = STATE.swLapIdx >= 0 ? (STATE.swLapIdx + 1).toString() : ' ';
+        chars[6] = Math.floor(min / 10).toString();
+        chars[5] = (min % 10).toString();
+        dps[5] = true;
+        chars[4] = Math.floor(sec / 10).toString();
+        chars[3] = (sec % 10).toString();
+        dps[3] = true;
+        chars[2] = Math.floor(ms / 100).toString();
+        chars[1] = Math.floor((ms % 100) / 10).toString();
+        chars[0] = (ms % 10).toString();
       }
 
-      // MODE 2: TIMER
-      else if (STATE.mode === 2) {
+      // 3. CHẾ ĐỘ 2: TIMER (dr_tr -> fmtD)
+      else if (m === 2) {
         const rem = STATE.tmrRemainMs;
         const isNeg = rem < 0;
-        const absSec = Math.floor(Math.abs(rem) / 1000);
-        const m = Math.floor(absSec / 60);
-        const s = absSec % 60;
-        const cs = Math.floor((Math.abs(rem) % 1000) / 10);
-
-        d[7] = isNeg ? '-' : ' ';
-        d[6] = Math.floor(m / 10).toString();
-        d[5] = (m % 10).toString();
-        d[4] = Math.floor(s / 10).toString();
-        d[3] = (s % 10).toString();
-        dp[3] = true;
-        d[2] = Math.floor(cs / 10).toString();
-        d[1] = (cs % 10).toString();
-        d[0] = ' ';
+        const absMs = Math.abs(rem);
+        const min = Math.floor(absMs / 60000) % 60;
+        const sec = Math.floor((absMs % 60000) / 1000);
+        const ms = absMs % 1000;
+        chars[7] = isNeg ? '-' : ' ';
+        chars[6] = Math.floor(min / 10).toString();
+        chars[5] = (min % 10).toString();
+        dps[5] = true;
+        chars[4] = Math.floor(sec / 10).toString();
+        chars[3] = (sec % 10).toString();
+        dps[3] = true;
+        chars[2] = Math.floor(ms / 100).toString();
+        chars[1] = Math.floor((ms % 100) / 10).toString();
+        chars[0] = (ms % 10).toString();
       }
 
-      // MODE 3: ALARM
-      else if (STATE.mode === 3) {
-        const alm = STATE.alarms[STATE.almChannel];
-        const h = Math.floor(alm.min / 60);
-        const m = alm.min % 60;
+      // 4. CHẾ ĐỘ 3: ALARM (dr_al)
+      else if (m === 3) {
+        if (STATE.almChannel < 4) {
+          const alm = STATE.alarms[STATE.almChannel];
+          let h = Math.floor(alm.minOfDay / 60);
+          let mn = alm.minOfDay % 60;
+          if (STATE.almEditing > 0) {
+            h = STATE.almEditH;
+            mn = STATE.almEditM;
+          }
+          chars[7] = 'A';
+          chars[6] = 'L';
+          chars[5] = (STATE.almChannel + 1).toString();
+          chars[4] = alm.en ? 'o' : ' ';
+          chars[3] = Math.floor(h / 10).toString();
+          chars[2] = (h % 10).toString();
+          dps[2] = true;
+          chars[1] = Math.floor(mn / 10).toString();
+          chars[0] = (mn % 10).toString();
 
-        d[7] = 'A';
-        d[6] = 'L';
-        d[5] = (STATE.almChannel + 1).toString();
-        d[4] = ' ';
-        d[3] = Math.floor(h / 10).toString();
-        d[2] = (h % 10).toString();
-        d[1] = Math.floor(m / 10).toString();
-        d[0] = (m % 10).toString();
-      }
-
-      // MODE 4: SET
-      else if (STATE.mode === 4) {
-        const sv = STATE.setVals;
-        // Hiển thị Giờ/Phút/Giây hoặc Ngày/Tháng/Năm
-        if (STATE.setField <= 2) {
-          d[7] = (STATE.setField === 0 && !blinkOn) ? ' ' : Math.floor(sv.hr / 10).toString();
-          d[6] = (STATE.setField === 0 && !blinkOn) ? ' ' : (sv.hr % 10).toString();
-          d[5] = (STATE.setField === 1 && !blinkOn) ? ' ' : Math.floor(sv.min / 10).toString();
-          d[4] = (STATE.setField === 1 && !blinkOn) ? ' ' : (sv.min % 10).toString();
-          d[3] = (STATE.setField === 2 && !blinkOn) ? ' ' : Math.floor(sv.sec / 10).toString();
-          d[2] = (STATE.setField === 2 && !blinkOn) ? ' ' : (sv.sec % 10).toString();
-          d[1] = ' ';
-          d[0] = ' ';
-        } else {
-          d[7] = (STATE.setField === 3 && !blinkOn) ? ' ' : Math.floor(sv.day / 10).toString();
-          d[6] = (STATE.setField === 3 && !blinkOn) ? ' ' : (sv.day % 10).toString();
-          d[5] = '-';
-          d[4] = (STATE.setField === 4 && !blinkOn) ? ' ' : Math.floor(sv.mon / 10).toString();
-          d[3] = (STATE.setField === 4 && !blinkOn) ? ' ' : (sv.mon % 10).toString();
-          d[2] = '-';
-          d[1] = (STATE.setField === 5 && !blinkOn) ? ' ' : Math.floor(sv.yr / 10).toString();
-          d[0] = (STATE.setField === 5 && !blinkOn) ? ' ' : (sv.yr % 10).toString();
-          sepColon = false;
+          // Nhấp nháy 2 Hz khi đang sửa trường
+          if (STATE.almEditing === 1 && !STATE.blinkPhase) { // Nháy giờ
+            chars[3] = ' '; chars[2] = ' ';
+          } else if (STATE.almEditing === 2 && !STATE.blinkPhase) { // Nháy phút
+            chars[1] = ' '; chars[0] = ' ';
+          }
+        } else { // Hourly Chime page
+          chars[7] = 'C';
+          chars[6] = 'H';
+          chars[5] = ' ';
+          chars[4] = STATE.hourlyChime ? 'o' : ' ';
+          chars[3] = ' '; chars[2] = ' '; chars[1] = ' '; chars[0] = ' ';
         }
       }
 
-      // Ghi ra 8 chữ số SVG
+      // 5. CHẾ ĐỘ 4: SET (dr_st)
+      else if (m === 4) {
+        const sf = STATE.setField;
+        if (sf < 3) { // Setting Time: HH.MM.SS
+          const sv = STATE.setVals;
+          chars[7] = ' ';
+          chars[6] = ' ';
+          chars[5] = Math.floor(sv.hr / 10).toString();
+          chars[4] = (sv.hr % 10).toString();
+          dps[4] = true;
+          chars[3] = Math.floor(sv.min / 10).toString();
+          chars[2] = (sv.min % 10).toString();
+          dps[2] = true;
+          chars[1] = Math.floor(sv.sec / 10).toString();
+          chars[0] = (sv.sec % 10).toString();
+
+          if (!STATE.blinkPhase) {
+            if (sf === 0) { chars[5] = ' '; chars[4] = ' '; }
+            else if (sf === 1) { chars[3] = ' '; chars[2] = ' '; }
+            else if (sf === 2) { chars[1] = ' '; chars[0] = ' '; }
+          }
+        } else { // Setting Date: DD-MM-YY
+          const sv = STATE.setVals;
+          chars[7] = Math.floor(sv.day / 10).toString();
+          chars[6] = (sv.day % 10).toString();
+          chars[5] = '-';
+          chars[4] = Math.floor(sv.mon / 10).toString();
+          chars[3] = (sv.mon % 10).toString();
+          chars[2] = '-';
+          chars[1] = Math.floor(sv.yr / 10).toString();
+          chars[0] = (sv.yr % 10).toString();
+
+          if (!STATE.blinkPhase) {
+            if (sf === 3) { chars[7] = ' '; chars[6] = ' '; }
+            else if (sf === 4) { chars[4] = ' '; chars[3] = ' '; }
+            else if (sf === 5) { chars[1] = ' '; chars[0] = ' '; }
+          }
+        }
+      }
+
+      // Xuất mẫu 7 thanh lên giao diện SVG
+      const segPats = [];
       for (let i = 0; i < 8; i++) {
-        setDigit(`d${i}`, d[i], dp[i]);
+        segPats[i] = renderDigitSvg(i, chars[i], dps[i]);
       }
 
-      // Separators
-      const sep1 = document.getElementById('sep1');
-      const sep2 = document.getElementById('sep2');
-      if (sepColon) {
-        sep1.textContent = ':';
-        sep2.textContent = ':';
-        sep1.classList.remove('off');
-        sep2.classList.remove('off');
-      } else {
-        sep1.textContent = ' ';
-        sep2.textContent = ' ';
-      }
+      // Cập nhật nhãn phụ
+      updateSubLabels();
 
-      // Annunciators
-      document.querySelectorAll('.ann-item').forEach(el => el.classList.remove('active'));
-      const modeKeys = ['ann-time', 'ann-stpw', 'ann-tmr', 'ann-alm', 'ann-set'];
-      const activeEl = document.getElementById(modeKeys[STATE.mode]);
-      if (activeEl) activeEl.classList.add('active');
+      // Cập nhật Terminal Monitor Mirror
+      updateTerminalMirror(chars, dps, segPats);
 
-      const bell = document.getElementById('ann-bell');
-      if (STATE.hourlyChime) bell.classList.add('active');
-      else bell.classList.remove('active');
-
-      // Status Flags
-      document.getElementById('flag-24h').textContent = STATE.is24h ? '24H' : '12H';
-      document.getElementById('flag-secms').textContent = STATE.showSecMs ? 'SEC.MS [BẬT]' : (STATE.showDate ? 'NGÀY/THÁNG' : 'THỜI GIAN');
-      
-      const almActive = STATE.alarms.some(a => a.en);
-      const flagAlm = document.getElementById('flag-alarm-active');
-      if (almActive) {
-        flagAlm.textContent = 'BÁO THỨC: BẬT';
-        flagAlm.classList.add('on');
-      } else {
-        flagAlm.textContent = 'BÁO THỨC: TẮT';
-        flagAlm.classList.remove('on');
-      }
-
-      // Register Inspector Updates
-      document.getElementById('reg-rtc-ms').textContent = '0x' + STATE.msOfDay.toString(16).padStart(8, '0').toUpperCase() + ` (${STATE.msOfDay} ms)`;
-      document.getElementById('reg-day').textContent = `0x${STATE.days.toString(16).toUpperCase()} (${STATE.days})`;
-      document.getElementById('reg-sw-ms').textContent = `0x${STATE.swElapsedMs.toString(16).toUpperCase()} (${STATE.swElapsedMs} ms)`;
-      document.getElementById('reg-tmr-val').textContent = `0x${(STATE.tmrRemainMs < 0 ? (0xFFFFFFFF + STATE.tmrRemainMs + 1) : STATE.tmrRemainMs).toString(16).toUpperCase()} (${STATE.tmrRemainMs} ms)`;
-      document.getElementById('reg-alarm0').textContent = `0x${STATE.alarms[0].min.toString(16).toUpperCase()} (${Math.floor(STATE.alarms[0].min/60)}:${(STATE.alarms[0].min%60).toString().padStart(2,'0')})`;
-      document.getElementById('reg-blink').textContent = STATE.mode === 4 ? `0x0000000${1 << (7 - STATE.setField)}` : '0x00000000';
-      document.getElementById('reg-cal').textContent = `${STATE.calPpm >= 0 ? '+' : ''}${STATE.calPpm} ppm (0x${(STATE.calPpm & 0xFFFF).toString(16).toUpperCase()})`;
-      document.getElementById('reg-cycles').textContent = '0x' + STATE.cycles.toString(16).padStart(8, '0').toUpperCase();
+      // Cập nhật Hardware Registers Inspector
+      updateRegisterInspector();
     }
 
-    // 3. Tương tác Nút Bấm (Button Handlers)
-    function pressA() {
-      clickSound();
-      if (STATE.mode === 4) {
-        // Lưu cài đặt SET về RTC
-        const sv = STATE.setVals;
-        STATE.msOfDay = (sv.hr * 3600 + sv.min * 60 + sv.sec) * 1000;
-        // Tính lại số ngày từ 01/01/2000
-        let d = 0;
-        for (let y = 2000; y < 2000 + sv.yr; y++) {
-          const isLeap = (y % 4 === 0 && y % 100 !== 0) || (y % 400 === 0);
-          d += isLeap ? 366 : 365;
+    // ============================================================================
+    // MÔ PHỎNG TERMINAL (tools/screen.py EXACT ASCII & LOG STREAM)
+    // ============================================================================
+    function updateTerminalMirror(chars, dps, segPats) {
+      // 1. Tạo chuỗi ký tự chuẩn: text(segs, tab) trong screen.py
+      let textOut = '';
+      for (let i = 7; i >= 0; i--) {
+        textOut += chars[i] + (dps[i] ? '.' : '');
+      }
+
+      // 2. Tạo chữ số lớn 3 dòng: big(segs) trong screen.py
+      // segPats[7] (trái nhất) -> segPats[0] (phải nhất)
+      const rows = ['', '', ''];
+      for (let i = 7; i >= 0; i--) {
+        const s = segPats[i];
+        const a = (s >> 0) & 1;
+        const b = (s >> 1) & 1;
+        const c = (s >> 2) & 1;
+        const d = (s >> 3) & 1;
+        const e = (s >> 4) & 1;
+        const f = (s >> 5) & 1;
+        const g = (s >> 6) & 1;
+        const dp = (s >> 7) & 1;
+        rows[0] += " " + (a ? "_" : " ") + "  ";
+        rows[1] += (f ? "|" : " ") + (g ? "_" : " ") + (b ? "|" : " ") + " ";
+        rows[2] += (e ? "|" : " ") + (d ? "_" : " ") + (c ? "|" : " ") + (dp ? "." : " ");
+      }
+
+      const bigAscii = `t = ${Math.floor(STATE.simTimeMs)} ms\n${rows[0]}\n${rows[1]}\n${rows[2]}`;
+      const bigEl = document.getElementById('term-big-content');
+      if (bigEl && STATE.termView === 'big') {
+        bigEl.textContent = bigAscii;
+      }
+
+      // 3. Ghi vết log theo thời gian (Stream log) mỗi 1 giây hoặc khi có sự kiện
+      const curSec = Math.floor(STATE.simTimeMs / 1000);
+      if (curSec !== STATE.lastLogSec) {
+        STATE.lastLogSec = curSec;
+        appendStreamLog(`t=${String(Math.floor(STATE.simTimeMs)).padStart(7, ' ')} ms | ${textOut.padEnd(12, ' ')}`);
+      }
+    }
+
+    function appendStreamLog(line, isTear = false) {
+      const logEl = document.getElementById('term-stream-content');
+      if (!logEl) return;
+      const row = document.createElement('div');
+      row.className = 'log-line' + (isTear ? ' tear' : ' active');
+      row.textContent = line + (isTear ? '  <- xe hinh (ghi do, 1 vong quet)' : '');
+      logEl.appendChild(row);
+      if (logEl.children.length > 80) {
+        logEl.removeChild(logEl.children[1]);
+      }
+      logEl.scrollTop = logEl.scrollHeight;
+    }
+
+    function clearTermLog() {
+      const logEl = document.getElementById('term-stream-content');
+      if (logEl) {
+        logEl.innerHTML = '<div class="log-line"># Da xoa vet log quet man hinh.</div>';
+      }
+    }
+
+    function switchTermView(view) {
+      STATE.termView = view;
+      document.getElementById('tab-big').classList.toggle('active', view === 'big');
+      document.getElementById('tab-stream').classList.toggle('active', view === 'stream');
+      document.getElementById('term-big-content').style.display = view === 'big' ? 'block' : 'none';
+      document.getElementById('term-stream-content').style.display = view === 'stream' ? 'block' : 'none';
+    }
+
+    // ============================================================================
+    // GIÁM SÁT THANH GHI PHẦN CỨNG (HARDWARE MMIO REGISTER INSPECTOR)
+    // ============================================================================
+    function toHex32(val) {
+      return '0x' + (val >>> 0).toString(16).toUpperCase().padStart(8, '0');
+    }
+
+    function updateRegisterInspector() {
+      document.getElementById('reg-rtc-ms').textContent = toHex32(STATE.msOfDay);
+      document.getElementById('reg-day-shadow').textContent = toHex32(STATE.days);
+      document.getElementById('reg-sw-val').textContent = toHex32(STATE.swElapsedMs);
+      const lapReg = STATE.laps.length > 0 ? (0x80000000 | (STATE.laps[STATE.laps.length - 1] & 0x1FFFFFFF)) : 0;
+      document.getElementById('reg-sw-lap').textContent = toHex32(lapReg);
+      document.getElementById('reg-tmr-val').textContent = toHex32(STATE.tmrRemainMs);
+      const a0 = STATE.alarms[0];
+      const a0Val = (a0.en ? 0x80000000 : 0) | (a0.minOfDay & 0x7FF);
+      document.getElementById('reg-alarm0').textContent = toHex32(a0Val);
+      document.getElementById('reg-bright').textContent = toHex32(STATE.brightness);
+      const blinkMask = (STATE.mode === 4) ? (1 << (STATE.setField * 2)) : 0;
+      document.getElementById('reg-blink').textContent = toHex32(blinkMask);
+      const beepPat = STATE.alarmSounding ? 0x00010F0F : (STATE.tmrBeeping ? 0x00000005 : 0);
+      document.getElementById('reg-beep').textContent = toHex32(beepPat);
+
+      const fsmNames = ['TIME', 'STPW', 'TMR', 'ALM', 'SET'];
+      document.getElementById('reg-fsm-mode').textContent = fsmNames[STATE.mode];
+    }
+
+    // ============================================================================
+    // XỬ LÝ SỰ KIỆN NÚT BẤM (HARDWARE KEY PRESS HANDLERS)
+    // ============================================================================
+    function updateAnnunciators() {
+      const modes = ['time', 'stpw', 'tmr', 'alm', 'set'];
+      modes.forEach((m, idx) => {
+        document.getElementById(`ann-${m}`).classList.toggle('active', STATE.mode === idx);
+      });
+      document.getElementById('ann-bell').classList.toggle('active', STATE.hourlyChime);
+      updateButtonDescriptions();
+    }
+
+    function updateButtonDescriptions() {
+      const m = STATE.mode;
+      const dMode = document.getElementById('desc-mode');
+      const dA = document.getElementById('desc-a');
+      const dB = document.getElementById('desc-b');
+      const dC = document.getElementById('desc-c');
+
+      dMode.textContent = 'Chuyển chế độ FSM (TIME → STPW → TMR → ALM → SET)';
+
+      if (m === 0) { // TIME
+        dA.textContent = 'Chuyển đổi 12H / 24H (AM/PM)';
+        dB.textContent = 'Đổi trang (Giờ:Phút:Giây → Phút:Giây.ms → Ngày-Tháng)';
+        dC.textContent = 'Điều chỉnh độ sáng LED (15 → 9 → 3 → 15)';
+      } else if (m === 1) { // STPW
+        dA.textContent = STATE.swRunning ? 'DỪNG (Stop) bấm giờ' : 'BẮT ĐẦU (Start) bấm giờ';
+        dB.textContent = STATE.swRunning ? 'Chụp Lap 0-ns phần cứng' : 'Đặt lại về 00:00.000 (Reset)';
+        dC.textContent = 'Duyệt xem 8 Lap đã lưu (1..8 → Live)';
+      } else if (m === 2) { // TMR
+        dA.textContent = STATE.tmrRunning ? 'DỪNG (Stop) đếm ngược' : 'BẮT ĐẦU (Start) đếm ngược';
+        dB.textContent = 'Khôi phục về giá trị đặt trước (Reset)';
+        dC.textContent = STATE.tmrRunning ? '(Khóa khi đang chạy)' : 'Tăng thêm 1 phút vào preset';
+      } else if (m === 3) { // ALM
+        if (STATE.almEditing > 0) {
+          dA.textContent = `Tăng giá trị trường ${STATE.almEditing === 1 ? 'Giờ (+1)' : 'Phút (+1)'}`;
+          dB.textContent = 'Chuyển đổi giữa sửa Giờ ↔ Phút';
+          dC.textContent = 'Lưu mốc giờ và hoàn tất sửa';
+        } else {
+          dA.textContent = STATE.almChannel < 4 ? 'Bật / Tắt kênh báo thức' : 'Bật / Tắt Chuông điểm giờ (Chime)';
+          dB.textContent = 'Đổi kênh (AL1 → AL2 → AL3 → AL4 → CHIME)';
+          dC.textContent = STATE.alarmSounding ? 'Tạm hoãn chuông Snooze (+5 phút)' : 'Vào chế độ chỉnh sửa giờ';
         }
-        const isCurLeap = ((2000 + sv.yr) % 4 === 0 && (2000 + sv.yr) % 100 !== 0) || ((2000 + sv.yr) % 400 === 0);
-        const mDays = [31, isCurLeap ? 29 : 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
-        for (let m = 0; m < sv.mon - 1; m++) d += mDays[m];
-        d += (sv.day - 1);
-        STATE.days = d;
+      } else if (m === 4) { // SET
+        const fNames = ['Giờ (+1)', 'Phút (+1)', 'Giây (Đặt về 00)', 'Ngày (+1)', 'Tháng (+1)', 'Năm (+1)'];
+        dA.textContent = `Tăng trường: ${fNames[STATE.setField]}`;
+        dB.textContent = 'Chuyển sang trường tiếp theo (Next Field)';
+        dC.textContent = 'Lưu vào RTC phần cứng và thoát về TIME';
+      }
+    }
+
+    // 1. Phím MODE
+    function pressMODE() {
+      playClick();
+      animateBtn('btn-mode');
+      if (STATE.mode === 4) {
+        // Thoát khỏi SET mà không lưu (hoặc chuyển sang TIME)
       }
       STATE.mode = (STATE.mode + 1) % 5;
       if (STATE.mode === 4) {
-        // Nạp giá trị hiện tại vào bộ đệm SET
-        const totalSec = Math.floor(STATE.msOfDay / 1000);
+        // Khởi tạo các giá trị SET từ RTC hiện tại
+        const secTotal = Math.floor(STATE.msOfDay / 1000);
         const dt = daysToDate(STATE.days);
         STATE.setVals = {
-          hr: Math.floor(totalSec / 3600),
-          min: Math.floor((totalSec % 3600) / 60),
-          sec: totalSec % 60,
+          hr: Math.floor(secTotal / 3600) % 24,
+          min: Math.floor((secTotal % 3600) / 60),
+          sec: secTotal % 60,
           day: dt.day,
           mon: dt.mon,
           yr: dt.yr
         };
         STATE.setField = 0;
       }
-      updateDescriptions();
-      renderDisplay();
+      if (STATE.mode === 1) {
+        STATE.swLapIdx = -1;
+      }
+      if (STATE.mode === 3) {
+        STATE.almEditing = 0;
+      }
+      updateAnnunciators();
+      render();
     }
 
-    function pressB() {
-      clickSound();
-      // MODE 0: TIME -> Đổi Xem Giây.ms
-      if (STATE.mode === 0) {
-        STATE.showSecMs = !STATE.showSecMs;
-        STATE.showDate = false;
-      }
-      // MODE 1: STOPWATCH -> Start / Stop
-      else if (STATE.mode === 1) {
-        STATE.swRunning = !STATE.swRunning;
-        STATE.swViewLapIdx = -1;
-      }
-      // MODE 2: TIMER -> Start / Stop
-      else if (STATE.mode === 2) {
-        STATE.tmrRunning = !STATE.tmrRunning;
-      }
-      // MODE 3: ALARM -> Toggle Alarm Enable
-      else if (STATE.mode === 3) {
-        STATE.alarms[STATE.almChannel].en = !STATE.alarms[STATE.almChannel].en;
-        beep(1800, 0.05);
-      }
-      // MODE 4: SET -> Tăng giá trị (+1)
-      else if (STATE.mode === 4) {
-        adjustSetField(1);
-      }
-      renderDisplay();
-    }
-
-    function pressC() {
-      clickSound();
-      // MODE 0: TIME -> Đổi 12h / 24h
-      if (STATE.mode === 0) {
+    // 2. Phím A
+    function pressA() {
+      playClick();
+      animateBtn('btn-a');
+      const m = STATE.mode;
+      if (m === 0) { // TIME: Đảo 12h / 24h
         STATE.is24h = !STATE.is24h;
+        document.getElementById('flag-fmt').textContent = (STATE.is24h ? '24H' : '12H') + ' | THỜI GIAN THẬT';
+      } else if (m === 1) { // STPW: Start / Stop
+        STATE.swRunning = !STATE.swRunning;
+        STATE.swLapIdx = -1;
+      } else if (m === 2) { // TMR: Start / Stop
+        STATE.tmrRunning = !STATE.tmrRunning;
+        STATE.tmrBeeping = false;
+      } else if (m === 3) { // ALM
+        if (STATE.almEditing === 1) { // Tăng giờ
+          STATE.almEditH = (STATE.almEditH + 1) % 24;
+        } else if (STATE.almEditing === 2) { // Tăng phút
+          STATE.almEditM = (STATE.almEditM + 1) % 60;
+        } else {
+          if (STATE.almChannel < 4) {
+            STATE.alarms[STATE.almChannel].en = !STATE.alarms[STATE.almChannel].en;
+          } else {
+            STATE.hourlyChime = !STATE.hourlyChime;
+          }
+        }
+      } else if (m === 4) { // SET: +1
+        const sv = STATE.setVals;
+        const sf = STATE.setField;
+        if (sf === 0) sv.hr = (sv.hr + 1) % 24;
+        else if (sf === 1) sv.min = (sv.min + 1) % 60;
+        else if (sf === 2) sv.sec = 0; // Riêng giây ép về 00
+        else if (sf === 3) {
+          const maxD = getMonthLength(sv.mon, sv.yr);
+          sv.day = (sv.day % maxD) + 1;
+        } else if (sf === 4) {
+          sv.mon = (sv.mon % 12) + 1;
+          const maxD = getMonthLength(sv.mon, sv.yr);
+          if (sv.day > maxD) sv.day = maxD;
+        } else if (sf === 5) {
+          sv.yr = (sv.yr + 1) % 100;
+          const maxD = getMonthLength(sv.mon, sv.yr);
+          if (sv.day > maxD) sv.day = maxD;
+        }
       }
-      // MODE 1: STOPWATCH -> Chốt Lap (nếu đang chạy) hoặc Reset (nếu đang dừng)
-      else if (STATE.mode === 1) {
+      updateAnnunciators();
+      render();
+    }
+
+    // 3. Phím B
+    function pressB() {
+      playClick();
+      animateBtn('btn-b');
+      const m = STATE.mode;
+      if (m === 0) { // TIME: Đổi trang hiển thị (0: HH.MM.SS, 1: MM.SS.mmm, 2: DD-MM-YY)
+        STATE.timeView = (STATE.timeView + 1) % 3;
+      } else if (m === 1) { // STPW: Chạy -> Chụp Lap 0-ns | Dừng -> Reset 0
         if (STATE.swRunning) {
           if (STATE.laps.length < 8) {
             STATE.laps.push(STATE.swElapsedMs);
-            STATE.swViewLapIdx = STATE.laps.length - 1;
-            beep(2200, 0.06);
-            setTimeout(() => { STATE.swViewLapIdx = -1; renderDisplay(); }, 1500);
+            appendStreamLog(`[STPW] Da chup Lap ${STATE.laps.length}: ${STATE.swElapsedMs} ms (0-ns capture)`);
           }
         } else {
           STATE.swElapsedMs = 0;
           STATE.laps = [];
-          STATE.swViewLapIdx = -1;
+          STATE.swLapIdx = -1;
         }
-      }
-      // MODE 2: TIMER -> Reset về thời gian ban đầu
-      else if (STATE.mode === 2) {
+      } else if (m === 2) { // TMR: Reset về preset
+        STATE.tmrRemainMs = STATE.tmrPresetMs;
         STATE.tmrRunning = false;
-        STATE.tmrRemainMs = STATE.tmrInitSec * 1000;
         STATE.tmrBeeping = false;
-      }
-      // MODE 3: ALARM -> Chuyển kênh (AL0..AL3) / Snooze
-      else if (STATE.mode === 3) {
-        STATE.almChannel = (STATE.almChannel + 1) % 4;
-      }
-      // MODE 4: SET -> Giảm giá trị (-1)
-      else if (STATE.mode === 4) {
-        adjustSetField(-1);
-      }
-      renderDisplay();
-    }
-
-    function pressD() {
-      clickSound();
-      // MODE 0: TIME -> Xem Ngày/Tháng hoặc Chime
-      if (STATE.mode === 0) {
-        STATE.showDate = !STATE.showDate;
-        STATE.showSecMs = false;
-      }
-      // MODE 1: STOPWATCH -> Xem danh sách các Lap
-      else if (STATE.mode === 1) {
-        if (STATE.laps.length > 0) {
-          STATE.swViewLapIdx = (STATE.swViewLapIdx + 1) % STATE.laps.length;
+      } else if (m === 3) { // ALM
+        if (STATE.almEditing > 0) { // Chuyển đổi giữa sửa Giờ (1) <-> Phút (2)
+          STATE.almEditing = STATE.almEditing === 1 ? 2 : 1;
+        } else {
+          STATE.almChannel = (STATE.almChannel + 1) % 5;
         }
-      }
-      // MODE 2: TIMER -> Thêm thời gian (+30s)
-      else if (STATE.mode === 2) {
-        if (!STATE.tmrRunning) {
-          STATE.tmrInitSec = (STATE.tmrInitSec + 30) % 3600;
-          if (STATE.tmrInitSec === 0) STATE.tmrInitSec = 30;
-          STATE.tmrRemainMs = STATE.tmrInitSec * 1000;
-        }
-      }
-      // MODE 3: ALARM -> Đổi phút báo thức (+15 phút)
-      else if (STATE.mode === 3) {
-        const alm = STATE.alarms[STATE.almChannel];
-        alm.min = (alm.min + 15) % 1440;
-      }
-      // MODE 4: SET -> Chuyển trường chỉnh tiếp theo
-      else if (STATE.mode === 4) {
+      } else if (m === 4) { // SET: Đổi trường (0..5)
         STATE.setField = (STATE.setField + 1) % 6;
       }
-      renderDisplay();
+      updateAnnunciators();
+      render();
     }
 
-    function adjustSetField(delta) {
-      const sv = STATE.setVals;
-      if (STATE.setField === 0) sv.hr = (sv.hr + delta + 24) % 24;
-      else if (STATE.setField === 1) sv.min = (sv.min + delta + 60) % 60;
-      else if (STATE.setField === 2) sv.sec = (sv.sec + delta + 60) % 60;
-      else if (STATE.setField === 3) {
-        sv.day += delta;
-        if (sv.day > 31) sv.day = 1;
-        if (sv.day < 1) sv.day = 31;
-      }
-      else if (STATE.setField === 4) {
-        sv.mon += delta;
-        if (sv.mon > 12) sv.mon = 1;
-        if (sv.mon < 1) sv.mon = 12;
-      }
-      else if (STATE.setField === 5) {
-        sv.yr = (sv.yr + delta + 100) % 100;
-      }
-    }
+    // 4. Phím C
+    function pressC() {
+      playClick();
+      animateBtn('btn-c');
+      const m = STATE.mode;
+      if (m === 0) { // TIME: Điều chỉnh độ sáng LED (15 -> 9 -> 3 -> 15)
+        if (STATE.brightness === 15) STATE.brightness = 9;
+        else if (STATE.brightness === 9) STATE.brightness = 3;
+        else STATE.brightness = 15;
 
-    function updateDescriptions() {
-      const descs = [
-        [
-          "Chuyển chế độ (TIME → STPW → TMR → ALM → SET)",
-          "Bật/tắt xem Giây.ms (SS.mmm) hoặc xem thường",
-          "Chuyển đổi định dạng 12H (AM/PM) / 24H",
-          "Xem Ngày / Tháng / Năm hoặc Thứ"
-        ],
-        [
-          "Chuyển sang chế độ TIẾP THEO (TIMER)",
-          STATE.swRunning ? "Tạm Dừng (Stop) bấm giờ" : "Bắt Đầu (Start) bấm giờ",
-          STATE.swRunning ? "Chốt Vòng Chạy (0-ns Hardware Capture Lap)" : "Đặt lại về 00:00.00 (Reset)",
-          "Xem lại danh sách 8 Lap đã lưu"
-        ],
-        [
-          "Chuyển sang chế độ TIẾP THEO (ALARM)",
-          STATE.tmrRunning ? "Tạm Dừng (Stop) đếm ngược" : "Bắt Đầu (Start) đếm ngược",
-          "Đặt lại thời gian đếm ban đầu",
-          "Tăng thời gian đếm (+30 giây)"
-        ],
-        [
-          "Chuyển sang chế độ TIẾP THEO (SET)",
-          "Bật / Tắt kích hoạt kênh báo thức hiện tại",
-          "Chuyển kênh báo thức (AL-1 → AL-2 → AL-3 → AL-4)",
-          "Cài đặt giờ báo thức (+15 phút)"
-        ],
-        [
-          "Lưu cài đặt và quay lại TIME",
-          "Tăng giá trị trường được chọn (+1)",
-          "Giảm giá trị trường được chọn (-1)",
-          "Chuyển trường (Giờ → Phút → Giây → Ngày → Tháng → Năm)"
-        ]
-      ];
-      const cur = descs[STATE.mode];
-      document.getElementById('desc-a').textContent = cur[0];
-      document.getElementById('desc-b').textContent = cur[1];
-      document.getElementById('desc-c').textContent = cur[2];
-      document.getElementById('desc-d').textContent = cur[3];
-    }
-
-    // 4. Vòng Lặp Mô Phỏng Đồng Hồ (Hardware Clock Simulation Loop)
-    let lastTick = performance.now();
-    setInterval(() => {
-      const now = performance.now();
-      const dt = (now - lastTick) * STATE.speed;
-      lastTick = now;
-
-      // Cộng dồn chu kỳ xung nhịp 50 MHz
-      STATE.cycles += Math.floor(dt * 50000);
-
-      // Cập nhật RTC thời gian thực
-      STATE.msOfDay += dt;
-      if (STATE.msOfDay >= 86400000) {
-        STATE.msOfDay -= 86400000;
-        STATE.days += 1;
-        beep(3000, 0.15); // Tiếng chuông sang ngày mới
-      }
-
-      // Hourly Chime
-      const sec = Math.floor(STATE.msOfDay / 1000);
-      if (STATE.hourlyChime && sec % 3600 === 0 && (STATE.msOfDay % 1000 < dt)) {
-        beep(2800, 0.08);
-        setTimeout(() => beep(2800, 0.08), 120);
-      }
-
-      // Cập nhật Stopwatch
-      if (STATE.swRunning) {
-        STATE.swElapsedMs += dt;
-      }
-
-      // Cập nhật Countdown Timer
-      if (STATE.tmrRunning) {
-        const prev = STATE.tmrRemainMs;
-        STATE.tmrRemainMs -= dt;
-        if (prev > 0 && STATE.tmrRemainMs <= 0) {
-          // Bắt đầu kêu chuông quá hạn
-          STATE.tmrBeeping = true;
-          beep(2000, 0.4);
+        const dCont = document.getElementById('digits-container');
+        dCont.className = `digits-row dim-${STATE.brightness}`;
+      } else if (m === 1) { // STPW: Duyệt 8 Lap đã lưu
+        if (STATE.laps.length > 0) {
+          STATE.swLapIdx++;
+          if (STATE.swLapIdx >= STATE.laps.length) {
+            STATE.swLapIdx = -1; // Quay về xem chạy trực tiếp
+          }
         }
-        if (STATE.tmrRemainMs < 0 && Math.floor(STATE.tmrRemainMs / 1000) !== Math.floor(prev / 1000)) {
-          beep(2000, 0.08); // Nhịp bíp đếm quá giờ âm
+      } else if (m === 2) { // TMR: +1 phút vào preset khi dừng
+        if (!STATE.tmrRunning) {
+          STATE.tmrPresetMs = (STATE.tmrPresetMs + 60000) % 3600000;
+          STATE.tmrRemainMs = STATE.tmrPresetMs;
         }
+      } else if (m === 3) { // ALM
+        if (STATE.alarmSounding) { // Snooze +5 phút
+          STATE.alarmSounding = false;
+          STATE.snoozeUntilMs = (STATE.msOfDay + 300000) % 86400000;
+          appendStreamLog(`[ALARM] Snooze da bat: hen keu lai sau 5 phut (+300.000 ms)`);
+        } else if (STATE.almChannel < 4) {
+          if (STATE.almEditing === 0) { // Bắt đầu sửa
+            const alm = STATE.alarms[STATE.almChannel];
+            STATE.almEditH = Math.floor(alm.minOfDay / 60);
+            STATE.almEditM = alm.minOfDay % 60;
+            STATE.almEditing = 1;
+          } else { // Lưu và thoát sửa
+            STATE.alarms[STATE.almChannel].minOfDay = STATE.almEditH * 60 + STATE.almEditM;
+            STATE.almEditing = 0;
+          }
+        }
+      } else if (m === 4) { // SET: Lưu vào RTC & Thoát về TIME
+        const sv = STATE.setVals;
+        STATE.msOfDay = (sv.hr * 3600 + sv.min * 60 + sv.sec) * 1000;
+        STATE.days = dateToDays(sv.day, sv.mon, sv.yr);
+        STATE.mode = 0;
+        appendStreamLog(`[RTC] Da dong bo gio moi: ${sv.hr}:${sv.min}:${sv.sec} ngay ${sv.day}/${sv.mon}/${sv.yr}`);
       }
+      updateAnnunciators();
+      render();
+    }
 
-      // Pha nhấp nháy 2 Hz cho chế độ SET
-      STATE.blinkPhase = Math.floor(now / 250) % 2 === 0;
+    function animateBtn(btnId) {
+      const btn = document.getElementById(btnId);
+      if (btn) {
+        btn.classList.add('pressed');
+        setTimeout(() => btn.classList.remove('pressed'), 120);
+      }
+    }
 
-      renderDisplay();
-    }, 40); // 25 FPS cập nhật hiển thị mượt mà
-
-    // 5. Gán Sự Kiện Giao Diện (Event Listeners)
-    document.getElementById('btn-a').onclick = pressA;
-    document.getElementById('btn-b').onclick = pressB;
-    document.getElementById('btn-c').onclick = pressC;
-    document.getElementById('btn-d').onclick = pressD;
-
-    // Phím tắt bàn phím
+    // Bàn phím máy tính (Keyboard Hotkeys)
     window.addEventListener('keydown', (e) => {
-      const k = e.key.toUpperCase();
-      if (k === 'A' || k === '1') { animateBtn('btn-a'); pressA(); }
-      else if (k === 'B' || k === '2') { animateBtn('btn-b'); pressB(); }
-      else if (k === 'C' || k === '3') { animateBtn('btn-c'); pressC(); }
-      else if (k === 'D' || k === '4') { animateBtn('btn-d'); pressD(); }
+      const k = e.key.toLowerCase();
+      if (k === 'm' || k === '1') pressMODE();
+      else if (k === 'a' || k === '2') pressA();
+      else if (k === 'b' || k === '3') pressB();
+      else if (k === 'c' || k === '4') pressC();
     });
 
-    function animateBtn(id) {
-      const el = document.getElementById(id);
-      el.classList.add('pressed');
-      setTimeout(() => el.classList.remove('pressed'), 120);
+    // ============================================================================
+    // VÒNG LẶP ĐỒNG HỒ PHẦN CỨNG (HARDWARE SYSTEM CLOCK ENGINE)
+    // ============================================================================
+    let lastRealStamp = performance.now();
+
+    function systemTick() {
+      const now = performance.now();
+      const deltaReal = now - lastRealStamp;
+      lastRealStamp = now;
+
+      // Tính thời gian mô phỏng theo tốc độ
+      const deltaSim = deltaReal * STATE.speed;
+      STATE.simTimeMs += deltaSim;
+
+      // 1. Cập nhật RTC thời gian thực
+      STATE.msOfDay += deltaSim;
+      if (STATE.msOfDay >= 86400000) { // 24 giờ
+        STATE.msOfDay -= 86400000;
+        STATE.days += 1;
+        appendStreamLog(`[RTC] Chuyen ngay moi: days=${STATE.days}`);
+      }
+
+      // 2. Cập nhật Stopwatch
+      if (STATE.swRunning) {
+        STATE.swElapsedMs += deltaSim;
+      }
+
+      // 3. Cập nhật Timer đếm lùi & quá hạn âm
+      if (STATE.tmrRunning) {
+        const prev = STATE.tmrRemainMs;
+        STATE.tmrRemainMs -= deltaSim;
+        if (prev >= 0 && STATE.tmrRemainMs < 0) {
+          // Vừa chạm 0! Kích hoạt còi bíp
+          STATE.tmrBeeping = true;
+          appendStreamLog(`[TIMER] Het gio! Chuyen sang dem qua gio am (-MM.SS.mmm)`);
+          playTone(2400, 0.4, 'square');
+        }
+      }
+
+      // 4. Kiểm tra Báo thức (Alarm Match) & Snooze
+      const curMinOfDay = Math.floor(STATE.msOfDay / 60000);
+      const curSecOfMin = Math.floor((STATE.msOfDay % 60000) / 1000);
+      if (curSecOfMin === 0 && !STATE.alarmSounding) {
+        for (let i = 0; i < 4; i++) {
+          if (STATE.alarms[i].en && STATE.alarms[i].minOfDay === curMinOfDay) {
+            STATE.alarmSounding = true;
+            STATE.alarmSoundStartMs = STATE.msOfDay;
+            appendStreamLog(`[ALARM] Kich hoat bao thuc kenh ${i + 1} tai moc ${curMinOfDay} phut`);
+            playTone(2800, 0.3, 'square');
+            break;
+          }
+        }
+      }
+      if (STATE.snoozeUntilMs >= 0 && Math.abs(STATE.msOfDay - STATE.snoozeUntilMs) < 1000) {
+        STATE.alarmSounding = true;
+        STATE.snoozeUntilMs = -1;
+        appendStreamLog(`[ALARM] Het gio Snooze: Do chuong lai!`);
+        playTone(2800, 0.3, 'square');
+      }
+      // Tự ngắt chuông sau 60 giây
+      if (STATE.alarmSounding && (STATE.msOfDay - STATE.alarmSoundStartMs >= 60000)) {
+        STATE.alarmSounding = false;
+        appendStreamLog(`[ALARM] Tu dong tat sau 60s`);
+      }
+
+      // 5. Chuông điểm giờ tròn tiếng (Hourly Chime)
+      if (STATE.hourlyChime && Math.floor(STATE.msOfDay % 3600000) < deltaSim && !STATE.alarmSounding) {
+        playTone(1800, 0.1, 'sine');
+        setTimeout(() => playTone(1800, 0.1, 'sine'), 180);
+      }
+
+      // 6. Nhấp nháy 2 Hz (Chu kỳ 500 ms)
+      STATE.blinkTimer += deltaSim;
+      if (STATE.blinkTimer >= 250) {
+        STATE.blinkTimer = 0;
+        STATE.blinkPhase = !STATE.blinkPhase;
+      }
+
+      render();
+      requestAnimationFrame(systemTick);
     }
 
-    // Tốc độ mô phỏng
-    document.getElementById('spd-1x').onclick = function() {
-      STATE.speed = 1; setPillActive(this);
-    };
-    document.getElementById('spd-10x').onclick = function() {
-      STATE.speed = 10; setPillActive(this);
-    };
-    document.getElementById('spd-60x').onclick = function() {
-      STATE.speed = 60; setPillActive(this);
-    };
+    // ============================================================================
+    // CÁC KỊCH BẢN KIỂM THỬ NHANH (1-CLICK TEST SCENARIOS)
+    // ============================================================================
 
-    function setPillActive(btn) {
-      btn.parentElement.querySelectorAll('.pill-btn').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-    }
-
-    // Đổi màu LED
-    document.getElementById('col-red').onclick = function() {
-      document.querySelectorAll('.seg-digit').forEach(el => el.classList.remove('theme-green'));
-      setPillActive(this);
-    };
-    document.getElementById('col-green').onclick = function() {
-      document.querySelectorAll('.seg-digit').forEach(el => el.classList.add('theme-green'));
-      setPillActive(this);
-    };
-
-    // Bật/tắt âm thanh
-    document.getElementById('btn-audio').onclick = function() {
-      STATE.audioMuted = !STATE.audioMuted;
-      this.textContent = STATE.audioMuted ? '🔇 Đã Tắt' : '🔊 Đang Bật';
-      this.classList.toggle('active', !STATE.audioMuted);
-    };
-
-    // 6. Kịch Bản Kiểm Thử Nhanh (Preset Scenarios)
-    document.getElementById('p-midnight').onclick = () => {
-      clickSound();
+    // Kịch bản 1: Nhảy nửa đêm & năm nhuận
+    function runScenarioMidnight() {
+      playClick();
       STATE.mode = 0;
-      STATE.msOfDay = (23 * 3600 + 59 * 60 + 55) * 1000; // 23:59:55
-      STATE.days = 9771; // Thứ Sáu
-      STATE.showDate = false;
-      STATE.showSecMs = false;
+      STATE.timeView = 0;
+      STATE.is24h = true;
+      // 23:59:55
+      STATE.msOfDay = (23 * 3600 + 59 * 60 + 55) * 1000;
+      // 28/02/2024 (days = 8824)
+      STATE.days = dateToDays(28, 2, 24);
       STATE.speed = 1;
-      setPillActive(document.getElementById('spd-1x'));
-      updateDescriptions();
-      renderDisplay();
-    };
+      updateAnnunciators();
+      appendStreamLog(`[KICH BAN 1] Dat 23:59:55 ngay 28/02/2024. Chuan bi quan sat nhay 29/02/2024!`);
+      render();
+    }
 
-    document.getElementById('p-lap').onclick = () => {
-      clickSound();
-      STATE.mode = 1;
+    // Kịch bản 2: Bấm giờ 0-ns & 3 Lap
+    function runScenarioStopwatchLap() {
+      playClick();
+      STATE.mode = 1; // STPW
+      STATE.swRunning = true;
       STATE.swElapsedMs = 0;
       STATE.laps = [];
-      STATE.swRunning = true;
-      updateDescriptions();
-      renderDisplay();
-      // Tự động chốt 3 lap
-      setTimeout(() => { if (STATE.mode === 1) pressC(); }, 1200);
-      setTimeout(() => { if (STATE.mode === 1) pressC(); }, 2500);
-      setTimeout(() => { if (STATE.mode === 1) pressC(); }, 3800);
-    };
+      STATE.swLapIdx = -1;
+      updateAnnunciators();
+      appendStreamLog(`[KICH BAN 2] Bat dau bam gio STPW...`);
+      setTimeout(() => {
+        if (STATE.mode === 1) {
+          STATE.laps.push(STATE.swElapsedMs);
+          appendStreamLog(`[KICH BAN 2] Chup Lap 1: ${STATE.swElapsedMs} ms`);
+        }
+      }, 700);
+      setTimeout(() => {
+        if (STATE.mode === 1) {
+          STATE.laps.push(STATE.swElapsedMs);
+          appendStreamLog(`[KICH BAN 2] Chup Lap 2: ${STATE.swElapsedMs} ms`);
+        }
+      }, 1500);
+      setTimeout(() => {
+        if (STATE.mode === 1) {
+          STATE.laps.push(STATE.swElapsedMs);
+          appendStreamLog(`[KICH BAN 2] Chup Lap 3: ${STATE.swElapsedMs} ms. Dung bam gio va xem Lap!`);
+          STATE.swRunning = false;
+          STATE.swLapIdx = 0;
+          render();
+        }
+      }, 2300);
+    }
 
-    document.getElementById('p-timer').onclick = () => {
-      clickSound();
-      STATE.mode = 2;
-      STATE.tmrInitSec = 5;
-      STATE.tmrRemainMs = 5000;
+    // Kịch bản 3: Đếm lùi Timer 3s & đếm quá hạn âm
+    function runScenarioTimerOvertime() {
+      playClick();
+      STATE.mode = 2; // TMR
+      STATE.tmrPresetMs = 3000;
+      STATE.tmrRemainMs = 3000;
       STATE.tmrRunning = true;
       STATE.tmrBeeping = false;
-      updateDescriptions();
-      renderDisplay();
-    };
+      updateAnnunciators();
+      appendStreamLog(`[KICH BAN 3] Dat Timer 3s va bat dau dem lui ve 0...`);
+      render();
+    }
 
-    document.getElementById('p-alarm').onclick = () => {
-      clickSound();
-      STATE.mode = 3;
-      STATE.almChannel = 0;
-      const curMin = Math.floor(STATE.msOfDay / 60000);
-      STATE.alarms[0].min = curMin;
+    // Kịch bản 4: Báo thức AL1 & Snooze
+    function runScenarioAlarmSnooze() {
+      playClick();
+      STATE.mode = 3; // ALM
+      STATE.almChannel = 0; // AL1
       STATE.alarms[0].en = true;
-      beep(2500, 0.3);
-      updateDescriptions();
-      renderDisplay();
-    };
+      STATE.alarms[0].minOfDay = 7 * 60; // 07:00
+      // Đặt giờ đồng hồ tới 06:59:57
+      STATE.msOfDay = (6 * 3600 + 59 * 60 + 57) * 1000;
+      updateAnnunciators();
+      appendStreamLog(`[KICH BAN 4] Dat gio toi 06:59:57 (AL1 dat 07:00). Cho do chuong va bam C de Snooze!`);
+      render();
+    }
 
-    document.getElementById('p-ntp').onclick = () => {
-      clickSound();
-      beep(1500, 0.05);
-      setTimeout(() => beep(2500, 0.05), 80);
-      // Giả lập đồng bộ gói $Z (Zero) và $T (Time)
-      STATE.msOfDay = (12 * 3600 + 30 * 60) * 1000;
-      STATE.calPpm = -15; // Hiệu chỉnh ppm
-      alert("Đã nhận gói tin đồng bộ NTP UART qua chân RX:\n• Lệnh $Z (Zero Sync)\n• Lệnh $T (Set Time: 12:30:00.000)\n• Hiệu chỉnh bù trôi: CAL = -15 ppm");
-      renderDisplay();
-    };
+    // Kịch bản 5: Mô phỏng đồng bộ NTP qua UART
+    function runScenarioNtpSync() {
+      playClick();
+      const ntpStr = "@SET:2026-10-02 12:30:00#";
+      appendStreamLog(`[UART RX] Nhan goi tin NTP: ${ntpStr}`);
+      STATE.msOfDay = (12 * 3600 + 30 * 60 + 0) * 1000;
+      STATE.days = dateToDays(2, 10, 26);
+      STATE.mode = 0;
+      STATE.timeView = 0;
+      updateAnnunciators();
+      appendStreamLog(`[RTC] Da chot nạp nguyen tu tu UART vao REG_RTC_MS va REG_RTC_DAY!`);
+      render();
+    }
 
-    // Khởi động giao diện ban đầu
-    updateDescriptions();
-    renderDisplay();
+    // ============================================================================
+    // CÁC TIỆN ÍCH GIAO DIỆN (THEME, SPEED)
+    // ============================================================================
+    function setSpeed(sp, btn) {
+      STATE.speed = sp;
+      btn.parentElement.querySelectorAll('.pill-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      playClick();
+    }
+
+    function setTheme(color, btn) {
+      const isGreen = color === 'green';
+      document.querySelectorAll('.seg-digit').forEach(svg => {
+        svg.classList.toggle('theme-green', isGreen);
+      });
+      btn.parentElement.querySelectorAll('.pill-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      playClick();
+    }
+
+    // Khởi động hệ thống
+    window.addEventListener('DOMContentLoaded', () => {
+      // Mặc định Emerald Xanh
+      setTheme('green', document.querySelectorAll('.sim-group:nth-child(2) .pill-btn')[1]);
+      updateAnnunciators();
+      render();
+      requestAnimationFrame(systemTick);
+    });
   </script>
 </body>
 </html>
