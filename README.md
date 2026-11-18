@@ -574,6 +574,23 @@ vvp work/system_tb.vvp +imem=work/main.hex
 python tools/screen.py work/screen_system.log --big
 ```
 
+#### Bước 4: Tự Động Sinh Sóng VCD & Trực Quan Hóa Với GTKWave Phục Vụ Báo Cáo
+Hệ thống cung cấp sẵn công cụ tự động hóa `tools/gen_waves.py` để biên dịch, nạp firmware kịch bản và sinh 3 tệp sóng `.vcd` gọn gàng tương ứng với 3 tệp cấu hình GTKWave (`.gtkw`) đã phân nhóm tín hiệu màu sắc trực quan phục vụ bảo vệ đồ án:
+
+```bash
+# Tự động biên dịch và trích xuất 3 file sóng .vcd vào thư mục work/
+python tools/gen_waves.py
+
+# 1. Quan sát vi kiến trúc CPU Pipeline G2 (IF, ID, EX, MEM, WB, Hazard Unit, Forwarding):
+gtkwave work/wave_pipeline.vcd sim/gtkwave_pipeline_view.gtkw
+
+# 2. Quan sát thực nghiệm E3 (Chốt mốc Lap phần cứng độ trễ 0-ns, ngắt IRQ):
+gtkwave work/wave_e3_capture.vcd sim/gtkwave_e3_capture.gtkw
+
+# 3. Quan sát ngoại vi thời gian thực SoC (Quét 8 LED 7 thanh, Blanking 100-ns, PWM Beeper, UART):
+gtkwave work/wave_peripherals.vcd sim/gtkwave_peripherals.gtkw
+```
+
 ---
 
 ### 7.3. Kết quả Kiểm thử Toàn diện (Regression Test Results)

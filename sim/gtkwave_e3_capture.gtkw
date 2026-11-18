@@ -1,0 +1,38 @@
+[*]
+[*] GTKWave Analyzer v3.3.100 (w)1999-2020 BSI
+[*]
+[dumpfile] "work/wave_e3_capture.vcd"
+[savefile] "sim/gtkwave_e3_capture.gtkw"
+[timestart] 0
+[size] 1920 1080
+[pos] -1 -1
+*-signals-
+-================ THUC NGHIEM E3: CHOT LAP PHAN CUNG 0-ns =================
+-================ 1. XUNG NHIP & NUT BAM VAT LY ============================
+@28
+exp_e3_tb.clk
+exp_e3_tb.rst_in
+exp_e3_tb.dut.press[2]
+exp_e3_tb.dut.u_sw.press_b
+-================ 2. BO DEM BAM GIO & CHOT LAP 0-ns VAO FIFO ===============
+@28
+exp_e3_tb.dut.u_sw.run
+@25
+exp_e3_tb.dut.u_sw.val[28:0]
+exp_e3_tb.dut.u_sw.fifo[0][28:0]
+@22
+exp_e3_tb.dut.u_sw.cnt[3:0]
+@28
+exp_e3_tb.dut.sw_capture
+-================ 3. CPU TRUY XUAT LAP QUA BUS MMIO ========================
+@22
+exp_e3_tb.dut.u_cpu.pc[31:0]
+exp_e3_tb.dut.bus_addr[7:0]
+@28
+exp_e3_tb.dut.bus_re
+@22
+exp_e3_tb.dut.rd_sw[31:0]
+@28
+exp_e3_tb.ret
+[pattern_trace] 1
+[pattern_trace] 0

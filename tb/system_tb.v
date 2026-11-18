@@ -37,7 +37,8 @@ module system_tb;
     integer v1, v2, v3, v4, v5;
     reg [63:0] fr, e1, e2, e3;
     reg [8*200:1] line;
-    reg [8*256:1] fimem, ftrace;
+    reg [8*256:1] fimem, ftrace, fvcd;
+    integer vcd_cyc_limit;
     reg run_q, ok, poll;                                 // poll: +poll = firmware dịch với USE_IRQ = 0 (run_unit.sh)
     reg [16:0] pat_q;
     integer nchime;
@@ -289,10 +290,23 @@ module system_tb;
         end
     endtask
 
+    // Tùy chọn ngắt dump VCD sau vcd_cyc chu kỳ để giữ file sóng nhỏ gọn khi demo
+    initial begin
+        if ($value$plusargs("vcd_cyc=%d", vcd_cyc_limit)) begin
+            repeat (vcd_cyc_limit) @(posedge clk);
+            $dumpoff;
+            $display("[VCD] Da ghi %0d chu ky vao file va tam ngat dump.", vcd_cyc_limit);
+        end
+    end
+
     // ------------------------------------------------------------------ chạy
     initial begin
         cyc = 0; nchime = 0; nchk = 0; nerr_all = 0; nerr = 0; nbad = 0; nal = 0; nlap = 0; c0 = 0; cz = 0;
         if (!$value$plusargs("imem=%s", fimem)) begin $display("FAIL system_tb thieu +imem="); $finish; end
+        if ($value$plusargs("vcd=%s", fvcd)) begin
+            $dumpfile(fvcd);
+            $dumpvars(0, system_tb);
+        end
         poll = $test$plusargs("poll");
         fd = $fopen("tb/vectors/seg7.txt", "r");
         r = $fgets(line, fd);

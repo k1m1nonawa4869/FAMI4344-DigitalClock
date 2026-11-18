@@ -50,7 +50,7 @@ module cpu_pipe_tb;
         else if (ev_wait > 0) ev_wait <= ev_wait - 1;
     end
 
-    reg [8*256:1] fimem, fdump, ftrace;
+    reg [8*256:1] fimem, fdump, ftrace, fvcd;
     integer i, df, n, nerr, cyc, cpu_cyc, maxcyc, nstart, ncomp, nbus, mem_ops;
     reg [31:0] endpc;
     reg        has_end;
@@ -91,6 +91,10 @@ module cpu_pipe_tb;
         if (has_end) dut.tr_end = endpc;        // lệnh có PC ≥ end không vào trace
         if ($value$plusargs("trace=%s", ftrace)) dut.tf = $fopen(ftrace, "w");
         rst = 0;
+        if ($value$plusargs("vcd=%s", fvcd)) begin
+            $dumpfile(fvcd);
+            $dumpvars(0, cpu_pipe_tb);
+        end
 
         // chạy tới khi lệnh có PC ≥ end tới EX/MEM (mọi lệnh trước nó, kể cả nhánh, đã xong; lệnh sai đường bị xóa trước đó),
         // rồi chạy nốt 8 bước CPU

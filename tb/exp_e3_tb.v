@@ -27,7 +27,7 @@ module exp_e3_tb;
     integer t_f [0:NMAX-1], v_f [0:NMAX-1], v_l [0:NMAX-1], v_b [0:NMAX-1];
     integer lat, lmin, lmax, nlap_bad, nstamp_bad, nms_neg;
     real    lsum;
-    reg [8*256:1] fimem, fcsv;
+    reg [8*256:1] fimem, fcsv, fvcd;
 
     task check(input cond, input [8*64:1] what);
         begin
@@ -59,6 +59,10 @@ module exp_e3_tb;
         $readmemh(fimem, dut.u_cpu.imem);
         repeat (6) @(negedge clk);
         rst_in = 0;
+        if ($value$plusargs("vcd=%s", fvcd)) begin
+            $dumpfile(fvcd);
+            $dumpvars(0, exp_e3_tb);
+        end
         while (dut.u_cpu.dmem[0] != 1 && cyc < 1000000) @(negedge clk);
         check(cyc < 1000000, "firmware bao san sang (DMEM[0] = 1)");
 

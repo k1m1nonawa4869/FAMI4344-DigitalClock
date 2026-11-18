@@ -1,0 +1,49 @@
+[*]
+[*] GTKWave Analyzer v3.3.100 (w)1999-2020 BSI
+[*]
+[dumpfile] "work/wave_peripherals.vcd"
+[savefile] "sim/gtkwave_peripherals.gtkw"
+[timestart] 0
+[size] 1920 1080
+[pos] -1 -1
+*-signals-
+-================ 1. XUNG NHIP, HIEU CHUAN PPM & RTC =======================
+@28
+system_tb.clk
+system_tb.rst_in
+system_tb.dut.u_tb.tick_1ms
+@25
+system_tb.dut.u_rtc.ms[26:0]
+system_tb.dut.u_rtc.day[15:0]
+-================ 2. QUET LED 7 DOAN & KHU BONG MA (BLANKING) =============
+@25
+system_tb.dut.u_disp.u_scan.c[15:0]
+system_tb.dut.u_disp.u_scan.j[2:0]
+@24
+system_tb.dut.u_disp.an[7:0]
+@22
+system_tb.dut.u_disp.seg[6:0]
+@28
+system_tb.dut.u_disp.dp
+system_tb.dut.u_disp.u_scan.blank_ph
+@25
+system_tb.dut.u_disp.u_scan.bright[3:0]
+-================ 3. DEM LUI (TIMER) & COI BUZZER PWM =====================
+@28
+system_tb.dut.u_tmr.run
+@26
+system_tb.dut.u_tmr.val[31:0]
+@28
+system_tb.dut.u_tmr.zero_ev
+system_tb.dut.u_beep.beep
+system_tb.dut.u_beep.sounding
+-================ 4. PHIM BAM & TRUYEN THONG UART ==========================
+@24
+system_tb.dut.u_btn.btn[3:0]
+system_tb.dut.u_btn.press[3:0]
+@28
+system_tb.dut.u_uart.rx
+system_tb.dut.u_uart.tx
+system_tb.dut.u_uart.rx_ev
+[pattern_trace] 1
+[pattern_trace] 0

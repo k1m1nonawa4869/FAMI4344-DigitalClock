@@ -1,0 +1,62 @@
+[*]
+[*] GTKWave Analyzer v3.3.100 (w)1999-2020 BSI
+[*]
+[dumpfile] "work/wave_pipeline.vcd"
+[savefile] "sim/gtkwave_pipeline_view.gtkw"
+[timestart] 0
+[size] 1920 1080
+[pos] -1 -1
+*-signals-
+-================ 1. XUNG NHIP & DIEU KHIEN =================
+@28
+cpu_pipe_tb.clk
+cpu_pipe_tb.rst
+cpu_pipe_tb.cpu_ce
+cpu_pipe_tb.retire
+-================ 2. TANG IF (INSTRUCTION FETCH) ============
+@22
+cpu_pipe_tb.dut.pc[31:0]
+cpu_pipe_tb.dut.ifid_pc[31:0]
+cpu_pipe_tb.dut.ifid_ins[31:0]
+@28
+cpu_pipe_tb.dut.ifid_v
+-================ 3. TANG ID & GIAI MA (DECODE) =============
+@25
+cpu_pipe_tb.dut.f_rs[4:0]
+cpu_pipe_tb.dut.f_rt[4:0]
+@22
+cpu_pipe_tb.dut.rs_v[31:0]
+cpu_pipe_tb.dut.rt_v[31:0]
+cpu_pipe_tb.dut.imm_x[31:0]
+-================ 4. HAZARD UNIT & FORWARDING ===============
+@28
+cpu_pipe_tb.dut.stall_lu
+cpu_pipe_tb.dut.flush
+cpu_pipe_tb.dut.take
+@22
+cpu_pipe_tb.dut.fwd_a[1:0]
+cpu_pipe_tb.dut.fwd_b[1:0]
+-================ 5. TANG EX (EXECUTE / ALU) ================
+@22
+cpu_pipe_tb.dut.idex_pc[31:0]
+cpu_pipe_tb.dut.idex_ins[31:0]
+@22
+cpu_pipe_tb.dut.alu_a[31:0]
+cpu_pipe_tb.dut.alu_b[31:0]
+cpu_pipe_tb.dut.exm_res[31:0]
+-================ 6. TANG MEM & WB (MEMORY & WRITE-BACK) ====
+@28
+cpu_pipe_tb.dut.bus_we
+cpu_pipe_tb.dut.bus_re
+@22
+cpu_pipe_tb.dut.bus_addr[7:0]
+cpu_pipe_tb.dut.bus_wdata[31:0]
+cpu_pipe_tb.dut.bus_rdata[31:0]
+@28
+cpu_pipe_tb.dut.we_rf
+@25
+cpu_pipe_tb.dut.mw_dst[4:0]
+@22
+cpu_pipe_tb.dut.wb[31:0]
+[pattern_trace] 1
+[pattern_trace] 0
