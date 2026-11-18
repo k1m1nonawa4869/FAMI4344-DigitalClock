@@ -59,6 +59,61 @@ def load(path):
 
 
 def text(segs, tab):
+    if len(segs) != 8:
+        out = ""
+        for s in segs:
+            out += tab.get(s & 0x7F, "?") + ("." if s & 0x80 else "")
+        return out
+
+    c = [tab.get(s & 0x7F, "?") for s in segs]
+    dp = [(s & 0x80) != 0 for s in segs]
+
+    # 1. Nhận diện các chế độ hiển thị
+    is_ampm = (c[0] in ('A', 'P') and c[1] == 'M') or (c[0] == ' ' and c[1] in ('A', 'P'))
+    is_date = dp[1] and dp[3] and not dp[5] and not dp[7] and "".join(c[4:]).isdigit() and len("".join(c[4:])) == 4
+    is_time24 = dp[1] and dp[3] and dp[5] and not dp[7] and all(x.isdigit() for x in c)
+    # Chess Clock: Cả 2 đồng hồ đấu thủ đều gồm 4 chữ số độc lập
+    is_chess = not is_ampm and not is_date and not is_time24 and "".join(c[0:4]).isdigit() and "".join(c[4:8]).isdigit() and (dp[1] or dp[3]) and (dp[5] or dp[7])
+
+    if is_chess:
+        # Bên Trái: nếu có chấm ở dp[1] và không có dp[3] -> MM:SS; nếu dp[3] bật -> SS.cs
+        if dp[1] and not dp[3]:
+            left_str = f"{c[0]}{c[1]}:{c[2]}{c[3]}"
+        elif dp[1] and dp[3]:
+            left_str = f"{c[0]}{c[1]}.{c[2]}{c[3]}."
+        elif dp[3]:
+            left_str = f"{c[0]}{c[1]}.{c[2]}{c[3]}"
+        else:
+            left_str = f"{c[0]}{c[1]}{c[2]}{c[3]}"
+
+        # Bên Phải: tương tự
+        if dp[5] and not dp[7]:
+            right_str = f"{c[4]}{c[5]}:{c[6]}{c[7]}"
+        elif dp[5] and dp[7]:
+            right_str = f"{c[4]}{c[5]}.{c[6]}{c[7]}."
+        elif dp[7]:
+            right_str = f"{c[4]}{c[5]}.{c[6]}{c[7]}"
+        else:
+            right_str = f"{c[4]}{c[5]}{c[6]}{c[7]}"
+
+        return f"{left_str} | {right_str}"
+
+    # 2. Nhận diện chế độ 99 Laps Stopwatch: [L##] MM:SS.cc
+    if c[0].isdigit() and c[1].isdigit() and dp[3] and dp[5] and not dp[0] and not dp[1]:
+        return f"[{c[0]}{c[1]}] {c[2]}{c[3]}:{c[4]}{c[5]}.{c[6]}{c[7]}"
+
+    # 3. Nhận diện chế độ 12H AM/PM: AM 10:25:30
+    if (c[0] in ('A', 'P') and c[1] == 'M') or (c[0] == ' ' and c[1] in ('A', 'P')):
+        prefix = f"{c[0]}{c[1]} "
+        sep1 = ":" if dp[3] else " "
+        sep2 = ":" if dp[5] else " "
+        return f"{prefix}{c[2]}{c[3]}{sep1}{c[4]}{c[5]}{sep2}{c[6]}{c[7]}"
+
+    # 4. Nhận diện chế độ 24H + CS hoặc HH:MM:SS.cs
+    if dp[1] and dp[3] and dp[5]:
+        return f"{c[0]}{c[1]}:{c[2]}{c[3]}:{c[4]}{c[5]}.{c[6]}{c[7]}"
+
+    # Mặc định ghép chuỗi nối tiếp
     out = ""
     for s in segs:
         out += tab.get(s & 0x7F, "?") + ("." if s & 0x80 else "")
@@ -67,11 +122,26 @@ def text(segs, tab):
 
 def big(segs):
     rows = ["", "", ""]
-    for s in segs:
+    n = len(segs)
+    is_chess = False
+    if n == 8:
+        c = [CHARS[s & 0x7F] if (s & 0x7F) < len(CHARS) else "?" for s in segs]
+        dp = [(s & 0x80) != 0 for s in segs]
+        is_ampm = (c[0] in ('A', 'P') and c[1] == 'M') or (c[0] == ' ' and c[1] in ('A', 'P'))
+        is_date = dp[1] and dp[3] and not dp[5] and not dp[7] and "".join(c[4:]).isdigit() and len("".join(c[4:])) == 4
+        is_time24 = dp[1] and dp[3] and dp[5] and not dp[7] and all(x.isdigit() for x in c)
+        is_chess = not is_ampm and not is_date and not is_time24 and "".join(c[0:4]).isdigit() and "".join(c[4:8]).isdigit() and (dp[1] or dp[3]) and (dp[5] or dp[7])
+
+    for k, s in enumerate(segs):
         a, b, c, d, e, f, g = ((s >> i) & 1 for i in range(7))
         rows[0] += " " + ("_" if a else " ") + "  "
         rows[1] += ("|" if f else " ") + ("_" if g else " ") + ("|" if b else " ") + " "
         rows[2] += ("|" if e else " ") + ("_" if d else " ") + ("|" if c else " ") + ("." if s & 0x80 else " ")
+        # Chèn vách ngăn | nổi bật giữa Left Clock (D4) và Right Clock (D3)
+        if is_chess and k == 3:
+            rows[0] += "   |   "
+            rows[1] += "   |   "
+            rows[2] += "   |   "
     return "\n".join(rows)
 
 

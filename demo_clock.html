@@ -175,6 +175,87 @@
       margin-right: 22px;
     }
 
+    /* Colons Styling (LED 2 chấm chuẩn phần cứng đồng hồ số) */
+    .colon-col {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      width: 14px;
+      height: 88px;
+      gap: 20px;
+      user-select: none;
+      opacity: 0.15;
+      transition: opacity 0.15s ease, transform 0.12s ease;
+    }
+    .colon-col.lit {
+      opacity: 1.0;
+    }
+    .colon-col.hidden {
+      display: none !important;
+    }
+    .colon-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--led-off);
+      transition: background 0.08s ease, box-shadow 0.08s ease;
+    }
+    .colon-col.theme-red.lit .colon-dot {
+      background: var(--led-on);
+      box-shadow: 0 0 6px var(--led-glow), 0 0 12px var(--led-glow);
+    }
+    .colon-col.theme-green.lit .colon-dot {
+      background: var(--led-green-on);
+      box-shadow: 0 0 6px var(--led-green-glow), 0 0 12px var(--led-green-glow);
+    }
+    .colon-col.theme-cyan.lit .colon-dot {
+      background: var(--led-cyan-on);
+      box-shadow: 0 0 6px var(--led-cyan-glow), 0 0 12px var(--led-cyan-glow);
+    }
+    .colon-col.theme-yellow.lit .colon-dot {
+      background: var(--led-yellow-on);
+      box-shadow: 0 0 6px var(--led-yellow-glow), 0 0 12px var(--led-yellow-glow);
+    }
+
+    /* Vách ngăn trung tâm phân tách 2 đồng hồ đấu thủ Cờ Vua Kép (Chess Divider) */
+    .chess-divider {
+      display: none;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      width: 38px;
+      height: 88px;
+      position: relative;
+      user-select: none;
+      margin: 0 6px;
+    }
+    .chess-divider.active {
+      display: flex;
+    }
+    .chess-divider-bar {
+      width: 4px;
+      height: 74px;
+      background: linear-gradient(180deg, rgba(88,166,255,0.2) 0%, rgba(88,166,255,0.8) 50%, rgba(88,166,255,0.2) 100%);
+      border-radius: 2px;
+      box-shadow: 0 0 8px rgba(88,166,255,0.5);
+    }
+    .chess-divider-tag {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 0.65rem;
+      font-weight: 900;
+      letter-spacing: 1px;
+      padding: 2px 5px;
+      border-radius: 4px;
+      background: #0d1117;
+      border: 1px solid #388bfd;
+      color: #58a6ff;
+      box-shadow: 0 0 8px rgba(56,139,253,0.3);
+    }
+
     /* SVG Segments Styling */
     .seg-digit {
       width: 54px;
@@ -810,6 +891,13 @@
             <circle id="d6-dp" cx="50" cy="85" r="3.2" />
           </svg>
         </div>
+
+        <!-- Colon Left (giữa D6 và D5) -->
+        <div class="colon-col" id="colon-left">
+          <div class="colon-dot top" id="colon-left-top"></div>
+          <div class="colon-dot bottom" id="colon-left-bottom"></div>
+        </div>
+
         <!-- Digit 5 (S5) -->
         <div class="digit-col" id="col-d5">
           <svg class="seg-digit" id="d5" viewBox="0 0 54 88">
@@ -836,6 +924,19 @@
             <circle id="d4-dp" cx="50" cy="85" r="3.2" />
           </svg>
         </div>
+
+        <!-- Chess Divider (phân tách 2 đồng hồ đấu thủ) -->
+        <div class="chess-divider" id="chess-divider">
+          <div class="chess-divider-tag" id="chess-divider-tag">VS</div>
+          <div class="chess-divider-bar"></div>
+        </div>
+
+        <!-- Colon Center (giữa D4 và D3) -->
+        <div class="colon-col" id="colon-center">
+          <div class="colon-dot top" id="colon-center-top"></div>
+          <div class="colon-dot bottom" id="colon-center-bottom"></div>
+        </div>
+
         <!-- Digit 3 (S3) -->
         <div class="digit-col" id="col-d3">
           <svg class="seg-digit" id="d3" viewBox="0 0 54 88">
@@ -861,6 +962,12 @@
             <polygon id="d2-g" points="7,44 10.25,40.75 43.75,40.75 47,44 43.75,47.25 10.25,47.25" />
             <circle id="d2-dp" cx="50" cy="85" r="3.2" />
           </svg>
+        </div>
+
+        <!-- Colon Right (giữa D2 và D1) -->
+        <div class="colon-col" id="colon-right">
+          <div class="colon-dot top" id="colon-right-top"></div>
+          <div class="colon-dot bottom" id="colon-right-bottom"></div>
         </div>
         <!-- Digit 1 (S1) -->
         <div class="digit-col" id="col-d1">
@@ -1395,7 +1502,7 @@ t = 0 ms
       return pat;
     }
 
-    // Cập nhật khoảng cách phân nhóm chức năng (Functional Group Spacing)
+    // Cập nhật khoảng cách phân nhóm chức năng & điều khiển LED hai chấm (Colons)
     function updateDigitSpacing() {
       // Xóa các class sep-after cũ
       for (let i = 0; i < 8; i++) {
@@ -1403,15 +1510,29 @@ t = 0 ms
         if (col) col.classList.remove('sep-after');
       }
 
+      // Điều khiển LED hai chấm (Colons) và thanh phân tách cờ vua kép (Chess Divider)
+      const colLeft = document.getElementById('colon-left');
+      const colCenter = document.getElementById('colon-center');
+      const colRight = document.getElementById('colon-right');
+      const chessDiv = document.getElementById('chess-divider');
+
+      [colLeft, colCenter, colRight].forEach(c => {
+        if (c) {
+          c.classList.remove('lit', 'hidden', 'theme-red', 'theme-green', 'theme-cyan', 'theme-yellow');
+          c.classList.add(`theme-${STATE.colorTheme}`);
+        }
+      });
+      if (chessDiv) chessDiv.classList.remove('active');
+
       const m = STATE.mode;
       if (m === 0) {
-        if (STATE.timeView === 0) { // TIME 12H AM/PM (AM 10.25.30)
+        if (STATE.timeView === 0) { // TIME 12H AM/PM (AM HH:MM:SS)
           document.getElementById('col-d6').classList.add('sep-after');
-          document.getElementById('col-d4').classList.add('sep-after');
-          document.getElementById('col-d2').classList.add('sep-after');
-        } else if (STATE.timeView === 1) { // TIME 24H + CS (HH.MM.SS.cc)
-          document.getElementById('col-d6').classList.add('sep-after');
-          document.getElementById('col-d4').classList.add('sep-after');
+          if (colCenter) colCenter.classList.add('lit');
+          if (colRight) colRight.classList.add('lit');
+        } else if (STATE.timeView === 1) { // TIME 24H + CS (HH:MM:SS.cc)
+          if (colLeft) colLeft.classList.add('lit');
+          if (colCenter) colCenter.classList.add('lit');
           document.getElementById('col-d2').classList.add('sep-after');
         } else if (STATE.timeView === 2) { // DATE DD.MM.YYYY
           document.getElementById('col-d6').classList.add('sep-after');
@@ -1420,50 +1541,51 @@ t = 0 ms
           document.getElementById('col-d5').classList.add('sep-after');
           document.getElementById('col-d3').classList.add('sep-after');
         }
-      } else if (m === 1) { // ALARM
+      } else if (m === 1) { // ALARM (AL k  HH:MM)
         document.getElementById('col-d4').classList.add('sep-after');
-        document.getElementById('col-d2').classList.add('sep-after');
-      } else if (m === 2) { // STPW (9lap: S7 | S6..S5 | S4..S3 | S2..S0 | 99lap: S7..S6 | S5..S4 | S3..S2 | S1..S0)
+        if (colCenter) colCenter.classList.add('lit');
+      } else if (m === 2) { // STPW (Live: H:MM:SS.mmm hoặc Lap)
         if (STATE.swMode === '99lap') {
           document.getElementById('col-d6').classList.add('sep-after');
-          document.getElementById('col-d4').classList.add('sep-after');
-          document.getElementById('col-d2').classList.add('sep-after');
+          if (colCenter) colCenter.classList.add('lit');
         } else {
-          document.getElementById('col-d7').classList.add('sep-after');
-          document.getElementById('col-d5').classList.add('sep-after');
+          if (colLeft) colLeft.classList.add('lit');
+          if (colCenter) colCenter.classList.add('lit');
           document.getElementById('col-d3').classList.add('sep-after');
         }
-      } else if (m === 3) { // TMR (Single: >= 1h hoặc < 1h | Chess: S7..S4 || S3..S0)
+      } else if (m === 3) { // TMR (Single: H:MM:SS.mmm hoặc Chess: L || R)
         if (STATE.tmrSubmode === 'chess') {
-          document.getElementById('col-d4').classList.add('sep-after'); // Khe hở phân tách 2 đồng hồ đấu thủ
-        } else if (Math.abs(STATE.tmrRemainMs) >= 3600000) {
-          document.getElementById('col-d6').classList.add('sep-after');
-          document.getElementById('col-d4').classList.add('sep-after');
-          document.getElementById('col-d2').classList.add('sep-after');
+          if (chessDiv) chessDiv.classList.add('active');
+          if (colCenter) colCenter.classList.add('hidden');
+          const tag = document.getElementById('chess-divider-tag');
+          if (tag) {
+            tag.textContent = STATE.tmrChessActive === 1 ? '◄ L' : (STATE.tmrChessActive === 2 ? 'R ►' : 'VS');
+            tag.style.color = STATE.tmrChessActive === 1 ? '#39ff14' : (STATE.tmrChessActive === 2 ? '#38bdf8' : '#8b949e');
+          }
+          if (Math.abs(STATE.tmrChessLRemainMs) >= 60000 && colLeft) colLeft.classList.add('lit');
+          if (Math.abs(STATE.tmrChessRRemainMs) >= 60000 && colRight) colRight.classList.add('lit');
         } else {
-          document.getElementById('col-d7').classList.add('sep-after');
-          document.getElementById('col-d5').classList.add('sep-after');
+          if (colCenter) colCenter.classList.add('lit');
+          if (Math.abs(STATE.tmrRemainMs) >= 3600000 && colLeft) colLeft.classList.add('lit');
           document.getElementById('col-d3').classList.add('sep-after');
         }
       } else if (m === 4) { // SET
         if (STATE.tPage === 1) { // SET ALARM: AL k  HH.MM
           document.getElementById('col-d4').classList.add('sep-after');
-          document.getElementById('col-d2').classList.add('sep-after');
+          if (colCenter) colCenter.classList.add('lit');
         } else if (STATE.tPage === 2) { // SET STOPWATCH: 09L  SPL
           document.getElementById('col-d5').classList.add('sep-after');
           document.getElementById('col-d3').classList.add('sep-after');
         } else if (STATE.tPage === 3) { // SET TIMER: t1/t2 HH.MM.SS
-          document.getElementById('col-d6').classList.add('sep-after');
-          document.getElementById('col-d4').classList.add('sep-after');
-          document.getElementById('col-d2').classList.add('sep-after');
+          if (colCenter) colCenter.classList.add('lit');
+          if (colRight) colRight.classList.add('lit');
         } else if (STATE.tPage === 4) { // SET CHESS C
-          document.getElementById('col-d4').classList.add('sep-after');
-          document.getElementById('col-d2').classList.add('sep-after');
+          if (colCenter) colCenter.classList.add('lit');
+          if (colRight) colRight.classList.add('lit');
         } else { // SET RTC
           if (STATE.setField < 3) {
-            document.getElementById('col-d6').classList.add('sep-after');
-            document.getElementById('col-d4').classList.add('sep-after');
-            document.getElementById('col-d2').classList.add('sep-after');
+            if (colCenter) colCenter.classList.add('lit');
+            if (colRight) colRight.classList.add('lit');
           } else {
             document.getElementById('col-d6').classList.add('sep-after');
             document.getElementById('col-d4').classList.add('sep-after');
@@ -2063,10 +2185,38 @@ t = 0 ms
     // MÔ PHỎNG TERMINAL (tools/screen.py EXACT ASCII & LOG STREAM)
     // ============================================================================
     function updateTerminalMirror(chars, dps, segPats) {
-      // 1. Tạo chuỗi ký tự chuẩn: text(segs, tab) trong screen.py
+      // 1. Tạo chuỗi ký tự chuẩn: khớp hoàn toàn với tools/screen.py text(segs, tab)
       let textOut = '';
-      for (let i = 7; i >= 0; i--) {
-        textOut += chars[i] + (dps[i] ? '.' : '');
+      const isDate = dps[6] && dps[4] && !dps[2] && !dps[0] && !isNaN(chars[3]) && !isNaN(chars[2]) && !isNaN(chars[1]) && !isNaN(chars[0]);
+      const isChess = (STATE.mode === 3 && STATE.tmrSubmode === 'chess') || 
+                      (!isDate && (dps[6] || dps[4]) && (dps[2] || dps[0]));
+
+      if (isChess) {
+        // Phân tách trực quan đồng hồ cờ vua kép: Left | Right (Ví dụ: 50:88 | 04:42)
+        const leftStr = (dps[6] && !dps[4]) ? `${chars[7]}${chars[6]}:${chars[5]}${chars[4]}` :
+                        (dps[6] && dps[4]) ? `${chars[7]}${chars[6]}.${chars[5]}${chars[4]}.` :
+                        dps[4] ? `${chars[7]}${chars[6]}.${chars[5]}${chars[4]}` :
+                        `${chars[7]}${chars[6]}${chars[5]}${chars[4]}`;
+
+        const rightStr = (dps[2] && !dps[0]) ? `${chars[3]}${chars[2]}:${chars[1]}${chars[0]}` :
+                         (dps[2] && dps[0]) ? `${chars[3]}${chars[2]}.${chars[1]}${chars[0]}.` :
+                         dps[0] ? `${chars[3]}${chars[2]}.${chars[1]}${chars[0]}` :
+                         `${chars[3]}${chars[2]}${chars[1]}${chars[0]}`;
+
+        textOut = `${leftStr} | ${rightStr}`;
+      } else if (chars[7] >= '0' && chars[7] <= '9' && chars[6] >= '0' && chars[6] <= '9' && dps[4] && dps[2] && !dps[7] && !dps[6]) {
+        // 99 Laps: [##] MM:SS.cc
+        textOut = `[${chars[7]}${chars[6]}] ${chars[5]}${chars[4]}:${chars[3]}${chars[2]}.${chars[1]}${chars[0]}`;
+      } else if ((chars[7] === 'A' || chars[7] === 'P') && chars[6] === 'M') {
+        // 12H AM/PM: AM 10:25:30
+        textOut = `${chars[7]}${chars[6]} ${chars[5]}${chars[4]}:${chars[3]}${chars[2]}:${chars[1]}${chars[0]}`;
+      } else if (dps[6] && dps[4] && dps[2]) {
+        // 24H + CS hoặc HH:MM:SS.cs
+        textOut = `${chars[7]}${chars[6]}:${chars[5]}${chars[4]}:${chars[3]}${chars[2]}.${chars[1]}${chars[0]}`;
+      } else {
+        for (let i = 7; i >= 0; i--) {
+          textOut += chars[i] + (dps[i] ? '.' : '');
+        }
       }
 
       // 2. Tạo chữ số lớn 3 dòng: big(segs) trong screen.py
@@ -2084,6 +2234,12 @@ t = 0 ms
         rows[0] += " " + (a ? "_" : " ") + "  ";
         rows[1] += (f ? "|" : " ") + (g ? "_" : " ") + (b ? "|" : " ") + " ";
         rows[2] += (e ? "|" : " ") + (d ? "_" : " ") + (c ? "|" : " ") + (dp ? "." : " ");
+        // Chèn vách ngăn | nổi bật giữa Left Clock (D4) và Right Clock (D3)
+        if (isChess && i === 4) {
+          rows[0] += "   |   ";
+          rows[1] += "   |   ";
+          rows[2] += "   |   ";
+        }
       }
 
       const bigAscii = `t = ${Math.floor(STATE.simTimeMs)} ms\n${rows[0]}\n${rows[1]}\n${rows[2]}`;
