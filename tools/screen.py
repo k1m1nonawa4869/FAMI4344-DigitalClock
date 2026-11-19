@@ -30,7 +30,14 @@ CHARS = "0123456789AbCdEFHLnoPrStU- MWG"
 TEAR_MS = 10
 
 
+_SEG_TAB_CACHE = None
+
+
 def seg_table():
+    """Đọc và cache bảng ánh xạ mẫu 7 đoạn (gfedcba) -> ký tự ASCII từ tb/vectors/seg7.txt."""
+    global _SEG_TAB_CACHE
+    if _SEG_TAB_CACHE is not None:
+        return _SEG_TAB_CACHE
     t = {}
     with open(os.path.join(ROOT, "tb", "vectors", "seg7.txt"), encoding="utf-8") as f:
         for ln in f:
@@ -40,10 +47,12 @@ def seg_table():
             if code < len(CHARS) and pat not in t:
                 t[pat] = CHARS[code]
     t[0] = " "
+    _SEG_TAB_CACHE = t
     return t
 
 
 def load(path):
+    """Đọc file vết quét chân LED từ tb/screen_dump.v thành danh sách (timestamp_ms, segs)."""
     frames = []
     with open(path, encoding="utf-8") as f:
         for ln in f:
@@ -58,7 +67,30 @@ def load(path):
     return frames
 
 
+def _detect_chess(c, dp):
+    """Xác định khung hình 8 chữ số có phải chế độ đồng hồ cờ vua kép (Left | Right) hay không."""
+    is_ampm = (c[0] in ('A', 'P') and c[1] == 'M') or (c[0] == ' ' and c[1] in ('A', 'P'))
+    is_date = dp[1] and dp[3] and not dp[5] and not dp[7] and "".join(c[4:]).isdigit() and len("".join(c[4:])) == 4
+    is_time24 = dp[1] and dp[3] and dp[5] and not dp[7] and all(x.isdigit() for x in c)
+    # Stopwatch / Timer single live clock: dp[2] và dp[4] bật
+    is_live_clock = dp[2] and dp[4] and "".join(c[1:]).isdigit()
+    # Chess Clock: cả 2 đồng hồ đấu thủ đều gồm 4 chữ số độc lập (hoặc dấu trừ ở đầu)
+    is_left_chess = (c[0] == '-' and "".join(c[1:4]).isdigit()) or "".join(c[0:4]).isdigit()
+    is_right_chess = (c[4] == '-' and "".join(c[5:8]).isdigit()) or "".join(c[4:8]).isdigit()
+    return (
+        not is_ampm
+        and not is_date
+        and not is_time24
+        and not is_live_clock
+        and is_left_chess
+        and is_right_chess
+        and (dp[1] or dp[3])
+        and (dp[5] or dp[7])
+    )
+
+
 def text(segs, tab):
+    """Giải mã một khung hình LED 7 đoạn sang chuỗi văn bản ngắn gọn khớp chế độ đồng hồ."""
     if len(segs) != 8:
         out = ""
         for s in segs:
@@ -68,18 +100,8 @@ def text(segs, tab):
     c = [tab.get(s & 0x7F, "?") for s in segs]
     dp = [(s & 0x80) != 0 for s in segs]
 
-    # 1. Nhận diện các chế độ hiển thị
-    is_ampm = (c[0] in ('A', 'P') and c[1] == 'M') or (c[0] == ' ' and c[1] in ('A', 'P'))
-    is_date = dp[1] and dp[3] and not dp[5] and not dp[7] and "".join(c[4:]).isdigit() and len("".join(c[4:])) == 4
-    is_time24 = dp[1] and dp[3] and dp[5] and not dp[7] and all(x.isdigit() for x in c)
-    # Stopwatch / Timer single live clock: dp[2] và dp[4] bật
-    is_live_clock = dp[2] and dp[4] and "".join(c[1:]).isdigit()
-    # Chess Clock: Cả 2 đồng hồ đấu thủ đều gồm 4 chữ số độc lập (hoặc dấu trừ)
-    is_left_chess = (c[0] == '-' and "".join(c[1:4]).isdigit()) or "".join(c[0:4]).isdigit()
-    is_right_chess = (c[4] == '-' and "".join(c[5:8]).isdigit()) or "".join(c[4:8]).isdigit()
-    is_chess = not is_ampm and not is_date and not is_time24 and not is_live_clock and is_left_chess and is_right_chess and (dp[1] or dp[3]) and (dp[5] or dp[7])
-
-    if is_chess:
+    # 1. Nhận diện chế độ Chess Clock (Left | Right)
+    if _detect_chess(c, dp):
         # Bên Trái: nếu có chấm ở dp[1] và không có dp[3] -> MM:SS; nếu dp[3] bật -> SS.cs
         if dp[1] and not dp[3]:
             left_str = f"{c[0]}{c[1]}:{c[2]}{c[3]}"
@@ -131,21 +153,17 @@ def text(segs, tab):
     return out
 
 
-def big(segs):
+def big(segs, tab=None):
+    """Vẽ chữ số 7 đoạn cỡ lớn bằng ký tự ASCII (3 dòng), chèn vách ngăn | khi ở chế độ Chess Clock."""
     rows = ["", "", ""]
     n = len(segs)
     is_chess = False
     if n == 8:
-        tab = seg_table()
+        if tab is None:
+            tab = seg_table()
         chars = [tab.get(s & 0x7F, "?") for s in segs]
         dp = [(s & 0x80) != 0 for s in segs]
-        is_ampm = (chars[0] in ('A', 'P') and chars[1] == 'M') or (chars[0] == ' ' and chars[1] in ('A', 'P'))
-        is_date = dp[1] and dp[3] and not dp[5] and not dp[7] and "".join(chars[4:]).isdigit() and len("".join(chars[4:])) == 4
-        is_time24 = dp[1] and dp[3] and dp[5] and not dp[7] and all(x.isdigit() for x in chars)
-        is_live_clock = dp[2] and dp[4] and "".join(chars[1:]).isdigit()
-        is_left_chess = (chars[0] == '-' and "".join(chars[1:4]).isdigit()) or "".join(chars[0:4]).isdigit()
-        is_right_chess = (chars[4] == '-' and "".join(chars[5:8]).isdigit()) or "".join(chars[4:8]).isdigit()
-        is_chess = not is_ampm and not is_date and not is_time24 and not is_live_clock and is_left_chess and is_right_chess and (dp[1] or dp[3]) and (dp[5] or dp[7])
+        is_chess = _detect_chess(chars, dp)
 
     for k, s in enumerate(segs):
         sa, sb, sc, sd, se, sf, sg = ((s >> i) & 1 for i in range(7))
@@ -161,6 +179,7 @@ def big(segs):
 
 
 def draw(segs, scale=6):
+    """Vẽ khung hình LED 7 đoạn thành ảnh PIL RGB (phục vụ xuất PNG/GIF)."""
     from PIL import Image, ImageDraw
     W, H, T = 10 * scale, 18 * scale, 2 * scale     # kích thước 1 chữ số, độ dày đoạn
     pad = 3 * scale
@@ -185,6 +204,7 @@ def draw(segs, scale=6):
 
 
 def main():
+    """Điểm vào CLI: phân tích đối số và xuất màn hình ảo ra terminal / PNG / GIF."""
     sys.stdout.reconfigure(encoding="utf-8")   # console Windows cp1252 không in được help tiếng Việt
     ap = argparse.ArgumentParser()
     ap.add_argument("log")
@@ -202,7 +222,7 @@ def main():
     if not (a.gif or a.png):
         for (t, segs), x in zip(frames, torn):
             if a.big:
-                print(f"t = {t} ms\n{big(segs)}\n")
+                print(f"t = {t} ms\n{big(segs, tab)}\n")
             else:
                 print(f"t={t:>7} ms | {text(segs, tab):<12}" + ("  <- xe hinh (ghi do, 1 vong quet)" if x else ""))
     frames = [f for f, x in zip(frames, torn) if not x]

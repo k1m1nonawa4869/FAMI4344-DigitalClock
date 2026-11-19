@@ -27,11 +27,11 @@
    - 3.2. Không gian Địa chỉ Ánh xạ Bộ nhớ (MMIO Memory Map)
    - 3.3. Tập Lệnh MIPS 28 Lệnh Hỗ trợ
 4. [Hướng dẫn Sử dụng 5 Chế độ Hoạt động (Operating Modes)](#4-hướng-dẫn-sử-dụng-5-chế-độ-hoạt-động-operating-modes)
-   - 4.1. Chế độ TIME (Xem Giờ Thực)
-   - 4.2. Chế độ STOPWATCH (Bấm Giờ Thể Thao 8 Lap)
-   - 4.3. Chế độ TIMER (Đếm Ngược & Đếm Bù Âm Quá Giờ)
-   - 4.4. Chế độ ALARM (4 Kênh Báo Thức & Chuông Báo Giờ)
-   - 4.5. Chế độ SET (Chỉnh Giờ Nhấp Nháy 2 Hz & Lịch Năm Nhuận)
+   - 4.1. Chế độ TIME (Xem Giờ Thực 4 Views & 4 Màu LED)
+   - 4.2. Chế độ ALARM (4 Kênh Báo Thức, Chuông Giờ & Thời Lượng)
+   - 4.3. Chế độ STOPWATCH (Bấm Giờ Thể Thao 9/99 Laps, SPLIT/GAP)
+   - 4.4. Chế độ TIMER (Đếm Lùi Đơn & Cờ Vua Kép Tối Đa 99 Phút)
+   - 4.5. Chế độ SET (Hệ Thống Cài Đặt 5 Trang & Lịch Năm Nhuận Gregorian)
 5. [Kiến trúc Phần mềm Nhúng (Firmware Architecture)](#5-kiến-trúc-phần-mềm-nhúng-firmware-architecture)
    - 5.1. Cấu trúc Module Hợp ngữ
    - 5.2. Cơ chế Ngắt Coprocessor 0 & Xử lý Gói tin NTP UART
@@ -132,7 +132,7 @@ Trong firmware đồng hồ, tác vụ chuyển đổi thời gian dạng nhị 
 Khối `muldiv.v` sử dụng thuật toán chia phục hồi số dư nhị phân không dấu (Unsigned Restoring Division) trên 32 chu kỳ xung nhịp để tính thương $Q = A / B$ và số dư $R = A \pmod B$:
 
 **Công thức toán học:**
-$$A = Q \times B + R \quad \text{với} \quad 0 \le R < B$$
+$$A = Q \times B + R \quad (0 \le R < B)$$
 
 **Máy trạng thái phần cứng 32 bước:**
 1. Khởi tạo thanh ghi ghép đôi 64-bit: $R = 0$, $Q = A$ (Số bị chia), $B$ (Số chia).
@@ -143,8 +143,8 @@ $$A = Q \times B + R \quad \text{với} \quad 0 \le R < B$$
      $$R_{trial} = R - B$$
    * Kiểm tra dấu kết quả trừ:
      $$\begin{cases}
-     \text{Nếu } R_{trial} \ge 0: & R \leftarrow R_{trial}; \quad Q[0] \leftarrow 1 \quad (\text{Thành công}) \\
-     \text{Nếu } R_{trial} < 0: & R \leftarrow R; \quad Q[0] \leftarrow 0 \quad (\text{Phục hồi số dư cũ})
+     R_{trial} \ge 0: & R \leftarrow R_{trial}; \quad Q[0] \leftarrow 1 \quad (\text{Accept}) \\
+     R_{trial} < 0: & R \leftarrow R; \quad Q[0] \leftarrow 0 \quad (\text{Restore})
      \end{cases}$$
 3. Sau 32 chu kỳ, thanh ghi $Q$ chứa Thương số chính xác và $R$ chứa Số dư, sẵn sàng chốt vào cặp thanh ghi `$lo` và `$hi`.
 
@@ -232,17 +232,17 @@ Mạch quét hiển thị đa hợp 8 LED 7 đoạn (`seg7_scan.v`) kích hoạt
 Tuy nhiên, do điện dung ký sinh trên các đường mạch in và thời gian phục hồi của bóng bán dẫn điều khiển LED, việc chuyển mạch đột ngột giữa Anode $k$ và Anode $k+1$ sẽ gây ra hiện tượng **bóng ma (Ghosting)** (hình ảnh của chữ số trước hiển thị mờ đè lên chữ số sau).
 
 **Giải pháp phần cứng:**
-Phần cứng chèn một khoảng làm tối cưỡng bức (**Blanking Interval**) kéo dài $100\text{ ns}$ (tương ứng 5 chu kỳ clock $50\text{ MHz}$) tại mỗi thời điểm chuyển đổi khe quét:
-$$\text{Tại sườn chuyển khe: } Anode[7:0] = 8'h00 \quad (\text{Khóa toàn bộ LED trong } 100\text{ ns})$$
+Phần cứng chèn một khoảng làm tối cưỡng bức (**Blanking Interval**) kéo dài $100\text{ ns}$ (tương ứng 5 chu kỳ clock $50\text{ MHz}$) tại mỗi thời điểm chuyển đổi khe quét (khóa toàn bộ LED trong $100\text{ ns}$):
+$$Anode[7:0] = \text{8'h00} \quad (\Delta t_{\text{blank}} = 100\text{ ns})$$
 Sau khi điện tích ký sinh tiêu tán hoàn toàn, Anode mới được kích hoạt cùng dữ liệu đoạn tương ứng, mang lại hình ảnh hiển thị sắc nét tuyệt đối.
 
 ---
 
 ### 2.8. Số học Bù Hai trong Đếm Quá Giờ Âm (Two's Complement Overtime)
-Khối `countdown_core.v` khi đếm ngược từ thời gian đặt trước về $0$ sẽ phát tín hiệu ngắt kích hoạt còi báo thức. Nếu người dùng không nhấn nút dừng, bộ đếm không dừng lại mà tiếp tục đếm xuống các giá trị âm (Overtime Counter).
+Khối `countdown_core.v` khi đếm ngược từ thời gian đặt trước về $0$ sẽ phát tín hiệu ngắt kích hoạt còi báo thức. Nếu người dùng không bật chế độ `STP0` (Dừng tại 0) và chưa nhấn nút dừng, bộ đếm không dừng lại mà tiếp tục đếm xuống các giá trị âm (Overtime Counter).
 
-* Giá trị đếm được lưu dưới dạng số nguyên bù hai 32-bit:
-  $$\text{Nếu } VAL < 0 \implies \text{Giá trị hiển thị} = |VAL| = -VAL = (\sim VAL) + 1$$
+* Giá trị đếm được lưu dưới dạng số nguyên bù hai 32-bit (khi $VAL < 0$, giá trị hiển thị lấy trị tuyệt đối):
+  $$|VAL| = -VAL = (\sim VAL) + 1$$
 * Giá trị độ lớn $|VAL|$ được đưa vào bộ chuyển đổi BCD để hiển thị lên 7 LED bên phải, đồng thời bit dấu được dùng để bật cố định ký tự dấu trừ `-` (`CHAR_DASH = 5'h19`, đoạn g) tại ô ngoài cùng bên trái (`DISP7`).
 
 ---
@@ -368,16 +368,16 @@ Bộ vi xử lý tích hợp 28 lệnh MIPS chuẩn, đáp ứng hoàn hảo cho
 ## 4. HƯỚNG DẪN SỬ DỤNG 5 CHẾ ĐỘ HOẠT ĐỘNG (OPERATING MODES)
 
 Thiết bị giao tiếp với người dùng thông qua **4 phím bấm vật lý (A, B, C, D)** và **màn hình 8 LED 7 đoạn**:
-* **Phím D:** Phím chuyển chế độ (Mode Select), xoay vòng tuần tự qua 5 chế độ:
-  $$\text{TIME (0)} \longrightarrow \text{STOPWATCH (1)} \longrightarrow \text{TIMER (2)} \longrightarrow \text{ALARM (3)} \longrightarrow \text{SET (4)} \longrightarrow \text{TIME (0)}$$
+* **Phím D (MODE):** Phím chuyển chế độ (Mode Select), xoay vòng tuần tự theo triết lý thiết kế Casio chuẩn:
+  $$\text{TIME (0)} \longrightarrow \text{ALARM (1)} \longrightarrow \text{STOPWATCH (2)} \longrightarrow \text{TIMER (3)} \longrightarrow \text{SET (4)} \longrightarrow \text{TIME (0)}$$
 
 ```
 +=============================================================================+
 |                      MÔ PHỎNG MÀN HÌNH LED 7 THANH (ASCII)                  |
 |                                                                             |
 |      _       _   _   _   _   _   _       [DISP7 .. DISP0]                   |
-|     |_| |   | | | |  _| | | | | | |      Chế độ 12h: "A1 02.30.00"          |
-|     | | |_  |_|.|_| |_ .|_| |_| |_|      (10 giờ 23 phút 00 giây sáng)      |
+|     |_| |\/| | | | |_| | | | |_| | |     Chế độ 12h: "AM 10:25:30"          |
+|     | | |  | |_| |_|   |_| |_| |_| |     (10 giờ 25 phút 30 giây sáng)      |
 |                                                                             |
 |      [A] Chức năng      [B] Tùy chỉnh     [C] Chuyển đổi      [D] Đổi Mode  |
 +=============================================================================+
@@ -385,132 +385,101 @@ Thiết bị giao tiếp với người dùng thông qua **4 phím bấm vật l
 
 ---
 
-### 4.1. Chế độ TIME (Xem Giờ Thực)
-* **Chức năng:** Hiển thị giờ hiện hành từ khối RTC phần cứng.
+### 4.1. Chế độ TIME (Xem Giờ Thực — 4 Kiểu Xem & 4 Màu LED)
+* **Chức năng:** Hiển thị giờ hiện hành, lịch ngày đầy đủ và số tuần ISO từ khối RTC phần cứng.
 * **Thao tác phím:**
-  * **Phím A:** Đổi định dạng 12 giờ (có chữ `A`/`P` ở DISP7) hoặc 24 giờ.
-  * **Phím B:** Xoay vòng 3 trang hiển thị:
-    1. Trang Giờ:Phút:Giây (`HH.MM.SS`)
-    2. Trang Giây.Mili-giây (`SS.mmmm`)
-    3. Trang Lịch Ngày:Tháng:Năm (`DD.MM.YY`)
-  * **Phím C:** Điều chỉnh độ sáng màn hình LED theo 3 mức ($15 \rightarrow 9 \rightarrow 3 \rightarrow 15$).
+  * **Phím A (Alarm Smash & Safety Global Off):**
+    * **Nhấn 1 lần:** Tắt ngay lập tức còi báo thức / Hourly Chime đang kêu (Alarm Smash).
+    * **Nhấn nhanh 3 lần liên tiếp** ($\Delta t \le 600\text{ ms}$): Kích hoạt/hủy khóa **Tắt Báo Thức Toàn Cục (Global Alarm Off)** cho đến khi người dùng vào lại trang Alarm để bật lại.
+  * **Phím B:** Xoay vòng tuần tự **4 kiểu xem hiển thị**:
+    1. **12h AM/PM (`AM HH:MM:SS` / `PM HH:MM:SS`):** Hiển thị đầy đủ `AM` / `PM` trên 2 chữ số ngoài cùng bên trái ($S_7 S_6$), theo sau bởi Giờ:Phút:Giây.
+    2. **24h + Centi-giây (`HH:MM:SS.cs`):** Giờ:Phút:Giây 24h tích hợp thêm 2 chữ số mili-giây độ chính xác $0.01\text{ s}$ ($cs$).
+    3. **Ngày tháng đầy đủ (`DD.MM.YYYY`):** Tận dụng trọn vẹn 8 LED hiển thị Ngày, Tháng và Năm 4 chữ số (ví dụ: `29.02.2024`).
+    4. **Tuần & Thứ trong tuần (`W##  DOW`):** Hiển thị số tuần trong năm (`W01`..`W53`) ở 3 LED trái và tên thứ (`MON`, `TUE`, `WED`, `THU`, `FRI`, `SAT`, `SUN`) ở 3 LED phải (ví dụ: `W03  THU`).
+  * **Phím C:** Chuyển đổi luân phiên **4 chủ đề màu LED** (`Đỏ` $\to$ `Xanh lá` $\to$ `Xanh lam` $\to$ `Vàng`).
 
 ---
 
-### 4.2. Chế độ STOPWATCH (Bấm Giờ Thể Thao 2 Chế Độ & Cấu Trúc Ngăn Xếp Stack)
-* **Chức năng:** Bấm giờ chính xác mili-giây, chốt tức thời ($\Delta T = 0\text{ ns}$) tại chân phần cứng `REG_SW_LAP`.
-* **2 Chế độ hiển thị & Đánh đổi kiến trúc (Display & Resolution Trade-off):**
-  Hệ thống 8 LED 7-đoạn tuân theo bài toán phân bổ hiển thị vật lý:
-  $$\text{Số lượng LED ID} + \text{Số lượng LED Thời gian} = 8$$
-  * **Chế độ 1: 9 Laps @ 1 ms (`L MM.SS.mmm`):**
-    * Dành 1 LED ô ngoài cùng bên trái ($S_7$) làm chỉ số vòng chạy ($1 \dots 9$), 7 LED còn lại ($S_6 \dots S_0$) hiển thị đầy đủ Phút, Giây và Mili-giây (`MM.SS.mmm`) với độ phân giải tuyệt đối $1\text{ ms}$.
-    * **Cơ chế Ngăn xếp Trượt (Sliding Buffer / Queue):** Khi vượt quá 9 mốc, firmware tự động dịch mảng sang trái và nạp mốc mới vào đỉnh, đảm bảo **không bao giờ bỏ sót (dismiss) lượt bấm mới nhất**.
-  * **Chế độ 2: 99 Laps @ 10 ms (`LL MM.SS.cc`):**
-    * Khi cần lưu trữ và theo dõi toàn bộ lịch sử lên tới 99 vòng chạy, hệ thống hy sinh 1 chữ số mili-giây xuống centi-giây ($0.01\text{ s}$, tức $10\text{ ms}$). Khi đó, 2 LED ($S_7 S_6$) được giải phóng làm số thứ tự ($01 \dots 99$), 6 LED ($S_5 \dots S_0$) hiển thị `MM.SS.cc`.
-    * **Cấu trúc Dữ liệu Ngăn Xếp (Stack / LIFO):** Toàn bộ 99 mốc được lưu trữ liên tục trong bộ nhớ RAM, cho phép duyệt ngược từ mốc mới nhất về mốc đầu tiên.
-* **Thao tác phím bấm:**
-  * **Phím A:** Bắt đầu chạy (Start) / Tạm dừng (Stop).
-  * **Phím B:**
-    * Khi đang chạy: Chốt tức thì mốc thời gian hiện tại vào đỉnh Ngăn xếp (Stack Push). Khi mảng đầy, áp dụng cơ chế dịch trượt giữ lại các mốc mới nhất.
-    * Khi đang dừng: Đặt lại toàn bộ bộ đếm về $00:00.000$ và giải phóng ngăn xếp (Reset).
-  * **Phím C:**
-    * Khi chưa có Lap ($V_{\text{LAPN}} = 0$) và đang dừng: **Chuyển đổi trực tiếp giữa 2 chế độ 9 Laps ($1\text{ ms}$) $\leftrightarrow$ 99 Laps ($10\text{ ms}$)** bằng hệ thống phím bấm ABCD mà không cần cấu hình bên ngoài.
-    * Khi đã có Lap trong bộ nhớ: Duyệt tuần tự qua các mốc Lap đã lưu trong ngăn xếp ($1 \dots N \to \text{Live}$).
-
----
-
-### 4.3. Chế độ TIMER (Đếm Ngược Đơn & Đồng Hồ Cờ Vua Kép Chess Double Clock)
-Chế độ TIMER cung cấp 2 tiểu chế độ chuyên dụng phục vụ mọi tình huống đo đếm thời gian:
-1. **Tiểu chế độ `t1` (Single Timer):** Đếm lùi đơn với mốc giờ/phút/giây, đếm bù âm quá giờ, tự động cảnh báo chuông còi.
-2. **Tiểu chế độ `t2` (Chess Double Clock):** Đồng hồ cờ vua kép chuyên nghiệp 2 bên độc lập cạnh nhau trên 8 LED, định dạng động 3 cấp độ phân giải $0.01\text{ s}$ (centi-giây).
-
-#### A. Tiểu chế độ `t1`: Đếm lùi Đơn (Single Timer)
-* **Chức năng:** Đếm lùi thời gian chính xác tới mili-giây từ khoảng thời gian cài đặt trước ($V_{PRE}$), hỗ trợ đầy đủ 3 trường: Giờ ($0 \dots 99$), Phút ($0 \dots 59$), Giây ($0 \dots 59$).
-* **Định dạng hiển thị tự động thích ứng (Adaptive Display Formatting):**
-  * **Khi thời gian $\ge 1\text{ giờ}$ ($V_{\text{TMR}} \ge 3.600.000\text{ ms}$):** Hiển thị định dạng `__HH.MM.SS` (ví dụ `  01.30.00` — dấu chấm tại $S_4$ sau giờ và $S_2$ sau phút).
-  * **Khi thời gian $< 1\text{ giờ}$ ($V_{\text{TMR}} < 3.600.000\text{ ms}$):** Hiển thị định dạng `_MM.SS.mmm` (ví dụ ` 01.30.000` — dấu chấm tại $S_5$ sau phút và $S_3$ sau giây).
-  * **Khi quá giờ âm (Negative Overtime in play):** Bật dấu trừ `-` tại ô ngoài cùng bên trái $S_7$ (`- HH.MM.SS` hoặc `-MM.SS.mmm`).
-* **Còi Báo Động Khi Về 0 & Nhịp Bíp Cảnh Báo Quá Hạn Âm (Overtime Alarm):**
-  * Ngay khi bộ đếm chạm mốc $0$, còi báo thức tự động kích hoạt chuông dồn dập cảnh báo người dùng.
-  * Trong suốt quá trình đếm quá giờ âm bù hai (Negative Overtime Counting), còi duy trì nhịp bíp định kỳ cảnh báo (mỗi giây một tiếng bíp ngắn).
-  * **Tắt chuông:** Nhấn bất kỳ phím nào để ngắt còi PWM mà không làm gián đoạn bộ đếm quá giờ âm.
-
-#### B. Tiểu chế độ `t2`: Đồng Hồ Cờ Vua Kép (Chess Double Clock)
-* **Bố cục hiển thị chia đôi 8 LED 7-đoạn ($S_7 \dots S_0$):**
-  * **Bên Trái ($S_7 S_6 S_5 S_4$):** Đồng hồ Đấu thủ A (Left Clock).
-  * **Bên Phải ($S_3 S_2 S_1 S_0$):** Đồng hồ Đấu thủ C (Right Clock).
-* **Cơ chế Định Dạng Động 3 Cấp (3-Tier Dynamic LED Formatting) cho mỗi bên:**
-  1. **Khi $\ge 1\text{ phút}$ ($V \ge 60.000\text{ ms}$):** Định dạng `MM.SS` (ví dụ: `05.00` — dấu chấm tại $S_6$ và $S_2$).
-  2. **Khi $< 1\text{ phút}$ dương ($0 < V < 60.000\text{ ms}$):** Tự động chuyển sang định dạng độ phân giải cao centi-giây $0.01\text{ s}$ `SS.cc` (ví dụ: `58.42` — 58 giây 42 centi-giây).
-  3. **Khi quá giờ âm (Overtime $V < 0$):** Hiển thị `-S.cc` với dấu trừ ở hàng đầu (ví dụ: `-1.25`, bão hòa cực hạn tại `-9.99`).
-* **Bàn Phím Lật Đơn Chiều (One-Way Flip-Flop Switch):**
-  * **Phím A:** Điều khiển Đồng hồ Trái (Left Clock).
-  * **Phím C:** Điều khiển Đồng hồ Phải (Right Clock).
-  * **Quy tắc lật switch:** Ai bấm trước sẽ kích hoạt đồng hồ bên đó chạy trước. Khi bên A đang chạy, đấu thủ A kết thúc nước đi nhấn Phím C $\to$ Đồng hồ A tạm dừng và Đồng hồ C bắt đầu đếm. Nhấn lặp lại nhiều lần Phím C **không làm lật ngược lại A**. Tương tự, khi C đang chạy, nhấn Phím A sẽ chuyển quyền sang A.
-* **Tái Sử Dụng Phần Cứng Tối Ưu (Zero Hardware Overhead):**
-  * Tại một thời điểm chỉ có 1 đấu thủ suy nghĩ, hệ thống dùng đúng 1 khối phần cứng `countdown_core.v` duy nhất: khi đổi lượt, CPU lưu thời gian tức thời vào DMEM và nạp thời gian đối phương vào thanh ghi đếm, không tốn thêm LUT/Flip-Flop nào trên FPGA.
-
-#### C. Khóa An Toàn Chống Bấm Nhầm Reset (Triple-Click Safety Reset trên Phím B)
-* Để ngăn chặn vận động viên hoặc trọng tài vô ý quệt tay vào nút Reset làm hỏng ván cờ hoặc phiên đếm lùi, lệnh Reset chỉ kích hoạt khi **nhấn Phím B nhanh 3 lần liên tiếp** ($\Delta t \le 600\text{ ms}$).
-* **Tác vụ Reset:**
-  * **Trong Single Timer (`t1`):** Khi đang chạy $\to$ Reset về mốc snapshot trước khi bấm A ($V_{\text{TMR\_SNAP}}$) và dừng; Khi đang dừng $\to$ Reset về toàn số 0 ($00:00.000$).
-  * **Trong Chess Clock (`t2`):** Tái đấu (Rematch Reset) $\to$ Khôi phục cả hai bên Trái và Phải về mốc ban đầu ($V_{\text{CHESS\_INIT}}$), sẵn sàng cho ván đấu mới.
-
-#### D. Quy trình Cài đặt & Chuyển đổi Tiểu Chế Độ (SET TIMER Page):
-1. Khi Single Timer đang dừng tĩnh (hoặc đã reset 0), nhấn **Phím C** để vào trang cài đặt: Màn hình hiển thị `t1` (hoặc `t2`) cùng 6 chữ số giờ/phút/giây.
-2. **Nhấn Phím B để đổi vòng qua 4 trường:**
-   `Giờ (DISP5-4 nháy 0x30)` $\to$ `Phút (DISP3-2 nháy 0x0C)` $\to$ `Giây (DISP1-0 nháy 0x03)` $\to$ `Chế độ t1/t2 (DISP7-6 nháy 0xC0)`.
-3. **Tại trường 3 (Chế độ `t1`/`t2`):** Nhấn **Phím A** để đảo giữa `t1` (Single Timer) và `t2` (Chess Double Clock).
-4. **Nhấn Phím C để lưu:**
-   * Nếu chọn `t1`: Cập nhật $V_{PRE}$ và nạp vào Timer đơn.
-   * Nếu chọn `t2`: Nạp thời gian cài đặt vào cả $V_{\text{CHESS\_INIT}}$, $V_{\text{CHESS\_L}}$, $V_{\text{CHESS\_R}}$, khởi động giao diện Cờ vua Kép.
-
----
-
-### 4.4. Chế độ ALARM (4 Kênh Báo Thức Độc Lập & Chuông Báo Giờ Tròn Tiếng)
-Chế độ ALARM cung cấp khả năng quản lý 4 mốc báo thức độc lập (`AL1` đến `AL4`) và tính năng chuông điểm giờ tròn tiếng (`CH` - Hourly Chime) thông qua các thanh ghi phần cứng `REG_ALARM0` đến `REG_ALARM3`.
+### 4.2. Chế độ ALARM (4 Kênh Báo Thức Độc Lập, Chuông Giờ & Cấu Hình Thời Lượng)
+Chế độ ALARM cung cấp khả năng quản lý 4 mốc báo thức độc lập (`AL1` đến `AL4`), chuông điểm giờ tròn tiếng (`CH` - Hourly Chime) và cấu hình thời lượng chuông thông qua các thanh ghi phần cứng `REG_ALARM0` đến `REG_ALARM3`.
 
 * **4 Kênh Báo Thức Độc Lập (`AL1`, `AL2`, `AL3`, `AL4`):**
-  * **Ý nghĩa:** Quản lý 4 mốc thời gian báo thức riêng biệt trong ngày (từ phút thứ $0$ đến $1439$, tương đương $00:00 \dots 23:59$), có thể gán mặt nạ các ngày trong tuần (Chủ nhật đến Thứ bảy).
-  * **Định dạng hiển thị:** `ALk.o HH.MM`
-    * `AL1o07.00`: Báo thức kênh 1 đang **BẬT** (ký tự `o` ở ô $S_4$), reo lúc $07:00$.
-    * `AL2 12.30`: Báo thức kênh 2 đang **TẮT** (khoảng trắng ở ô $S_4$), reo lúc $12:30$.
+  * **Ý nghĩa:** Quản lý 4 mốc thời gian báo thức riêng biệt trong ngày (từ $00:00$ đến $23:59$), gán mặt nạ các ngày trong tuần.
+  * **Định dạng hiển thị:** `ALk o HH:MM` (ví dụ `AL1o07:00`: kênh 1 đang **BẬT** với chữ `o` ở $S_4$; `AL2 12:30`: kênh 2 đang **TẮT**).
   * **Thao tác phím:**
-    * **Phím A:** Bật / Tắt kích hoạt kênh báo thức hiện tại (Đảo cờ `EN`).
+    * **Phím A:** Bật / Tắt kích hoạt kênh báo thức hiện tại (hoặc `CH` Hourly Chime).
     * **Phím B:** Chuyển đổi vòng tròn giữa các kênh: `AL1` $\to$ `AL2` $\to$ `AL3` $\to$ `AL4` $\to$ `CH` $\to$ `AL1`.
     * **Phím C (khi không reo):** Vào chế độ chỉnh sửa giờ/phút báo thức. Nhấn Phím A để tăng giá trị (+1), Phím B để đổi giữa Giờ $\leftrightarrow$ Phút, Phím C để lưu lại.
-    * **Phím C (khi chuông đang reo dồn dập):** Kích hoạt tính năng **Snooze (Tạm hoãn chuông Casio +5 phút)**. Chuông sẽ tắt ngay lập tức và tự động hẹn giờ reo lại sau đúng $300.000\text{ ms}$ (+5 phút).
-    * **Tự động ngắt (Auto-Silence):** Nếu không có tương tác người dùng, chuông báo thức sẽ tự động tắt sau đúng 60 giây ($60.000\text{ ms}$) để tiết kiệm pin.
-
+    * **Phím C (khi chuông đang reo):** Kích hoạt **Snooze (+5 phút)** — tắt chuông tạm thời và tự động hẹn reo lại sau $300.000\text{ ms}$.
+* **Thời lượng Chuông (Alarm Duration) & Tick Định Kỳ Chạy Giờ:**
+  * Hỗ trợ cấu hình thời lượng chuông kéo dài (**5s / 10s / 30s / 60s**) cho Báo thức Mode 1, Hourly Chime và Countdown Timer khi chạm mốc 0 (Auto-Silence khi hết thời lượng).
+  * **Tick Định Kỳ (Periodic Running Ticks):** Trong Mode 2 (Stopwatch) và Mode 3 (Timer), cho phép cấu hình chu kỳ phát tiếng bíp (`OFF / 1s / 2s / 5s / 10s / 20s / 30s / 60s / ...`) và số nhịp bíp mỗi lần kích hoạt (`1..5` bíp).
 * **Chuông Điểm Giờ Tròn Tiếng (`CH` — Hourly Chime):**
-  * **Ý nghĩa:** Tính năng phát tín hiệu âm thanh báo hiệu mỗi khi đồng hồ bước sang giờ mới (ví dụ: $08:00, 09:00, \dots, 23:00$).
-  * **Định dạng hiển thị:** `CH o    ` (Hourly Chime đang **BẬT**) hoặc `CH      ` (Hourly Chime đang **TẮT**).
-  * **Hành vi âm thanh:** Khi bật, tại đúng giây $00$ của đầu mỗi giờ tròn tiếng, phần cứng PWM beeper tự động phát 2 tiếng bíp kép thanh thoát (`REG_BEEP_PAT = 5`).
-  * **Thao tác:** Ở trang `CH`, bấm **Phím A** để Bật / Tắt tính năng này.
+  * Hiển thị `CH o    ` (BẬT) hoặc `CH      ` (TẮT). Tại giây `00` đầu mỗi giờ, phần cứng PWM beeper phát chuỗi bíp báo hiệu.
 
 ---
 
-### 4.5. Chế độ SET (Chỉnh Giờ Nhấp Nháy 2 Hz, Lịch Năm Nhuận & Cài Đặt Timer)
-* **Chức năng:** Cài đặt ngày giờ hệ thống RTC trực quan hoặc cài đặt thời gian Timer đếm lùi, với tần số nhấp nháy $2\text{ Hz}$ tại trường dữ liệu đang chọn (`REG_BLINK_MASK`).
-* **Trình tự các trường chỉnh giờ hệ thống (RTC SET):**
-  $$\text{Giờ (0..23)} \xrightarrow{\text{Nút B}} \text{Phút (0..59)} \xrightarrow{\text{Nút B}} \text{Giây (ép về 00)} \xrightarrow{\text{Nút B}} \text{Ngày (1..mlen)} \xrightarrow{\text{Nút B}} \text{Tháng (1..12)} \xrightarrow{\text{Nút B}} \text{Năm (0..99)}$$
-* **Thuật toán Năm Nhuận & Tự động Kẹp Ngày:**
-  Firmware tự động xác định năm nhuận: Nếu `Năm % 4 == 0`, tháng 2 có 29 ngày, ngược lại có 28 ngày. Khi người dùng đổi tháng từ tháng có 31 ngày (ví dụ: ngày 31 tháng 1) sang tháng 2, phần mềm tự động kẹp ngày về giới hạn cực đại hợp lệ (ngày 28 hoặc 29).
-* **Thao tác phím:**
-  * **Phím A:** Tăng giá trị của trường đang chọn (+1 đơn vị, tự động quay vòng khi chạm ngưỡng; riêng giây ép về 00).
-  * **Phím B:** Chuyển sang trường dữ liệu kế tiếp (xoay vòng qua 6 trường).
-  * **Phím C:** Lưu toàn bộ thiết lập vào phần cứng RTC (kích hoạt cờ nguyên tử `ARM`) và quay trở lại chế độ xem giờ TIME.
-* **Hệ thống Cài đặt Toàn diện 4 Trang trong SET Mode (Điều hướng tuần hoàn qua Phím MODE/ABCD):**
-  * **Trang 0 — SET RTC (`V_TPAGE = 0`):** Chỉnh Giờ, Phút, Giây, Ngày, Tháng, Năm (2000..2099) với tần số nhấp nháy 2 Hz và thuật toán kẹp ngày năm nhuận. Phím B đổi trường (0..5), Phím A tăng giá trị (giây ép về 00), Phím C lưu vào RTC phần cứng và thoát về TIME.
-  * **Trang 1 — SET TIMER `s1` & Chế độ (`V_TPAGE = 1`):** Cài đặt thời gian đếm lùi `s1` (dùng cho Single Timer và Clock A của Cờ vua) cùng Chế độ đếm lùi (`t1`: Đơn $\leftrightarrow$ `t2`: Cờ vua Kép). Hiển thị dạng `t1/t2 HH.MM.SS`. Phím B đổi trường (Giờ $\to$ Phút $\to$ Giây $\to$ Chế độ `t1`/`t2`), Phím A tăng giá trị / đảo chế độ, Phím C lưu và thoát về TIMER.
-  * **Trang 2 — SET CHESS `s2` (`V_TPAGE = 2`):** Cài đặt thời gian độc lập `s2` cho Đấu thủ Phải (Clock C) phục vụ thi đấu chấp giờ / odds matches (ví dụ Trái 5 phút vs Phải 3 phút). Hiển thị dạng `C2  MM.SS`. Phím B đổi giữa Phút $\leftrightarrow$ Giây, Phím A tăng giá trị, Phím C lưu `s2` và thoát về TIMER.
-  * **Trang 3 — SET STOPWATCH (`V_TPAGE = 3`):** Cấu hình chế độ bấm giờ thể thao giữa 9 Laps @ 1 ms (`9L`, định dạng `_MM.SS.mmm`) và 99 Laps @ 10 ms (`99L`, định dạng `LL MM.SS.cc`). Hiển thị `SP  09LA` hoặc `SP  99LA`. Phím A/B đảo chế độ, Phím C lưu và thoát về STOPWATCH.
-  * **Điều hướng tuần hoàn mượt mà:** Nhấn phím MODE bên trong SET Mode sẽ tuần tự duyệt qua Trang 0 $\to$ Trang 1 $\to$ Trang 2 $\to$ Trang 3 $\to$ thoát về TIME (Mode 0), đảm bảo người dùng có thể cấu hình mọi tính năng và không bao giờ bị kẹt ở bất kỳ màn hình nào. Phím C tại bất kỳ trang nào cũng đóng vai trò Save & Exit về chế độ hoạt động tương ứng.
+### 4.3. Chế độ STOPWATCH (Bấm Giờ Thể Thao 9/99 Laps, Giờ Live & SPLIT/GAP)
+* **Chức năng:** Bấm giờ chính xác mili-giây, chốt tức thời ($\Delta T = 0\text{ ns}$) tại thanh ghi phần cứng `REG_SW_LAP`.
+* **Hiển thị Live Running (`H:MM:SS.mmm`):**
+  * Trong khi đồng hồ đang chạy trực tiếp (cho cả chế độ 9 Laps và 99 Laps), LED ngoài cùng bên trái ($S_7$) hiển thị **chữ số Giờ (0..9)** kèm dấu hai chấm `:` và đầy đủ **3 chữ số mili-giây** (`H:MM:SS.mmm`, tối đa `9:59:59.999`).
+* **2 Chế độ Lưu Trữ & Đánh đổi Kiến trúc (Display & Resolution Trade-off):**
+  $$N_{\text{LED\_ID}} + N_{\text{LED\_Time}} = 8$$
+  * **Chế độ `09L` (9 Laps @ 1 ms — `L MM:SS.mmm`):** Dành 1 LED ($S_7$) làm chỉ số vòng ($1 \dots 9$), 7 LED còn lại ($S_6 \dots S_0$) hiển thị đầy đủ Phút, Giây và Mili-giây độ phân giải $1\text{ ms}$. Vượt quá 9 mốc áp dụng bộ đệm trượt (Sliding Buffer) giữ lại 9 mốc mới nhất.
+  * **Chế độ `99L` (99 Laps @ 10 ms — `LL MM:SS.cc`):** Lưu tới 99 vòng chạy trong ngăn xếp RAM (LIFO) với độ phân giải $0.01\text{ s}$ ($10\text{ ms}$); 2 LED ($S_7 S_6$) làm số thứ tự `01..99`, 6 LED ($S_5 \dots S_0$) hiển thị `MM:SS.cc`.
+* **Tùy chọn Xem `SPL` (Split) vs `GAP` (Chênh lệch giữa các Lap):**
+  * **`SPL` (Split Time):** Hiển thị mốc thời gian tuyệt đối tính từ lúc bắt đầu.
+  * **`GAP` (Lap Delta):** Hiển thị khoảng thời gian chênh lệch giữa lap thứ $k$ và lap $k-1$ (với lap 1 so với 0), đồng thời **tắt toàn bộ các số 0 vô nghĩa ở đầu** (Leading Zero Blanking) giúp đọc nhanh thời gian từng chặng.
+* **Thao tác phím bấm:**
+  * **Phím A:** Bắt đầu chạy (Start) / Tạm dừng (Stop).
+  * **Phím B:** Khi đang chạy $\to$ Chốt Lap vào Stack; Khi đang dừng $\to$ Đặt lại về `0:00:00.000` và xóa Stack.
+  * **Phím C:** Khi dừng và chưa có Lap $\to$ Đổi trực tiếp `09L` $\leftrightarrow$ `99L`; Khi đã có Lap $\to$ Duyệt xem các mốc đã lưu ($1 \dots N \to \text{Live}$).
 
-* **Cải tiến Điều khiển Đồng Hồ Đếm Lùi & Cờ Vua Kép:**
-  * **Tắt chuông và Tạm dừng (Pause) tức thì trong 1 lần nhấn Phím C:** Khi đồng hồ đếm lùi quá giờ âm đang reo còi báo động, một lần bấm Phím C duy nhất sẽ đồng thời ngắt còi PWM và chuyển đồng hồ sang trạng thái Tạm dừng (Pause) ngay lập tức, loại bỏ hoàn toàn việc phải bấm 2 lần.
-  * **Định dạng hiển thị Động 4 Chữ Số Cờ Vua:** Left Clock (S7..S4) và Right Clock (S3..S0) chuyển đổi 3 cấp mượt mà: $\ge 1\text{ phút}$ hiển thị `MM.SS`, $< 1\text{ phút dương}$ hiển thị `SS.cc` (độ phân giải 0.01s), $< 0\text{ quá hạn âm}$ hiển thị `-S.cc` (kẹp tối đa -9.99s). Khắc phục triệt để hiện tượng đứng hình tại 9.99s lúc khởi động.
-  * **Tái đấu (Rematch Reset) với Khóa an toàn Triple-Click Phím B:** Nhấn nhanh 3 lần liên tiếp ($\le 600\text{ ms}$) khôi phục Clock A về mốc `s1` và Clock C về mốc `s2` độc lập đã thiết lập.
+---
+
+### 4.4. Chế độ TIMER (Đếm Lùi Đơn `t1` & Đồng Hồ Cờ Vua Kép `t2` 99 Phút)
+Chế độ TIMER cung cấp 2 tiểu chế độ chuyên dụng phục vụ mọi tình huống đo đếm thời gian:
+
+#### A. Tiểu chế độ `t1`: Đếm lùi Đơn (Single Timer)
+* **Định dạng hiển thị thích ứng:**
+  * **Khi thời gian $< 10\text{ h}$ (`absMs < 36.000.000 ms`):** Hiển thị `H:MM:SS.mmm` với chữ số Giờ ($0 \dots 9$) trên $S_7$ kèm dấu hai chấm `:`, dấu hai chấm giữa `MM` và `SS`, và dấu chấm `.` trước 3 chữ số mili-giây `mmm`.
+  * **Khi thời gian $\ge 10\text{ h}$:** Tự động chuyển sang định dạng `__HH:MM:SS`.
+  * **Khi quá giờ âm (Overtime):** Bật dấu trừ `-` tại ô ngoài cùng bên trái ($S_7$).
+* **Tùy chọn Dừng tại 0 (`STP0`) & Tick Căn Chỉnh Mốc 0:**
+  * **`STP0` (Stop at 0):** Cho phép chọn giữa **Đếm bù âm quá giờ** (mặc định) hoặc **Tự động dừng tại `0:00:00.000` và reo chuông báo thức** theo thời lượng đã cài đặt.
+  * **Zero-Aligned Periodic Ticks:** Nhịp tick định kỳ trong chế độ đếm lùi luôn được căn chỉnh chia hết tới mốc `0` (bỏ qua bội số đầu tiên nếu tổng thời gian không chia hết chu kỳ tick).
+* **Điều khiển an toàn (Fail-Safe Buttons):**
+  * **Phím A:** Start / Resume (nhấn lặp lại khi đang chạy không gây tắt).
+  * **Phím B (1 lần):** Tạm dừng tức thì (Pause).
+  * **Phím B (3 lần nhanh $\le 600\text{ ms}$):** Reset an toàn về mốc trước khi chạy ($V_{\text{TMR\_SNAP}}$) hoặc về 0.
+  * **Phím C:** Tắt chuông báo động đang kêu **VÀ** tạm dừng đồng hồ ngay trong **1 lần nhấn duy nhất** (Atomic Silence & Pause).
+
+#### B. Tiểu chế độ `t2`: Đồng Hồ Cờ Vua Kép (Chess Double Clock — Tối đa `99:59`)
+* **Bố cục chia đôi 8 LED ($S_7 \dots S_0$):**
+  * **Bên Trái ($S_7 S_6 S_5 S_4$):** Đồng hồ Đấu thủ A (Left Clock, cấu hình `s1`).
+  * **Bên Phải ($S_3 S_2 S_1 S_0$):** Đồng hồ Đấu thủ C (Right Clock, cấu hình độc lập `s2` cho chấp giờ / Odds Matches).
+  * Vì không cần trường Giờ, mỗi bên hỗ trợ giới hạn tối đa lên tới **99 phút 59 giây (`99:59`)**.
+* **Định dạng Động 3 Cấp cho mỗi bên:**
+  1. **Khi $\ge 1$ phút ($V \ge 60.000\text{ ms}$):** Hiển thị `MM:SS` (có dấu hai chấm `:` giữa Phút và Giây, hỗ trợ `01:00` đến `99:59`).
+  2. **Khi $< 1$ phút dương ($0 \le V < 60.000\text{ ms}$):** Tự động chuyển thang đo sang centi-giây $0.01\text{ s}$ `SS.cc` với dấu chấm thập phân `.`.
+  3. **Khi quá giờ âm ($V < 0$):** Hiển thị `-S.cc` (bão hòa tại `-9.99`s).
+* **Bàn Phím Lật Đơn Chiều & Tái Đấu:**
+  * **Phím A / C:** Ai bấm trước chạy trước; khi A đang chạy bấm C để chuyển lượt sang C (nhấn lặp lại C không lật ngược về A). Tương tự khi C đang chạy, bấm A để chuyển sang A.
+  * **Phím B (1 lần):** Tạm dừng cả 2 đồng hồ; **Phím B (3 lần nhanh $\le 600\text{ ms}$):** Tái đấu (Rematch Reset) — khôi phục A về `s1` và C về `s2`.
+* **Tái Sử Dụng Phần Cứng:** Toàn bộ 2 đồng hồ dùng chung 1 khối `countdown_core.v` duy nhất, CPU hoán đổi giá trị với DMEM khi đổi lượt (0 LUT/FF phát sinh thêm).
+
+---
+
+### 4.5. Chế độ SET (Hệ Thống Cài Đặt 5 Trang & Lịch Năm Nhuận Gregorian)
+Chế độ SET hỗ trợ điều hướng tuần hoàn qua **5 trang cài đặt (`V_TPAGE = 0..4`)** với tín hiệu nhấp nháy $2\text{ Hz}$ trên trường đang sửa (`REG_BLINK_MASK`):
+
+* **Trang 0 — SET RTC (`V_TPAGE = 0`):** Chỉnh Giờ (0..23), Phút (0..59), Giây (ép về 00), Ngày, Tháng, Năm (2000..2099).
+  * **Thuật toán Năm Nhuận Gregorian chuẩn xác:** Năm nhuận khi chia hết cho 4 **nhưng không chia hết cho 100**, trừ trường hợp chia hết cho 400 (`(y % 4 == 0 && y % 100 != 0) || (y % 400 == 0)` — ví dụ 2000 nhuận, 1900/2100 không nhuận). Tự động kẹp ngày cuối tháng hợp lệ khi đổi tháng/năm.
+* **Trang 1 — SET ALARM (`V_TPAGE = 1`):** Chỉnh kênh báo thức (`AL1`..`AL4`), Giờ và Phút (`ALk  HH:MM`).
+* **Trang 2 — SET STOPWATCH (`V_TPAGE = 2`):** Hiển thị `09L  SPL` / `99L  GAP` — **Phím A** chọn Option A (`09L` vs `99L`), **Phím B** chọn Option B (`SPL` vs `GAP`), **Phím C** lưu và thoát về STOPWATCH.
+* **Trang 3 — SET TIMER `s1` & Chế độ (`V_TPAGE = 3`):** Cài đặt thời gian đếm lùi `s1` và đảo tiểu chế độ `t1` (Single) $\leftrightarrow$ `t2` (Chess). Ở chế độ `t2`, Phút tăng từ `00` đến `99`.
+* **Trang 4 — SET CHESS `s2` (`V_TPAGE = 4`):** Cài đặt mốc thời gian riêng `s2` cho Đấu thủ Phải (Clock C, hiển thị `C2  MM:SS`, Phút hỗ trợ từ `00` đến `99` cho ván tối đa 99m59s).
+* **Điều hướng:** Nhấn phím **MODE (D)** duyệt vòng `Trang 0 → 1 → 2 → 3 → 4 → thoát về TIME`; nhấn **C** tại bất kỳ trang nào để **Save & Exit** về chế độ tương ứng.
 
 ---
 
@@ -522,14 +491,15 @@ Firmware được tổ chức theo kiến trúc phân tầng module hóa cao đ�
 ```
 fw/
 ├── mmio.inc          # Định nghĩa hằng số địa chỉ MMIO dương (0xFFFF0000 base)
-├── def.inc           # Định nghĩa biến toàn cục, ký tự ROM LED và cờ điều khiển
+├── def.inc           # Định nghĩa biến toàn cục, ký tự ROM LED (0..9, M, W, G, -) và cờ
 ├── boot.s            # Khởi tạo phần cứng ban đầu, nạp RTC, cấu hình ngắt
+├── fmt.s             # Thư viện định dạng BCD / LED 7 thanh dùng chung
 ├── isr.s             # Trình phục vụ ngắt tại vector 0x00000180 (chụp giờ gói UART)
-├── time_mode.s       # FSM chế độ TIME: xử lý nút bấm, xoay vòng 3 trang màn hình
-├── sw_mode.s         # FSM chế độ STOPWATCH: điều khiển chạy/dừng, duyệt 8 Lap
-├── timer_mode.s      # FSM chế độ TIMER: đếm lùi, xử lý số âm bù hai quá giờ
-├── alarm_mode.s      # FSM chế độ ALARM: 4 kênh báo thức, Snooze, Hourly Chime
-├── set_mode.s        # FSM chế độ SET: máy trạng thái nhấp nháy 2 Hz, tính năm nhuận
+├── time_mode.s       # FSM chế độ TIME: 4 views (12h AM/PM, 24h+cs, Date, Week/DOW), 4 màu LED
+├── alarm_mode.s      # FSM chế độ ALARM: 4 kênh báo thức, Snooze, Chime, thời lượng chuông & tick
+├── sw_mode.s         # FSM chế độ STOPWATCH: live H:MM:SS.mmm, 9/99 Laps, SPLIT/GAP blanking
+├── timer_mode.s      # FSM chế độ TIMER: Single Timer (STP0/Overtime) & Chess Clock 99 phút
+├── set_mode.s        # FSM chế độ SET: 5 trang cài đặt nhấp nháy 2 Hz, lịch năm nhuận Gregorian
 ├── uart_sync.s       # Giao thức đồng bộ NTP qua UART, giải thuật tính trôi CAL PPM
 └── main.s            # Vòng lặp điều phối chính (Super-loop Router) & Quét hiển thị
 ```
@@ -561,7 +531,7 @@ fw/
 | **`src/irq_ctrl.v`** | Bộ gom, tạo mặt nạ và điều khiển ưu tiên 8 kênh ngắt ngoại vi phần cứng |
 | **`src/display_ctrl.v`** | Bộ đệm hiển thị 8 chữ số, điều khiển nhấp nháy 2 Hz và độ sáng PWM 16 mức |
 | **`src/seg7_scan.v`** | Bộ quét đa hợp 8 LED 7 đoạn kèm khoảng làm tối 100 ns chống bóng ma |
-| **`src/char_rom.v`** | Bảng tra ROM giải mã ký tự ASCII sang mã 7 thanh (hỗ trợ số, chữ cái và ký tự đặc biệt) |
+| **`src/char_rom.v`** | Bảng tra ROM giải mã ký tự ASCII sang mã 7 thanh (hỗ trợ 0..9, A..F, M, W, G, - và ký hiệu UI) |
 | **`src/beeper.v`** | Khối điều chế độ rộng xung PWM tạo âm thanh đa tần số cho còi Buzzer |
 | **`src/uart.v`** | Bộ truyền nhận nối tiếp bất đồng bộ UART 115200 baud 8N1, tích hợp hàng đợi FIFO 64-byte |
 | **`src/regfile.v`** | Tập 32 thanh ghi MIPS 32-bit: 2 cổng đọc bất đồng bộ, 1 cổng ghi đồng bộ tại sườn xung |
@@ -590,9 +560,9 @@ fw/
 
 #### Bước 1: Biên dịch Firmware Hợp ngữ sang Mã máy Hex
 ```bash
-python tools/fw_build.py fw/main.s work/main.hex
+python tools/asm.py --aw 11 -o work/main.hex fw/main.s
 ```
-*Kết quả:* Xuất file `work/main.hex` gồm 1.173 từ mã máy MIPS 32-bit.
+*Kết quả:* Xuất file `work/main.hex` gồm 2.039 từ mã máy MIPS 32-bit (nằm gọn trong giới hạn 2.048 words IMEM).
 
 #### Bước 2: Biên dịch & Chạy Mô phỏng Toàn diện Hệ thống SoC (7 Kịch bản)
 ```powershell
@@ -657,15 +627,15 @@ Hệ thống đã vượt qua 100% tất cả các bài kiểm tra tự động 
 21. cosim_iss      : PASS cosim_iss 6 mục SoC (So sánh từng lệnh khớp 100% với ISS)
 -------------------------------------------------------------------------------
 KỊCH BẢN TÍCH HỢP HỆ THỐNG TOÀN DIỆN (tb/system_tb.v):
-- sys_0: Kiểm tra hàm golden model định dạng hiển thị LED            -> PASS
-- sys_1: Chuyển giao nửa đêm, 12h/24h, giây.ms, trang ngày           -> PASS
-- sys_2: Chế độ Stopwatch chạy 1.234 ms                              -> PASS
-- sys_3: Bắt 8 vòng Lap bằng phần cứng trễ 0-ns                      -> PASS
-- sys_4: Countdown timer về 0, chuông báo, đếm quá giờ âm            -> PASS
-- sys_5: Báo thức 4 kênh, Snooze +5 phút, tự tắt sau 60s, Chime     -> PASS
-- sys_6: Chỉnh giờ SET nhấp nháy 2 Hz, kẹp ngày tháng năm nhuận      -> PASS
-- sys_7: Đồng bộ NTP UART ($Z, $T), xử lý lỗi checksum, bù trôi CAL  -> PASS
-TỔNG CỘNG: 621/621 kiểm tra đạt kết quả PASS tuyệt đối (884.869 chu kỳ mô phỏng).
+- sys_0: Kiểm tra hàm golden model định dạng hiển thị LED                  -> PASS
+- sys_1: Chuyển giao nửa đêm, 4 views (12h/24h+cs/Date/Week), 4 màu LED  -> PASS
+- sys_2: Chế độ Stopwatch chạy 1.234 ms                                  -> PASS
+- sys_3: Bắt Lap bằng phần cứng trễ 0-ns, kiểm tra thứ tự                -> PASS
+- sys_4: Countdown timer về 0, chuông báo, đếm quá giờ âm               -> PASS
+- sys_5: Báo thức 4 kênh, Snooze +5 phút, tự tắt, Chủ nhật, Chime        -> PASS
+- sys_6: Chỉnh giờ SET nhấp nháy 2 Hz, kẹp ngày tháng năm nhuận         -> PASS
+- sys_7: Đồng bộ NTP UART ($Z, $T), xử lý lỗi checksum, $Q/$R, bù CAL    -> PASS
+TỔNG CỘNG: 634/634 kiểm tra đạt kết quả PASS tuyệt đối (930.677 chu kỳ mô phỏng).
 ===============================================================================
 ```
 

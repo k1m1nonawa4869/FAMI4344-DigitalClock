@@ -9,7 +9,8 @@
 //                   với kết quả lệnh bcd trong tập lệnh MIPS của SoC.
 //                 - Mã 0x10 .. 0x19: Các chữ cái và ký hiệu đặc biệt ("H", "L", "n", "o",
 //                   "P", "r", "S", "t", "U", "-") phục vụ các chế độ đồng hồ.
-//                 - Mã 0x1A .. 0x1F: Ký tự trống (tắt toàn bộ các đoạn).
+//                 - Mã 0x1B .. 0x1D: Ký tự mở rộng ("M", "W", "G") cho 12h AM/PM, Week và GAP.
+//                 - Mã 0x1A, 0x1E .. 0x1F: Ký tự trống (tắt toàn bộ các đoạn).
 // ============================================================================
 
 `timescale 1ns/1ps

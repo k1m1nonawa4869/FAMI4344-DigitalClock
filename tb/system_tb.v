@@ -6,12 +6,12 @@
 // VAI TRÒ:        Chạy mô phỏng toàn diện chip WatchChip cùng firmware thật (fw/main.s).
 //                 Kiểm chứng tự động 7 kịch bản hoạt động chính:
 //                 - Kịch bản 0 (sys_0): Hàm golden model định dạng hiển thị LED.
-//                 - Kịch bản 1 (sys_1): Chế độ TIME (nửa đêm, 12h/24h, giây.ms, ngày/tháng).
+//                 - Kịch bản 1 (sys_1): Chế độ TIME (nửa đêm, 4 views: 12h AM/PM, 24h+cs, ngày DD.MM.YYYY, tuần W## DOW, đổi 4 màu LED).
 //                 - Kịch bản 2 (sys_2): Chế độ STOPWATCH (chạy/dừng, đo 1234 ms).
-//                 - Kịch bản 3 (sys_3): Khóa phần cứng chốt 8 Lap tức thì (0-ns capture).
-//                 - Kịch bản 4 (sys_4): Chế độ TIMER đếm lùi về 0, còi báo, đếm quá giờ âm.
+//                 - Kịch bản 3 (sys_3): Khóa phần cứng chốt Lap tức thì (0-ns capture, SPLIT/GAP).
+//                 - Kịch bản 4 (sys_4): Chế độ TIMER đếm lùi về 0, còi báo, đếm quá giờ âm & Chess Clock.
 //                 - Kịch bản 5 (sys_5): Chế độ ALARM 4 kênh, Snooze +5 phút, Hourly Chime.
-//                 - Kịch bản 6 (sys_6): Chế độ SET chỉnh giờ nhấp nháy 2 Hz, kẹp ngày hợp lệ.
+//                 - Kịch bản 6 (sys_6): Chế độ SET chỉnh giờ nhấp nháy 2 Hz, kẹp ngày hợp lệ (năm nhuận Gregorian).
 //                 - Kịch bản 7 (sys_7): Đồng bộ UART NTP ($Z, $T, $Q/$R) và hiệu chỉnh CAL ppm.
 // ============================================================================
 `timescale 1ns/1ps

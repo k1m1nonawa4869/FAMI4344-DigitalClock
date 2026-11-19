@@ -18,9 +18,18 @@ output_files/
 modelsim.ini
 transcript
 
-# Python cache
+# Firmware & Simulation temporary logs / outputs
+*.hex
+*.lst
+*.log
+*.tmp
+*.bak
+
+# OS metadata & Python cache
 __pycache__/
 *.pyc
+.DS_Store
+Thumbs.db
 
 # Local backup archive & environment toolchains
 old_backup/
