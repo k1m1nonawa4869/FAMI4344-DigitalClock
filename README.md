@@ -51,28 +51,38 @@ Trong các hệ thống nhúng điều khiển thời gian thực (Real-Time Emb
 
 Đồ án **WatchChip SoC** hiện thực hóa trọn vẹn một hệ thống vi mạch trên chip (SoC) hoàn chỉnh, từ lõi vi xử lý MIPS 32-bit tùy biến đến các ngoại vi chuyên dụng và phần mềm nhúng (firmware) hợp ngữ, giải quyết triệt để bài toán đồng thiết kế phần cứng / phần mềm (Hardware/Software Co-design).
 
-```
-   ┌────────────────────────────────────────────────────────────────────────┐
-   │                            WATCHCHIP SoC                               │
-   │                                                                        │
-   │   ┌───────────────┐        32-bit MMIO Bus       ┌─────────────────┐   │
-   │   │ CPU MIPS Core │◄────────────────────────────►│  soc_regs MMIO  │   │
-   │   │  (G1 / G2)    │                              │ Central Decoder │   │
-   │   └───────▲───────┘                              └────────▲────────┘   │
-   │           │ IRQ [7:0]                                     │            │
-   │   ┌───────┴───────┐   ┌──────────────┐   ┌────────────────▼────────┐   │
-   │   │   irq_ctrl    │   │   timebase   │   │ Real-Time Timers (RTL): │   │
-   │   │  Controller   │   │ (CAL signed) │──►│ • rtc_core (Shadow)     │   │
-   │   └───────────────┘   └──────────────┘   │ • stopwatch_core (8 Lap)│   │
-   │                                          │ • countdown_core (Overt)│   │
-   │   ┌───────────────┐   ┌──────────────┐   │ • alarm_controller (x4) │   │
-   │   │  buttons 2-FF │   │  uart 115.2k │   └─────────────────────────┘   │
-   │   │  (Anti-Bounce)│   │ (64-byte Q)  │   ┌─────────────────────────┐   │
-   │   └───────────────┘   └──────────────┘   │ • display_ctrl (8 Dig)  │   │
-   │                                          │ • seg7_scan + char_rom  │   │
-   │                                          │ • beeper (PWM Buzzer)   │   │
-   │                                          └─────────────────────────┘   │
-   └────────────────────────────────────────────────────────────────────────┘
+```mermaid
+flowchart TB
+    CPU["CPU MIPS32 Core<br/>(G1 2-Phase @ 25MHz / G2 5-Stage Pipe @ 50MHz)"]
+    MEM["Harvard BRAM<br/>(IMEM 2048w + DMEM 1024w)"]
+    IRQ["irq_ctrl<br/>(8 Maskable IRQs -> CP0 0x180)"]
+    TB["timebase<br/>(28-bit Fractional + Signed CAL ppm)"]
+    BUS["soc_regs MMIO Bridge<br/>(0xFFFF0000 .. 0xFFFF00E4)"]
+
+    subgraph TIMERS["Real-Time Hardware Counters"]
+        RTC["rtc_core + rtc_bcd<br/>(Day Shadow Latch)"]
+        SW["stopwatch_core<br/>(0-ns HW Capture)"]
+        TMR["countdown_core<br/>(Overtime / STP0)"]
+        ALM["alarm_controller<br/>(4x Alarms + Chime)"]
+    end
+
+    subgraph IO["Peripherals & Display"]
+        BTN["buttons<br/>(2-FF Sync + 16ms Debounce)"]
+        DISP["display_ctrl + seg7_scan + char_rom<br/>(8-Digit LED, 100ns Blanking, 4-Color)"]
+        BEEP["beeper<br/>(PWM Buzzer)"]
+        UART["uart<br/>(115200 8N1 + 64B FIFO)"]
+    end
+
+    MEM <--> CPU
+    CPU <--> BUS
+    IRQ -->|"IRQ [7:0]"| CPU
+    TB -->|"tick_1ms"| TIMERS
+    BUS <--> TIMERS
+    BUS <--> IO
+    BTN --> IRQ
+    UART --> IRQ
+    ALM --> IRQ
+    TMR --> IRQ
 ```
 
 ### 1.2. Câu hỏi Cốt lõi: Phần cứng vs. Phần mềm trong Đo đạc Thời gian Thực
@@ -368,19 +378,24 @@ Bộ vi xử lý tích hợp 28 lệnh MIPS chuẩn, đáp ứng hoàn hảo cho
 ## 4. HƯỚNG DẪN SỬ DỤNG 5 CHẾ ĐỘ HOẠT ĐỘNG (OPERATING MODES)
 
 Thiết bị giao tiếp với người dùng thông qua **4 phím bấm vật lý (A, B, C, D)** và **màn hình 8 LED 7 đoạn**:
-* **Phím D (MODE):** Phím chuyển chế độ (Mode Select), xoay vòng tuần tự theo triết lý thiết kế Casio chuẩn:
-  $$\text{TIME (0)} \longrightarrow \text{ALARM (1)} \longrightarrow \text{STOPWATCH (2)} \longrightarrow \text{TIMER (3)} \longrightarrow \text{SET (4)} \longrightarrow \text{TIME (0)}$$
+* **Phím D (MODE):** Phím chuyển chế độ (Mode Select), xoay vòng tuần tự theo triết lý thiết kế Casio chuẩn (`TIME (0) → ALARM (1) → STOPWATCH (2) → TIMER (3) → SET (4) → TIME (0)`):
 
-```
-+=============================================================================+
-|                      MÔ PHỎNG MÀN HÌNH LED 7 THANH (ASCII)                  |
-|                                                                             |
-|      _       _   _   _   _   _   _       [DISP7 .. DISP0]                   |
-|     |_| |\/| | | | |_| | | | |_| | |     Chế độ 12h: "AM 10:25:30"          |
-|     | | |  | |_| |_|   |_| |_| |_| |     (10 giờ 25 phút 30 giây sáng)      |
-|                                                                             |
-|      [A] Chức năng      [B] Tùy chỉnh     [C] Chuyển đổi      [D] Đổi Mode  |
-+=============================================================================+
+```mermaid
+stateDiagram-v2
+    [*] --> TIME
+    TIME --> ALARM : "Nút D (MODE)"
+    ALARM --> STOPWATCH : "Nút D (MODE)"
+    STOPWATCH --> TIMER : "Nút D (MODE)"
+    TIMER --> SET : "Nút D (MODE)"
+    SET --> TIME : "Nút D (Trang 4 -> 0) hoặc Nút C (Save & Exit)"
+
+    state SET {
+        [*] --> Page0_RTC
+        Page0_RTC --> Page1_ALM : "MODE"
+        Page1_ALM --> Page2_SW : "MODE"
+        Page2_SW --> Page3_TMR : "MODE"
+        Page3_TMR --> Page4_CHESS : "MODE"
+    }
 ```
 
 ---
@@ -424,7 +439,7 @@ Chế độ ALARM cung cấp khả năng quản lý 4 mốc báo thức độc l
 * **Hiển thị Live Running (`H:MM:SS.mmm`):**
   * Trong khi đồng hồ đang chạy trực tiếp (cho cả chế độ 9 Laps và 99 Laps), LED ngoài cùng bên trái ($S_7$) hiển thị **chữ số Giờ (0..9)** kèm dấu hai chấm `:` và đầy đủ **3 chữ số mili-giây** (`H:MM:SS.mmm`, tối đa `9:59:59.999`).
 * **2 Chế độ Lưu Trữ & Đánh đổi Kiến trúc (Display & Resolution Trade-off):**
-  $$N_{\text{LED\_ID}} + N_{\text{LED\_Time}} = 8$$
+  $$N_{\text{ID}} + N_{\text{time}} = 8$$
   * **Chế độ `09L` (9 Laps @ 1 ms — `L MM:SS.mmm`):** Dành 1 LED ($S_7$) làm chỉ số vòng ($1 \dots 9$), 7 LED còn lại ($S_6 \dots S_0$) hiển thị đầy đủ Phút, Giây và Mili-giây độ phân giải $1\text{ ms}$. Vượt quá 9 mốc áp dụng bộ đệm trượt (Sliding Buffer) giữ lại 9 mốc mới nhất.
   * **Chế độ `99L` (99 Laps @ 10 ms — `LL MM:SS.cc`):** Lưu tới 99 vòng chạy trong ngăn xếp RAM (LIFO) với độ phân giải $0.01\text{ s}$ ($10\text{ ms}$); 2 LED ($S_7 S_6$) làm số thứ tự `01..99`, 6 LED ($S_5 \dots S_0$) hiển thị `MM:SS.cc`.
 * **Tùy chọn Xem `SPL` (Split) vs `GAP` (Chênh lệch giữa các Lap):**
@@ -451,7 +466,7 @@ Chế độ TIMER cung cấp 2 tiểu chế độ chuyên dụng phục vụ m�
 * **Điều khiển an toàn (Fail-Safe Buttons):**
   * **Phím A:** Start / Resume (nhấn lặp lại khi đang chạy không gây tắt).
   * **Phím B (1 lần):** Tạm dừng tức thì (Pause).
-  * **Phím B (3 lần nhanh $\le 600\text{ ms}$):** Reset an toàn về mốc trước khi chạy ($V_{\text{TMR\_SNAP}}$) hoặc về 0.
+  * **Phím B (3 lần nhanh $\le 600\text{ ms}$):** Reset an toàn về mốc trước khi chạy (`V_TMR_SNAP`) hoặc về 0.
   * **Phím C:** Tắt chuông báo động đang kêu **VÀ** tạm dừng đồng hồ ngay trong **1 lần nhấn duy nhất** (Atomic Silence & Pause).
 
 #### B. Tiểu chế độ `t2`: Đồng Hồ Cờ Vua Kép (Chess Double Clock — Tối đa `99:59`)
@@ -467,6 +482,18 @@ Chế độ TIMER cung cấp 2 tiểu chế độ chuyên dụng phục vụ m�
   * **Phím A / C:** Ai bấm trước chạy trước; khi A đang chạy bấm C để chuyển lượt sang C (nhấn lặp lại C không lật ngược về A). Tương tự khi C đang chạy, bấm A để chuyển sang A.
   * **Phím B (1 lần):** Tạm dừng cả 2 đồng hồ; **Phím B (3 lần nhanh $\le 600\text{ ms}$):** Tái đấu (Rematch Reset) — khôi phục A về `s1` và C về `s2`.
 * **Tái Sử Dụng Phần Cứng:** Toàn bộ 2 đồng hồ dùng chung 1 khối `countdown_core.v` duy nhất, CPU hoán đổi giá trị với DMEM khi đổi lượt (0 LUT/FF phát sinh thêm).
+
+```mermaid
+stateDiagram-v2
+    [*] --> IDLE : "V_CHESS_ACT = 0"
+    IDLE --> LEFT_RUN : "Nút A -> Nạp V_CHESS_L"
+    IDLE --> RIGHT_RUN : "Nút C -> Nạp V_CHESS_R"
+    LEFT_RUN --> RIGHT_RUN : "Nút C -> Lưu Left, Nạp Right"
+    RIGHT_RUN --> LEFT_RUN : "Nút A -> Lưu Right, Nạp Left"
+    LEFT_RUN --> IDLE : "Nút B (1 lần: Pause)"
+    RIGHT_RUN --> IDLE : "Nút B (1 lần: Pause)"
+    IDLE --> IDLE : "Nút B (3 lần <= 600ms: Rematch s1 | s2)"
+```
 
 ---
 
@@ -511,6 +538,23 @@ fw/
   1. Ngay khi ký tự ngắt dòng `\n` đi vào thanh ghi dịch UART, cờ ngắt phần cứng bật lên.
   2. Trình phục vụ ngắt (`fw/isr.s`) phản hồi tức thì trong vòng $8$ chu kỳ lệnh, đọc ngay lập tức giá trị `REG_RTC_MS` và `REG_DAY_SHADOW` để chốt mốc thời gian nhận gói với sai số $0\text{ ms}$.
   3. Firmware kiểm tra mã lỗi Checksum XOR (`*CS`). Nếu hợp lệ, hệ thống nạp lại giờ chuẩn và tính toán bù trừ độ trôi tần số $CAL$ cho bộ dao động.
+
+```mermaid
+sequenceDiagram
+    participant PC as "Host PC (115200 8N1)"
+    participant UART as "uart.v (64B FIFO)"
+    participant IRQ as "irq_ctrl + CP0"
+    participant ISR as "fw/isr.s (0x180)"
+    participant RTC as "rtc_core + timebase"
+
+    PC->>UART: Gửi khung "$T...*CS\n"
+    UART->>IRQ: Bật cờ RX_LF tại ký tự '\n'
+    IRQ->>ISR: Nhảy tới vector 0x180 (lưu PC -> $epc)
+    ISR->>RTC: Đọc tức thời REG_RTC_MS + DAY_SHADOW
+    ISR->>UART: Pop FIFO vào vòng đệm kép (V_U2)
+    ISR->>CPU: eret (khôi phục PC <- $epc)
+    Note over ISR,RTC: Kiểm tra *CS -> Cập nhật giờ & hiệu chỉnh CAL ppm
+```
 
 ---
 
