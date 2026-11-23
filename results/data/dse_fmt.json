@@ -1,0 +1,29 @@
+{
+  "budget_32khz_cyc_per_ms": 32.768,
+  "methods": [
+    {
+      "name": "1. Chia phần mềm (div)",
+      "cycles": 224,
+      "added_lut": 0,
+      "load_pct": 683.6
+    },
+    {
+      "name": "2. Lệnh bcd tuần tự",
+      "cycles": 162,
+      "added_lut": 0,
+      "load_pct": 494.4
+    },
+    {
+      "name": "3. Lệnh bcd tổ hợp",
+      "cycles": 135,
+      "added_lut": 237,
+      "load_pct": 412.0
+    },
+    {
+      "name": "4. Thanh ghi HW RTC_BCD",
+      "cycles": 24,
+      "added_lut": 60,
+      "load_pct": 73.2
+    }
+  ]
+}

@@ -1,0 +1,76 @@
+{
+  "cases": [
+    {
+      "G_SLOT": 50000,
+      "G_BLANK": 0,
+      "T_OFF": 50,
+      "gap": 5,
+      "on_cyc": 200135,
+      "ghost_cyc": 135,
+      "ghost_pct": 0.067
+    },
+    {
+      "G_SLOT": 50000,
+      "G_BLANK": 100,
+      "T_OFF": 50,
+      "gap": 10,
+      "on_cyc": 199720,
+      "ghost_cyc": 0,
+      "ghost_pct": 0.0
+    },
+    {
+      "G_SLOT": 12500,
+      "G_BLANK": 0,
+      "T_OFF": 50,
+      "gap": 5,
+      "on_cyc": 200675,
+      "ghost_cyc": 630,
+      "ghost_pct": 0.314
+    },
+    {
+      "G_SLOT": 12500,
+      "G_BLANK": 100,
+      "T_OFF": 50,
+      "gap": 10,
+      "on_cyc": 199000,
+      "ghost_cyc": 0,
+      "ghost_pct": 0.0
+    },
+    {
+      "G_SLOT": 3125,
+      "G_BLANK": 0,
+      "T_OFF": 50,
+      "gap": 5,
+      "on_cyc": 202835,
+      "ghost_cyc": 2520,
+      "ghost_pct": 1.242
+    },
+    {
+      "G_SLOT": 3125,
+      "G_BLANK": 100,
+      "T_OFF": 50,
+      "gap": 10,
+      "on_cyc": 196120,
+      "ghost_cyc": 0,
+      "ghost_pct": 0.0
+    },
+    {
+      "G_SLOT": 3125,
+      "G_BLANK": 0,
+      "T_OFF": 150,
+      "gap": 5,
+      "on_cyc": 209135,
+      "ghost_cyc": 8120,
+      "ghost_pct": 3.883
+    },
+    {
+      "G_SLOT": 3125,
+      "G_BLANK": 100,
+      "T_OFF": 150,
+      "gap": 10,
+      "on_cyc": 202420,
+      "ghost_cyc": 2240,
+      "ghost_pct": 1.107
+    }
+  ]
+}

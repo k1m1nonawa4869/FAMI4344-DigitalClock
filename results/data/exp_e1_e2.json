@@ -1,0 +1,125 @@
+{
+  "e1": [
+    {
+      "in_ppm": -199,
+      "d_ms": -716,
+      "cal": -651700,
+      "k_ms": 200,
+      "rtl_cycles": 9998011,
+      "after_ppm": -0.1
+    },
+    {
+      "in_ppm": -80,
+      "d_ms": -288,
+      "cal": -262100,
+      "k_ms": 200,
+      "rtl_cycles": 9999200,
+      "after_ppm": 0.0
+    },
+    {
+      "in_ppm": -20,
+      "d_ms": -72,
+      "cal": -65500,
+      "k_ms": 200,
+      "rtl_cycles": 9999800,
+      "after_ppm": 0.0
+    },
+    {
+      "in_ppm": 20,
+      "d_ms": 72,
+      "cal": 65500,
+      "k_ms": 200,
+      "rtl_cycles": 10000199,
+      "after_ppm": 0.1
+    },
+    {
+      "in_ppm": 80,
+      "d_ms": 288,
+      "cal": 262100,
+      "k_ms": 200,
+      "rtl_cycles": 10000799,
+      "after_ppm": 0.1
+    },
+    {
+      "in_ppm": 150,
+      "d_ms": 540,
+      "cal": 491500,
+      "k_ms": 200,
+      "rtl_cycles": 10001499,
+      "after_ppm": 0.1
+    },
+    {
+      "in_ppm": 250,
+      "d_ms": 900,
+      "cal": 0,
+      "k_ms": 200,
+      "rtl_cycles": 10000000,
+      "after_ppm": 250.0
+    }
+  ],
+  "e2": [
+    {
+      "gn": 50,
+      "cal": 0,
+      "measured_cyc": 100000,
+      "formula_cyc": 100000,
+      "status": "OK"
+    },
+    {
+      "gn": 50,
+      "cal": 65500,
+      "measured_cyc": 101998,
+      "formula_cyc": 101998,
+      "status": "OK"
+    },
+    {
+      "gn": 50,
+      "cal": -65500,
+      "measured_cyc": 98001,
+      "formula_cyc": 98001,
+      "status": "OK"
+    },
+    {
+      "gn": 50,
+      "cal": 163840,
+      "measured_cyc": 105000,
+      "formula_cyc": 105000,
+      "status": "OK"
+    },
+    {
+      "gn": 50,
+      "cal": -163840,
+      "measured_cyc": 95000,
+      "formula_cyc": 95000,
+      "status": "OK"
+    },
+    {
+      "gn": 50,
+      "cal": 655360,
+      "measured_cyc": 120000,
+      "formula_cyc": 120000,
+      "status": "OK"
+    },
+    {
+      "gn": 50,
+      "cal": -655360,
+      "measured_cyc": 80000,
+      "formula_cyc": 80000,
+      "status": "OK"
+    },
+    {
+      "gn": 50,
+      "cal": 12345,
+      "measured_cyc": 100376,
+      "formula_cyc": 100376,
+      "status": "OK"
+    },
+    {
+      "gn": 50,
+      "cal": -1,
+      "measured_cyc": 99999,
+      "formula_cyc": 99999,
+      "status": "OK"
+    }
+  ]
+}

@@ -1,0 +1,60 @@
+{
+  "n_per_case": 60,
+  "total_presses": 360,
+  "cases": {
+    "poll_D2": {
+      "mode": "poll",
+      "D": 2,
+      "n": 60,
+      "min_us": 0.26,
+      "mean_us": 1.05,
+      "p95_us": 1.72,
+      "max_us": 1.76
+    },
+    "irq_D2": {
+      "mode": "irq",
+      "D": 2,
+      "n": 60,
+      "min_us": 0.08,
+      "mean_us": 0.6,
+      "p95_us": 1.28,
+      "max_us": 1.38
+    },
+    "poll_D100": {
+      "mode": "poll",
+      "D": 100,
+      "n": 60,
+      "min_us": 7.1,
+      "mean_us": 41.91,
+      "p95_us": 80.08,
+      "max_us": 88.54
+    },
+    "irq_D100": {
+      "mode": "irq",
+      "D": 100,
+      "n": 60,
+      "min_us": 2.48,
+      "mean_us": 35.81,
+      "p95_us": 62.17,
+      "max_us": 67.58
+    },
+    "poll_D1526": {
+      "mode": "poll",
+      "D": 1526,
+      "n": 60,
+      "min_us": 118.8,
+      "mean_us": 768.54,
+      "p95_us": 1312.34,
+      "max_us": 1357.06
+    },
+    "irq_D1526": {
+      "mode": "irq",
+      "D": 1526,
+      "n": 60,
+      "min_us": 34.26,
+      "mean_us": 432.82,
+      "p95_us": 946.05,
+      "max_us": 1032.54
+    }
+  }
+}

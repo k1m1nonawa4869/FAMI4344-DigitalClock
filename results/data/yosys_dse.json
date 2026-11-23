@@ -1,0 +1,172 @@
+{
+  "soc_g1": {
+    "desc": "SoC đầy đủ, lõi G1",
+    "LUT": 3741,
+    "FF": 2734,
+    "BRAM36": 3,
+    "BRAM18": 0,
+    "LUTRAM": 13,
+    "DSP": 4,
+    "CARRY4": 284
+  },
+  "soc_g1_bcdc": {
+    "desc": "SoC G1 + `bcd` tổ hợp (§8.1)",
+    "LUT": 3978,
+    "FF": 2680,
+    "BRAM36": 3,
+    "BRAM18": 0,
+    "LUTRAM": 13,
+    "DSP": 4,
+    "CARRY4": 382
+  },
+  "soc_g1_rtcb": {
+    "desc": "SoC G1 + `RTC_BCD` (§8.1)",
+    "LUT": 3801,
+    "FF": 2803,
+    "BRAM36": 3,
+    "BRAM18": 0,
+    "LUTRAM": 13,
+    "DSP": 4,
+    "CARRY4": 292
+  },
+  "soc_g2": {
+    "desc": "SoC đầy đủ, lõi G2",
+    "LUT": 3632,
+    "FF": 3192,
+    "BRAM36": 3,
+    "BRAM18": 0,
+    "LUTRAM": 13,
+    "DSP": 4,
+    "CARRY4": 291
+  },
+  "cpu_g1": {
+    "desc": "lõi G1 (gồm CP0 + ngắt, IMEM, DMEM)",
+    "LUT": 2023,
+    "FF": 1312,
+    "BRAM36": 3,
+    "BRAM18": 0,
+    "LUTRAM": 0,
+    "DSP": 3,
+    "CARRY4": 87
+  },
+  "cpu_g2": {
+    "desc": "lõi G2 pipeline (gồm hazard, ngắt)",
+    "LUT": 2296,
+    "FF": 1758,
+    "BRAM36": 3,
+    "BRAM18": 0,
+    "LUTRAM": 0,
+    "DSP": 3,
+    "CARRY4": 95
+  },
+  "irq": {
+    "desc": "bộ điều khiển ngắt",
+    "LUT": 59,
+    "FF": 81,
+    "BRAM36": 0,
+    "BRAM18": 0,
+    "LUTRAM": 0,
+    "DSP": 0,
+    "CARRY4": 0
+  },
+  "display": {
+    "desc": "display_ctrl (quét LED 7 đoạn)",
+    "LUT": 205,
+    "FF": 88,
+    "BRAM36": 0,
+    "BRAM18": 0,
+    "LUTRAM": 0,
+    "DSP": 1,
+    "CARRY4": 27
+  },
+  "seg7": {
+    "desc": "quét 7 đoạn (seg7_scan + char_rom)",
+    "LUT": 80,
+    "FF": 28,
+    "BRAM36": 0,
+    "BRAM18": 0,
+    "LUTRAM": 0,
+    "DSP": 1,
+    "CARRY4": 17
+  },
+  "timebase": {
+    "desc": "timebase + CAL",
+    "LUT": 115,
+    "FF": 82,
+    "BRAM36": 0,
+    "BRAM18": 0,
+    "LUTRAM": 0,
+    "DSP": 0,
+    "CARRY4": 22
+  },
+  "rtc": {
+    "desc": "RTC",
+    "LUT": 143,
+    "FF": 149,
+    "BRAM36": 0,
+    "BRAM18": 0,
+    "LUTRAM": 0,
+    "DSP": 0,
+    "CARRY4": 17
+  },
+  "stopwatch": {
+    "desc": "stopwatch (capture)",
+    "LUT": 202,
+    "FF": 159,
+    "BRAM36": 0,
+    "BRAM18": 0,
+    "LUTRAM": 5,
+    "DSP": 0,
+    "CARRY4": 43
+  },
+  "cdtimer": {
+    "desc": "TIMER đếm ngược",
+    "LUT": 192,
+    "FF": 150,
+    "BRAM36": 0,
+    "BRAM18": 0,
+    "LUTRAM": 0,
+    "DSP": 0,
+    "CARRY4": 38
+  },
+  "alarm": {
+    "desc": "alarm",
+    "LUT": 223,
+    "FF": 210,
+    "BRAM36": 0,
+    "BRAM18": 0,
+    "LUTRAM": 0,
+    "DSP": 0,
+    "CARRY4": 7
+  },
+  "uart": {
+    "desc": "UART (FIFO 64 byte)",
+    "LUT": 118,
+    "FF": 116,
+    "BRAM36": 0,
+    "BRAM18": 0,
+    "LUTRAM": 3,
+    "DSP": 0,
+    "CARRY4": 16
+  },
+  "muldiv": {
+    "desc": "mul + div tuần tự",
+    "LUT": 248,
+    "FF": 169,
+    "BRAM36": 0,
+    "BRAM18": 0,
+    "LUTRAM": 0,
+    "DSP": 3,
+    "CARRY4": 43
+  },
+  "alu": {
+    "desc": "ALU",
+    "LUT": 317,
+    "FF": 0,
+    "BRAM36": 0,
+    "BRAM18": 0,
+    "LUTRAM": 0,
+    "DSP": 0,
+    "CARRY4": 16
+  }
+}

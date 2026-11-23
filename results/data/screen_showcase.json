@@ -1,0 +1,32 @@
+[
+  {
+    "label": "Mode 0: TIME (12h AM/PM)",
+    "t_ms": 38,
+    "decoded": "AM 12:00:00"
+  },
+  {
+    "label": "Mode 0 (View 2): DATE (DD.MM.YYYY)",
+    "t_ms": 140,
+    "decoded": "03.10.2026"
+  },
+  {
+    "label": "Mode 1: ALARM (AL1o 07:00)",
+    "t_ms": 6853,
+    "decoded": "AL1o07.00"
+  },
+  {
+    "label": "Mode 2: STOPWATCH (1.234 ms)",
+    "t_ms": 9073,
+    "decoded": "00:01.234"
+  },
+  {
+    "label": "Mode 3: TIMER Kép / Cờ vua (Left | Right)",
+    "t_ms": 15032,
+    "decoded": "02.00. | 02.00."
+  },
+  {
+    "label": "Mode 4: SET Cấu hình (09L  SPL)",
+    "t_ms": 10686,
+    "decoded": "09L  5PL"
+  }
+]

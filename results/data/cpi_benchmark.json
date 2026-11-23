@@ -1,0 +1,123 @@
+{
+  "cpu_benchmarks": [
+    {
+      "name": "sum100",
+      "g1": {
+        "n": 304,
+        "cyc": 304,
+        "ngắt": 0,
+        "busy": 0,
+        "nhánh": 0,
+        "load-use": 0,
+        "khác": 0
+      },
+      "cpi_g1": 1.0,
+      "time_g1_us": 12.16,
+      "g2": {
+        "n": 304,
+        "cyc": 502,
+        "ngắt": 0,
+        "busy": 0,
+        "nhánh": 198,
+        "load-use": 0,
+        "khác": 0
+      },
+      "cpi_g2": 1.6513,
+      "time_g2_us": 10.04,
+      "speedup": 1.211
+    },
+    {
+      "name": "fact10",
+      "g1": {
+        "n": 122,
+        "cyc": 122,
+        "ngắt": 0,
+        "busy": 0,
+        "nhánh": 0,
+        "load-use": 0,
+        "khác": 0
+      },
+      "cpi_g1": 1.0,
+      "time_g1_us": 4.88,
+      "g2": {
+        "n": 122,
+        "cyc": 182,
+        "ngắt": 0,
+        "busy": 0,
+        "nhánh": 60,
+        "load-use": 0,
+        "khác": 0
+      },
+      "cpi_g2": 1.4918,
+      "time_g2_us": 3.64,
+      "speedup": 1.341
+    },
+    {
+      "name": "bcd",
+      "g1": {
+        "n": 320,
+        "cyc": 455,
+        "ngắt": 0,
+        "busy": 135,
+        "nhánh": 0,
+        "load-use": 0,
+        "khác": 0
+      },
+      "cpi_g1": 1.4219,
+      "time_g1_us": 18.2,
+      "g2": {
+        "n": 320,
+        "cyc": 653,
+        "ngắt": 0,
+        "busy": 135,
+        "nhánh": 198,
+        "load-use": 0,
+        "khác": 0
+      },
+      "cpi_g2": 2.0406,
+      "time_g2_us": 13.06,
+      "speedup": 1.394
+    }
+  ],
+  "firmware_main": {
+    "name": "main.s (SoC)",
+    "g1": {
+      "n": 310819,
+      "cyc": 465322,
+      "ngắt": 0,
+      "busy": 154503,
+      "nhánh": 0,
+      "load-use": 0,
+      "khác": 0
+    },
+    "cpi_g1": 1.4971,
+    "mips_g1": 16.699,
+    "g2": {
+      "n": 384529,
+      "cyc": 814296,
+      "ngắt": 684,
+      "busy": 208351,
+      "nhánh": 180476,
+      "load-use": 40209,
+      "khác": 0
+    },
+    "cpi_g2": 2.1176,
+    "mips_g2": 23.611,
+    "throughput_gain_pct": 41.39,
+    "speedup": 1.414
+  },
+  "g2_breakdown": {
+    "total_cyc": 814296,
+    "effective_cyc": 384529,
+    "effective_pct": 47.22,
+    "branch_cyc": 180476,
+    "branch_pct": 22.16,
+    "busy_cyc": 208351,
+    "busy_pct": 25.59,
+    "load_use_cyc": 40209,
+    "load_use_pct": 4.94,
+    "irq_cyc": 731,
+    "irq_pct": 0.09,
+    "other_cyc": 0
+  }
+}
