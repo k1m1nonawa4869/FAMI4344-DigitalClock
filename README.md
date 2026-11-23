@@ -638,6 +638,21 @@ gtkwave work/wave_e3_capture.vcd sim/gtkwave_e3_capture.gtkw
 gtkwave work/wave_peripherals.vcd sim/gtkwave_peripherals.gtkw
 ```
 
+#### Bước 5: Tái Lập Toàn Bộ Benchmark, Tổng Hợp Yosys & 11 Biểu Đồ Tự Động (One-Command Reproducibility)
+Toàn bộ đồ thị hiệu năng CPI/Amdahl, tài nguyên FPGA tổng hợp bằng **Yosys 0.66**, dữ liệu thực nghiệm (`E1'`, `E2'`, `E3`, `E4'`), dạng sóng số trích xuất từ VCD (`tools/vcd_plot.py`) và ảnh 6 màn hình LED 7 đoạn từ mô phỏng RTL (`tools/screen.py`) đều được lưu mã nguồn công khai và tái lập hoàn toàn bằng một dòng lệnh:
+
+```bash
+# Chạy trọn 7 nhóm benchmark (CPI G1/G2, DSE & Yosys 0.66, E1'/E2', E3 n=60, E4', VCD Waves, System Screen)
+python tools/run_benchmarks_and_plots.py --all
+```
+
+* **Dữ liệu đo thô (JSON/CSV):** Xuất tự động vào [`results/data/`](results/data/) (`cpi_benchmark.json`, `dse_fmt.json`, `yosys_dse.json`, `exp_e1_e2.json`, `exp_e3.json`, `exp_e4.json`, `screen_showcase.json`).
+* **11 Biểu đồ PNG 300 DPI:** Xuất tự động vào [`results/plots/`](results/plots/):
+  * `fig_cpi_g1_vs_g2.png`, `fig_g2_cpi_breakdown.png`, `fig_amdahl_real.png` (Iron Law & Amdahl từ trace RTL G1/G2).
+  * `fig_dse_fmt.png`, `fig_yosys_resources.png` (DSE định dạng 8 chữ số & tổng hợp LUT/FF/BRAM/DSP bằng Yosys 0.66 `synth_xilinx`).
+  * `fig_exp_e1_e2_cal.png`, `fig_exp_e3_latency.png`, `fig_exp_e4_ghosting.png` (Thực nghiệm bù ppm CAL, 360 ca bấm E3 0 ns, và triệt tiêu bóng ma LED 0,000%).
+  * `fig_wave_pipeline_hazard.png`, `fig_wave_e3_capture.png`, `fig_sim_screen_modes.png` (Dạng sóng VCD thật qua `tools/vcd_plot.py` & LED 7 đoạn từ `system_tb`).
+
 ---
 
 ### 7.3. Kết quả Kiểm thử Toàn diện (Regression Test Results)
@@ -691,11 +706,11 @@ Dự án được triển khai theo quy trình phân công chuyên môn hóa cao
 
 | Thành Viên | Vai Trò Kỹ Thuật | Nhiệm Vụ Chính Đảm Trách | Sản Phẩm & Bằng Chứng Mã Nguồn |
 | :---: | :--- | :--- | :--- |
-| **TV1** | **Trưởng nhóm / Kiến trúc Hệ thống & Tích hợp SoC** | • Thiết kế cấu trúc vi mạch SoC tổng thể (`soc_top.v`)<br>• Xây dựng bộ giải mã địa chỉ bus MMIO (`soc_regs.v`)<br>• Quy hoạch bản đồ bộ nhớ và phân bổ không gian ngoại vi<br>• Quản trị mã nguồn, tích hợp và tối ưu hóa diện tích/tần số | `src/soc_top.v`<br>`src/soc_regs.v`<br>`tb/soc_bus_tb.v`<br>`README.md` |
-| **TV2** | **Kỹ sư Vi kiến trúc CPU & Đường ống Pipeline** | • Thiết kế đường dữ liệu Datapath CPU Đơn chu kỳ G1 (`cpu_g1.v`)<br>• Thiết kế CPU Pipeline 5 tầng G2 (`cpu_pipe.v`)<br>• Hiện thực khối giải quyết xung đột Forwarding & Hazard (`hazard.v`)<br>• Thiết kế tập thanh ghi 32 từ (`regfile.v`) và bộ giải mã lệnh (`control.v`) | `src/cpu_g1.v`<br>`src/cpu_pipe.v`<br>`src/hazard.v`<br>`src/regfile.v`<br>`src/control.v`<br>`tb/hazard_tb.v` |
-| **TV3** | **Kỹ sư Số học Phần cứng & Ngoại vi Thời gian Thực** | • Thiết kế khối số học ALU 32-bit phát hiện tràn số (`alu.v`)<br>• Thiết kế bộ chia phục hồi số dư 32 chu kỳ (`muldiv.v`)<br>• Thiết kế khối đổi nhị phân sang BCD Double-Dabble (`bcd_unit.v`)<br>• Thiết kế bộ đếm thời gian thực RTC (`rtc_core.v`) và Bấm giờ (`stopwatch_core.v`) | `src/alu.v`<br>`src/muldiv.v`<br>`src/bcd_unit.v`<br>`src/rtc_core.v`<br>`src/stopwatch_core.v`<br>`tb/alu_tb.v` |
-| **TV4** | **Kỹ sư Giao tiếp Ngoại vi, Hiển thị & Truyền thông** | • Thiết kế bộ chia tần số phân số bù trôi PPM (`timebase.v`)<br>• Thiết kế ngoại vi quét LED 7 đoạn chống bóng ma (`seg7_scan.v`, `char_rom.v`)<br>• Thiết kế khối điều khiển hiển thị nhấp nháy/độ sáng (`display_ctrl.v`)<br>• Thiết kế khối lọc nhiễu phím bấm 2-FF (`buttons.v`) và UART 115200 (`uart.v`) | `src/timebase.v`<br>`src/seg7_scan.v`<br>`src/char_rom.v`<br>`src/display_ctrl.v`<br>`src/buttons.v`<br>`src/uart.v` |
-| **TV5** | **Kỹ sư Phần mềm Nhúng & Kiểm thử Toàn diện** | • Thiết kế toàn bộ firmware hợp ngữ 5 chế độ hoạt động (`fw/*.s`)<br>• Hiện thực trình phục vụ ngắt ISR Coprocessor 0 và đồng bộ NTP<br>• Xây dựng testbench tích hợp toàn diện 7 kịch bản (`system_tb.v`)<br>• Phát triển bộ công cụ dịch mã `asm.py`, mô phỏng ISS và màn hình ảo | `fw/*.s`<br>`fw/*.inc`<br>`tb/system_tb.v`<br>`tb/screen_dump.v`<br>`tools/asm.py`<br>`tools/screen.py` |
+| **TV1** | **Kỹ sư Số học Phần cứng, DSE & Phân tích Hiệu năng** | • Thiết kế khối số học ALU 32-bit (`alu.v`), chia khôi phục 33 chu kỳ (`muldiv.v`) và Double-Dabble (`bcd_unit.v`)<br>• Khảo sát DSE `fmt.s` 4 phương án ở 32,768 kHz<br>• Phân tích Iron Law (CPI G1 vs G2), Định luật Amdahl & tổng hợp Yosys 0.66 | `src/alu.v`<br>`src/muldiv.v`<br>`src/bcd_unit.v`<br>`tools/dse_report.py`<br>`tools/cpi.py` |
+| **TV2** | **Nhóm trưởng / ISA, Công cụ, Firmware 5 Chế độ & Demo** | • Chuẩn hóa tập lệnh MIPS32/ABI (28 lệnh) & công cụ (`asm.py`, `iss.py`, `cosim_iss.py`, `screen.py`)<br>• Phát triển toàn bộ firmware hợp ngữ 5 chế độ (`fw/*.s`, 2.039/2.048 word)<br>• Xây dựng kịch bản tích hợp `system_tb.v` (634/634 PASS), pipeline benchmark & `demo_clock.html` | `fw/*.s`, `fw/*.inc`<br>`tools/*.py`<br>`tb/system_tb.v`<br>`demo_clock.html`<br>`README.md` |
+| **TV3** | **Kỹ sư Vi kiến trúc CPU G1 & Đường ống Pipeline G2** | • Thiết kế CPU Đơn chu kỳ 2 pha BRAM `cpu_g1.v`<br>• Thiết kế CPU Pipeline 5 tầng `cpu_pipe.v` (4 thanh ghi tầng IF/ID, ID/EX, EX/MEM, MEM/WB)<br>• Hiện thực bộ giải mã (`control.v`), tập thanh ghi (`regfile.v`) và khối xử lý xung đột (`hazard.v`) | `src/cpu_g1.v`<br>`src/cpu_pipe.v`<br>`src/hazard.v`<br>`src/regfile.v`<br>`src/control.v`<br>`tb/hazard_tb.v` |
+| **TV4** | **Kỹ sư Hiển thị LED 7 đoạn, Âm thanh PWM, UART & Kiểm thử 3 lớp** | • Thiết kế mạch quét 8 LED chống bóng ma 0,000% (`seg7_scan.v`, `char_rom.v`, `display_ctrl.v`)<br>• Thiết kế khối giải mã MMIO (`soc_top.v`, `soc_regs.v`), còi PWM (`beeper.v`) & UART 115200 8N1 (`uart.v`)<br>• Thực nghiệm E4' & kiểm thử hồi quy 3 lớp (Unit, Co-sim, SoC) | `src/seg7_scan.v`<br>`src/char_rom.v`<br>`src/display_ctrl.v`<br>`src/beeper.v`<br>`src/uart.v`<br>`tb/exp_e4_tb.v` |
+| **TV5** | **Kỹ sư Logic Số, Định thời Thực, Ngắt CP0 & HW Capture 0 ns** | • Quy chuẩn Edge-Triggered, 2-FF chống Metastability & ngắt chính xác CP0 (`irq_ctrl.v`)<br>• Thiết kế bộ tích lũy pha bù ppm `timebase.v` (E1'/E2'), `rtc_core.v` (`DAY_SHADOW`)<br>• Thiết kế lọc rung phím 10 ms (`buttons.v`), `stopwatch_core.v` (E3 Capture 0 ns), `cdtimer`, `alarm` | `src/timebase.v`<br>`src/rtc_core.v`<br>`src/buttons.v`<br>`src/stopwatch_core.v`<br>`src/irq_ctrl.v`<br>`tb/exp_cal_tb.v`, `tb/exp_e3_tb.v` |
 
 ---
 
