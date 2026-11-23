@@ -49,7 +49,7 @@ BLOCKS = [
     ("alu", "ALU", "alu", "", ""),
 ]
 
-COLS = [("LUT", r"LUT[1-6]"), ("FF", r"FD[A-Z]*"), ("BRAM36", r"RAMB36E1"), ("BRAM18", r"RAMB18E1"),
+COLS = [("LUT", r"LUT[1-6]"), ("FF", r"(FD[A-Z]*|\$_S?DFF[A-Z0-9_]*)"), ("BRAM36", r"RAMB36E1"), ("BRAM18", r"RAMB18E1"),
         ("LUTRAM", r"RAM(32|64|128|256)[MXS]\w*"), ("DSP", r"DSP48E1"), ("CARRY4", r"CARRY4")]
 
 
