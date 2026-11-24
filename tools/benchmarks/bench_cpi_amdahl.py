@@ -125,12 +125,15 @@ def run_cpi_and_amdahl():
     _save_json("cpi_benchmark.json", summary)
 
     # --- Plot 1: fig_cpi_g1_vs_g2.png ---
-    labels = [r["name"] for r in rows] + ["fw/main.s"]
+    mips_g1 = 25.0 / fw_entry["cpi_g1"]
+    mips_g2 = 50.0 / fw_entry["cpi_g2"]
+    fw_lbl = f"fw/main.s\n({mips_g1:.1f} vs {mips_g2:.1f} MIPS)"
+    labels = [r["name"] for r in rows] + [fw_lbl]
     cpi_g1s = [r["cpi_g1"] for r in rows] + [fw_entry["cpi_g1"]]
     cpi_g2s = [r["cpi_g2"] for r in rows] + [fw_entry["cpi_g2"]]
     speedups = [r["speedup"] for r in rows] + [fw_entry["speedup"]]
 
-    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(11.0, 4.2), dpi=300)
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(11.2, 4.35), dpi=300)
     x = np.arange(len(labels))
     w = 0.35
     _style_ax(ax1)
@@ -140,10 +143,10 @@ def run_cpi_and_amdahl():
         h = rect.get_height()
         ax1.text(rect.get_x() + rect.get_width() / 2, h + 0.04, f"{h:.3f}", ha="center", va="bottom", fontsize=7.8, color="#0F172A")
     ax1.set_xticks(x)
-    ax1.set_xticklabels(labels, fontsize=8.5, fontweight="bold")
+    ax1.set_xticklabels(labels, fontsize=8.0, fontweight="bold")
     ax1.set_ylim(0, max(cpi_g2s) * 1.25)
     ax1.set_ylabel("CPI trung bình (chu kỳ / lệnh)", fontsize=9, color=SLATE)
-    ax1.set_title("(a) So sánh CPI đo từ trace RTL", loc="left", fontsize=10, fontweight="bold", color=NAVY)
+    ax1.set_title("(a) CPI đo từ trace RTL", loc="left", fontsize=10, fontweight="bold", color=NAVY)
     ax1.legend(loc="upper left", fontsize=8, frameon=True, facecolor="#FFFFFF", edgecolor=GRID)
 
     _style_ax(ax2)
@@ -154,14 +157,14 @@ def run_cpi_and_amdahl():
         ax2.text(rect.get_x() + rect.get_width() / 2, h + 0.03, f"{h:.2f}x\n(+{(h-1)*100:.1f}%)",
                  ha="center", va="bottom", fontsize=8, fontweight="bold", color=TEAL)
     ax2.set_xticks(x)
-    ax2.set_xticklabels(labels, fontsize=8.5, fontweight="bold")
+    ax2.set_xticklabels(labels, fontsize=8.0, fontweight="bold")
     ax2.set_ylim(0, max(speedups) * 1.28)
-    ax2.set_ylabel("Tăng tốc thực tế G2 so với G1 (x)", fontsize=9, color=SLATE)
-    ax2.set_title("(b) Lợi ích xung nhịp gấp đôi (CPI/f_clk)", loc="left", fontsize=10, fontweight="bold", color=NAVY)
+    ax2.set_ylabel("Tăng tốc G2/G1 (giả định 50 vs 25 MHz)", fontsize=8.8, color=SLATE)
+    ax2.set_title("(b) Thời gian & lợi ích xung nhịp (giả định 50/25 MHz)", loc="left", fontsize=9.6, fontweight="bold", color=NAVY)
     ax2.legend(loc="lower right", fontsize=8, frameon=True, facecolor="#FFFFFF", edgecolor=GRID)
-    fig.suptitle("Hiệu năng đo thực tế từ trace RTL: CPU G1 (25 MHz) vs CPU G2 Pipeline (50 MHz)",
-                 fontsize=11, fontweight="bold", color=NAVY, y=0.99)
-    fig.tight_layout(rect=(0, 0, 1, 0.94))
+    fig.suptitle("CPI đo từ trace RTL; thời gian giả định G1 25 MHz / G2 50 MHz",
+                 fontsize=11, fontweight="bold", color=NAVY, y=0.985)
+    fig.tight_layout(rect=(0, 0, 1, 0.93))
     out_p1 = os.path.join(PLOT_DIR, "fig_cpi_g1_vs_g2.png")
     fig.savefig(out_p1, dpi=300)
     plt.close(fig)
