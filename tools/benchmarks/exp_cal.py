@@ -1,6 +1,6 @@
 # ============================================================================
 # HỌC PHẦN:       MI4344 / IT3283 – Kiến trúc Máy tính (HUST - SAMI/SoICT)
-# TÊN CÔNG CỤ:    tools/exp_cal.py — Phân tích thực nghiệm hiệu chuẩn sai số thạch anh (Crystal Calibration)
+# TÊN CÔNG CỤ:    tools/benchmarks/exp_cal.py — Phân tích thực nghiệm hiệu chuẩn sai số thạch anh (Crystal Calibration)
 # CHUYÊN ĐỀ KTMT: Chương 05: Hệ thống Vào/Ra (I/O) & Bộ đếm thời gian thực chính xác cao (Precision RTC)
 # VAI TRÒ:        Mô phỏng và kiểm chứng cơ chế bù sai lệch tần số thạch anh (±100 ppm) bằng thanh ghi CAL.
 # MÔ TẢ:          - Giả lập độ lệch tần số thạch anh thực tế theo ppm qua các khoảng thời gian I (ms).
@@ -10,7 +10,7 @@
 
 """Thí nghiệm E1′ (báo cáo 2.4, chủ TV5): thạch anh lệch p ppm → firmware tính CAL → ppm còn lại sau hiệu chỉnh.
 
-    python tools/exp_cal.py            # bảng Markdown ra stdout (cần work/exp_cal_tb.vvp: bash tools/run_unit.sh exp_cal)
+    python tools/benchmarks/exp_cal.py            # bảng Markdown ra stdout (cần work/exp_cal_tb.vvp: bash tools/run_unit.sh exp_cal)
 
 Mỗi ca (p, I):
   1. Thạch anh nhanh p ppm → sau I ms thật, chip đếm dư D = round(I·p/10⁶) ms (PC chỉ thấy số nguyên ms).
@@ -24,8 +24,9 @@ import sys
 from concurrent.futures import ThreadPoolExecutor
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-ROOT = os.path.dirname(HERE)
-sys.path.insert(0, HERE)
+TOOLS_DIR = os.path.dirname(HERE)
+ROOT = os.path.dirname(TOOLS_DIR)
+sys.path.insert(0, TOOLS_DIR)
 from test_iss import sync_cal  # noqa: E402
 
 K = 1000                                            # ms mô phỏng; sai số đo ≤ 1 chu kỳ / (K·50 000) = 0,02 ppm

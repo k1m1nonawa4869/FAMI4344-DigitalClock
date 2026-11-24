@@ -1,6 +1,6 @@
 # ============================================================================
 # HỌC PHẦN:       MI4344 / IT3283 – Kiến trúc Máy tính (HUST - SAMI/SoICT)
-# TÊN CÔNG CỤ:    tools/exp_e4.py — Phân tích dạng sóng chống bóng ma LED 7 đoạn (Anti-ghosting Analysis)
+# TÊN CÔNG CỤ:    tools/benchmarks/exp_e4.py — Phân tích dạng sóng chống bóng ma LED 7 đoạn (Anti-ghosting Analysis)
 # CHUYÊN ĐỀ KTMT: Chương 05: Hệ thống Vào/Ra & Giao tiếp hiển thị đa hợp (Multiplexed Display Control)
 # VAI TRÒ:        Xử lý dữ liệu chuyển mạch Anode/Cathode từ mô phỏng RTL, kiểm chứng hiệu quả khoảng ngắt trống (Blanking).
 # MÔ TẢ:          - Đọc dữ liệu mức logic thời gian thực từ mô phỏng tb/exp_e4_tb.v.
@@ -11,7 +11,7 @@
 """Vẽ dạng sóng E4′ (bóng ma LED) từ CSV của tb/exp_e4_tb.v.
 
     vvp -n work/exp_e4_tb.vvp +csv=work/exp_e4_wave.csv     # sau bash tools/run_unit.sh exp_e4
-    python tools/exp_e4.py work/exp_e4_wave.csv report/h_e4_bongma.png
+    python tools/benchmarks/exp_e4.py work/exp_e4_wave.csv report/h_e4_bongma.png
 
 2 khung trên/dưới: G_BLANK = 0 và G_BLANK = 100 (G_SLOT = 3 125, T_OFF = 50), quanh ranh giới khe 0 → 1.
 Vùng tô = anode 0 vật lý còn dẫn trong khi chân đoạn đã mang mẫu chữ số 2 (bóng ma).

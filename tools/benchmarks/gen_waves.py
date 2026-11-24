@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 # ============================================================================
 # HỌC PHẦN:       MI4344 / IT3283 – Kiến trúc Máy tính (HUST - SAMI/SoICT)
-# TÊN CÔNG CỤ:    tools/gen_waves.py — Bộ Tạo Sóng Mô Phỏng & Khởi Chạy GTKWave
+# TÊN CÔNG CỤ:    tools/benchmarks/gen_waves.py — Bộ Tạo Sóng Mô Phỏng & Khởi Chạy GTKWave
 # CHUYÊN ĐỀ KTMT: Chương 04, 05: Kiểm chứng Vi kiến trúc Pipeline, Khối Định thời & Ngoại vi
 # VAI TRÒ:        Tự động biên dịch RTL, nạp firmware mẫu, trích xuất 3 file sóng .vcd
 #                 tương ứng với 3 file cấu hình GTKWave (.gtkw) phục vụ bảo vệ đồ án.
@@ -13,7 +13,7 @@ import sys
 import subprocess
 import glob
 
-REPO_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+REPO_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 WORK_DIR = os.path.join(REPO_ROOT, "work")
 SIM_DIR = os.path.join(REPO_ROOT, "sim")
 
@@ -41,7 +41,7 @@ def main():
     # 1. TẠO SÓNG PIPELINE G2: work/wave_pipeline.vcd
     # ------------------------------------------------------------------------
     print("\n--- 1. Biên dịch & Sinh sóng Pipeline G2 (Hazard / Forwarding) ---")
-    ok1 = run_cmd("python tools/fw_build.py fw/tests/hazard/load_use.s work/wave_pipeline.hex", "Dich firmware load_use.s")
+    ok1 = run_cmd(f'"{sys.executable}" tools/fw_build.py fw/tests/hazard/load_use.s work/wave_pipeline.hex', "Dich firmware load_use.s")
     if ok1:
         pipe_srcs = "src/cpu_pipe.v src/regfile.v src/control.v src/alu.v src/muldiv.v src/bcd_unit.v src/hazard.v src/irq_ctrl.v"
         ok1 = run_cmd(f"iverilog -g2005 -Wall -Wno-timescale -o work/cpu_pipe_tb.vvp tb/cpu_pipe_tb.v {pipe_srcs}", "Bien dich cpu_pipe_tb")
@@ -62,7 +62,7 @@ def main():
     # 2. TẠO SÓNG THỰC NGHIỆM E3: work/wave_e3_capture.vcd (Chốt Lap 0-ns)
     # ------------------------------------------------------------------------
     print("\n--- 2. Biên dịch & Sinh sóng Thực nghiệm E3 (Stopwatch Lap Capture 0-ns) ---")
-    ok2 = run_cmd("python tools/fw_build.py fw/exp/e3_irq.s work/wave_e3.hex", "Dich firmware e3_irq.s")
+    ok2 = run_cmd(f'"{sys.executable}" tools/fw_build.py fw/exp/e3_irq.s work/wave_e3.hex', "Dich firmware e3_irq.s")
     if ok2:
         ok2 = run_cmd(f"iverilog -g2005 -Wall -Wno-timescale -o work/exp_e3_tb.vvp tb/exp_e3_tb.v {all_srcs}", "Bien dich exp_e3_tb")
     if ok2:
@@ -78,7 +78,7 @@ def main():
     # 3. TẠO SÓNG NGOẠI VI & LED 7 ĐOẠN: work/wave_peripherals.vcd
     # ------------------------------------------------------------------------
     print("\n--- 3. Biên dịch & Sinh sóng Ngoại vi SoC & LED 7 Đoạn Quét Đa Hợp ---")
-    ok3 = run_cmd("python tools/fw_build.py fw/main.s work/main.hex", "Dich firmware main.s")
+    ok3 = run_cmd(f'"{sys.executable}" tools/fw_build.py fw/main.s work/main.hex', "Dich firmware main.s")
     if ok3:
         ok3 = run_cmd(f"iverilog -g2005 -Wall -Wno-timescale -o work/system_tb.vvp tb/system_tb.v tb/screen_dump.v {all_srcs}", "Bien dich lai system_tb co ho tro +vcd=")
     if ok3:

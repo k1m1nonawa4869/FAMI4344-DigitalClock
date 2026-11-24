@@ -1,6 +1,6 @@
 # ============================================================================
 # HỌC PHẦN:       MI4344 / IT3283 – Kiến trúc Máy tính (HUST - SAMI/SoICT)
-# TÊN CÔNG CỤ:    tools/exp_e3.py — Phân tích thực nghiệm Polling vs Ngắt vs Chốt phần cứng 0-ns (Experiment E3)
+# TÊN CÔNG CỤ:    tools/benchmarks/exp_e3.py — Phân tích thực nghiệm Polling vs Ngắt vs Chốt phần cứng 0-ns (Experiment E3)
 # CHUYÊN ĐỀ KTMT: Chương 05: Hệ thống Vào/Ra & Cơ chế ngắt vi xử lý (Interrupt & Hardware Timestamping)
 # VAI TRÒ:        Đo đạc độ trễ (Latency) và độ bất định (Jitter) khi ghi nhận thời điểm bấm nút bằng 4 kỹ thuật.
 # MÔ TẢ:          - Chạy song song 4 cơ chế: Polling vòng lặp, ISR ngắt thông thường, ISR tối ưu và Chốt 0-ns.
@@ -10,7 +10,7 @@
 
 """Thí nghiệm E3 (báo cáo, chủ TV3 + TV2): polling vs ngắt vs capture phần cứng khi lấy thời điểm bấm nút.
 
-    python tools/exp_e3.py [--n 1000]      # bảng Markdown ra stdout; CSV từng lần bấm ở work/exp_e3/
+    python tools/benchmarks/exp_e3.py [--n 1000]      # bảng Markdown ra stdout; CSV từng lần bấm ở work/exp_e3/
 
 Dịch fw/exp/e3_poll.s và e3_irq.s với D = 2 / 100 / 1526 (thay dòng `.eqv D_VAL`), chạy tb/exp_e3_tb.v song song.
 Độ trễ đo bằng chu kỳ 50 MHz (không phụ thuộc G_N) → µs ở board = chu kỳ / 50.
@@ -25,7 +25,8 @@ import sys
 from concurrent.futures import ThreadPoolExecutor
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-ROOT = os.path.dirname(HERE)
+TOOLS_DIR = os.path.dirname(HERE)
+ROOT = os.path.dirname(TOOLS_DIR)
 OUT = os.path.join(ROOT, "work", "exp_e3")
 DS = (2, 100, 1526)
 MODES = ("poll", "irq")
@@ -39,7 +40,7 @@ def run(args):
     assert k == 1
     open(src, "w", encoding="utf-8").write(text)
     hexf = src[:-2] + ".hex"
-    subprocess.run([sys.executable, os.path.join(HERE, "fw_build.py"), src, hexf], check=True, capture_output=True)
+    subprocess.run([sys.executable, os.path.join(TOOLS_DIR, "fw_build.py"), src, hexf], check=True, capture_output=True)
     out = subprocess.run(["vvp", "-n", os.path.join(ROOT, "work", "exp_e3_tb.vvp"), "+imem=" + hexf, "+d=%d" % d,
                           "+n=%d" % n, "+csv=" + src[:-2] + ".csv"], cwd=ROOT, capture_output=True, text=True).stdout
     if "PASS exp_e3_tb" not in out:

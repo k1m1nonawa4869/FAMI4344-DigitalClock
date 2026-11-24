@@ -1,6 +1,6 @@
 # ============================================================================
 # HỌC PHẦN:       MI4344 / IT3283 – Kiến trúc Máy tính (HUST - SAMI/SoICT)
-# TÊN CÔNG CỤ:    tools/plot_h9.py — Vẽ đồ thị đánh đổi không gian thiết kế phần cứng (DSE Trade-off Plot)
+# TÊN CÔNG CỤ:    tools/benchmarks/plot_h9.py — Vẽ đồ thị đánh đổi không gian thiết kế phần cứng (DSE Trade-off Plot)
 # CHUYÊN ĐỀ KTMT: Chương 01: Đánh giá hiệu năng & Phân tích Đánh đổi Kiến trúc (Architecture Trade-offs)
 # VAI TRÒ:        Trực quan hóa sự đánh đổi giữa tài nguyên phần cứng (LUT) và số chu kỳ CPU cho các giải pháp RTC.
 # MÔ TẢ:          - Trích xuất dữ liệu chu kỳ đo đạc thực tế từ fmt_bench và số lượng LUT từ Yosys synthesis.
@@ -10,9 +10,9 @@
 
 """Hình H9 (plan §8.1): chu kỳ CPU mỗi lần đổi ms → chữ số so với LUT thêm, 4 cách. → report/h9_dse.png
 
-    python tools/plot_h9.py
+    python tools/benchmarks/plot_h9.py
 
-Số chép từ PLAN_DONG_HO.md §8.1 (chu kỳ: evidence/20261026_fmt.log; LUT: tools/dse_report.py, Yosys).
+Số chép từ PLAN_DONG_HO.md §8.1 (chu kỳ: evidence/20261026_fmt.log; LUT: tools/benchmarks/dse_report.py, Yosys).
 """
 import os
 
@@ -20,7 +20,7 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt  # noqa: E402
 
-ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 # (nhãn, LUT thêm so với SoC G1 3 701 LUT, chu kỳ CPU/lần)
 DATA = [
     ("div thuần (6 div)", 0, 224),
@@ -51,7 +51,7 @@ def main():
     for s in ("left", "bottom"):
         ax.spines[s].set_color(GRID)
     ax.tick_params(colors=INK2, labelsize=8)
-    fig.text(0.01, 0.01, "Góc dưới-trái là tốt nhất. Nguồn: PLAN §8.1, evidence/20261026_fmt.log, tools/dse_report.py",
+    fig.text(0.01, 0.01, "Góc dưới-trái là tốt nhất. Nguồn: PLAN §8.1, evidence/20261026_fmt.log, tools/benchmarks/dse_report.py",
              color=INK2, fontsize=7)
     fig.tight_layout(rect=(0, 0.03, 1, 1))
     out = os.path.join(ROOT, "report", "h9_dse.png")

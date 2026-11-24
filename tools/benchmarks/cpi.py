@@ -1,6 +1,6 @@
 # ============================================================================
 # HỌC PHẦN:       MI4344 / IT3283 – Kiến trúc Máy tính (HUST - SAMI/SoICT)
-# TÊN CÔNG CỤ:    tools/cpi.py — Phân tích CPI & Phân rã chu kỳ trễ Pipeline (CPI & Stall Breakdown)
+# TÊN CÔNG CỤ:    tools/benchmarks/cpi.py — Phân tích CPI & Phân rã chu kỳ trễ Pipeline (CPI & Stall Breakdown)
 # CHUYÊN ĐỀ KTMT: Chương 01: Đánh giá hiệu năng máy tính & Chương 04: Kiến trúc Pipeline CPU
 # VAI TRÒ:        Đọc vết thực thi từ RTL pipeline, tính toán CPI thực tế và định lượng các chu kỳ mất mát (Stalls).
 # MÔ TẢ:          - Tính toán chỉ số CPI (Cycles Per Instruction) từ khoảng cách chu kỳ retire của từng lệnh.
@@ -11,8 +11,8 @@
 
 """CPI từ trace RTL (isa-spec §8) + tách chu kỳ mất theo nguyên nhân (pipeline-policy §4–6). Báo cáo mục 3.3.
 
-    python tools/cpi.py work/cpi/g2/*.csv           # bảng Markdown ra stdout
-    python tools/cpi.py --sum work/cpi/g1/*.csv     # thêm dòng tổng
+    python tools/benchmarks/cpi.py work/cpi/g2/*.csv           # bảng Markdown ra stdout
+    python tools/benchmarks/cpi.py --sum work/cpi/g1/*.csv     # thêm dòng tổng
 
 Mỗi dòng trace là 1 lệnh retire; cột 1 = chu kỳ hệ thống lúc retire. Khoảng cách giữa 2 lần retire, chia cho
 khoảng nhỏ nhất trong file (= 1 chu kỳ CPU: G2 = D, G1 = 2·D vì 2 pha), cho số chu kỳ CPU của lệnh đó.

@@ -1,6 +1,6 @@
 # ============================================================================
 # HỌC PHẦN:       MI4344 / IT3283 – Kiến trúc Máy tính (HUST - SAMI/SoICT)
-# TÊN CÔNG CỤ:    tools/dse_report.py — Khám phá không gian thiết kế phần cứng (Design Space Exploration)
+# TÊN CÔNG CỤ:    tools/benchmarks/dse_report.py — Khám phá không gian thiết kế phần cứng (Design Space Exploration)
 # CHUYÊN ĐỀ KTMT: Chương 01: Tối ưu hóa kiến trúc & Chương 02: Thiết kế logic số FPGA/ASIC
 # VAI TRÒ:        Tự động hóa tổng hợp logic (Yosys synth_xilinx) để đo đạc diện tích và tài nguyên của từng khối.
 # MÔ TẢ:          - Tổng hợp từng module: ALU, BCD, RTC, Timebase, Display Controller, UART, CPU, SoC.
@@ -11,8 +11,8 @@
 """Bảng tài nguyên cho plan §8.1–8.2: Yosys synth_xilinx từng khối → LUT / FF / BRAM / LUTRAM / DSP / CARRY4.
 
 Chạy từ gốc project (sau `source tools/env.sh`):
-    python tools/dse_report.py            # mọi khối → bảng Markdown ra stdout, log ở work/dse_<khối>.log
-    python tools/dse_report.py soc_g1 alu # vài khối
+    python tools/benchmarks/dse_report.py            # mọi khối → bảng Markdown ra stdout, log ở work/dse_<khối>.log
+    python tools/benchmarks/dse_report.py soc_g1 alu # vài khối
 
 Luồng: synth_xilinx tới trước map_luts, rồi `abc -lut 6` (ABC cổ điển) thay abc9 — abc9 bị assertion trên bản Yosys
 trong .toolchain. Số là ước lượng Yosys (`inference`), không phải Vivado; không có Fmax.
@@ -20,10 +20,11 @@ IMEM/DMEM nạp work/main.hex (dịch fw/main.s) để ROM không bị tối ưu
 """
 import os
 import re
+import shutil
 import subprocess
 import sys
 
-ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 SRC = sorted("src/" + f for f in os.listdir(os.path.join(ROOT, "src")) if f.endswith(".v"))
 HEX = "work/main.hex"
 IMEM = '-set IMEM_FILE "%s" -set G_IMEM_AW 11' % HEX
@@ -83,6 +84,8 @@ def count(stat):
 
 def main(argv):
     sys.stdout.reconfigure(encoding="utf-8")   # console Windows cp1252 không in được tiếng Việt
+    if shutil.which("yosys") is None and os.path.isdir(r"C:\msys64\ucrt64\bin"):
+        os.environ["PATH"] = os.environ.get("PATH", "") + os.pathsep + r"C:\msys64\ucrt64\bin"
     names = argv or [b[0] for b in BLOCKS]
     unknown = set(names) - {b[0] for b in BLOCKS}
     if unknown:

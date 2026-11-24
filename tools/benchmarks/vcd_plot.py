@@ -1,6 +1,6 @@
 # ============================================================================
 # HỌC PHẦN:       MI4344 / IT3283 – Kiến trúc Máy tính (HUST - SAMI/SoICT)
-# TÊN CÔNG CỤ:    tools/vcd_plot.py — Bộ đọc VCD & Vẽ Dạng Sóng Số Chuẩn Học Thuật
+# TÊN CÔNG CỤ:    tools/benchmarks/vcd_plot.py — Bộ đọc VCD & Vẽ Dạng Sóng Số Chuẩn Học Thuật
 # CHUYÊN ĐỀ KTMT: Chương 04 & 05: Phân tích Đường ống Pipeline, Hazard & Ngoại vi SoC
 # VAI TRÒ:        Đọc trực tiếp tệp VCD sinh từ mô phỏng RTL (Icarus Verilog) và kết xuất
 #                 biểu đồ dạng sóng số độ phân giải cao (300 DPI) phục vụ Báo cáo & Slide.
