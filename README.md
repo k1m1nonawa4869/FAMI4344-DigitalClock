@@ -589,7 +589,10 @@ sequenceDiagram
 | **`tb/system_tb.v`** | Testbench kiểm thử tích hợp toàn diện hệ thống SoC bao quát toàn bộ 7 kịch bản hoạt động |
 | **`tb/screen_dump.v`** | Màn hình ảo giám sát chân Anode/Cathode để tái tạo hình ảnh hiển thị LED dạng ASCII |
 | **`tools/asm.py`** | Trình biên dịch hợp ngữ MIPS tùy biến hỗ trợ chỉ thị tiền xử lý `.include`, `.eqv`, `.org` |
-| **`tools/screen.py`** | Tiện ích kết xuất log tín hiệu quét chân LED thành đồng hồ số ASCII cỡ lớn trên Terminal |
+| **`tools/iss.py`, `cosim_*.py`** | Bộ giả lập chuẩn (ISS), đối chiếu vết thực thi (`cmp_trace.py`), đồng mô phỏng MARS & ModelSim và kiểm thử tự động (`run_unit.sh`, `test_*.py`) |
+| **`tools/screen.py`** | Tiện ích kết xuất log tín hiệu quét chân LED thành đồng hồ số ASCII/PNG |
+| **`tools/benchmarks/run_all.py`** | Bộ điều phối benchmark thực nghiệm (`bench_cpi_amdahl.py`, `bench_dse_yosys.py`, `bench_e1_e2.py`, `bench_e3.py`, `bench_e4.py`, `bench_visuals.py`, `common.py`) xuất dữ liệu JSON và ảnh 300 DPI |
+| **`tools/benchmarks/*.py`** | Các công cụ phân tích chuyên biệt: `cpi.py`, `dse_report.py` (Yosys), `exp_cal.py`, `exp_e3.py`, `exp_e4.py`, `gen_waves.py`, `vcd_plot.py`, `plot_h9.py` |
 
 ---
 
@@ -622,11 +625,11 @@ python tools/screen.py work/screen_system.log --big
 ```
 
 #### Bước 4: Tự Động Sinh Sóng VCD & Trực Quan Hóa Với GTKWave Phục Vụ Báo Cáo
-Hệ thống cung cấp sẵn công cụ tự động hóa `tools/gen_waves.py` để biên dịch, nạp firmware kịch bản và sinh 3 tệp sóng `.vcd` gọn gàng tương ứng với 3 tệp cấu hình GTKWave (`.gtkw`) đã phân nhóm tín hiệu màu sắc trực quan phục vụ bảo vệ đồ án:
+Hệ thống cung cấp sẵn công cụ tự động hóa `tools/benchmarks/gen_waves.py` để biên dịch, nạp firmware kịch bản và sinh 3 tệp sóng `.vcd` gọn gàng tương ứng với 3 tệp cấu hình GTKWave (`.gtkw`) đã phân nhóm tín hiệu màu sắc trực quan phục vụ bảo vệ đồ án:
 
 ```bash
 # Tự động biên dịch và trích xuất 3 file sóng .vcd vào thư mục work/
-python tools/gen_waves.py
+python tools/benchmarks/gen_waves.py
 
 # 1. Quan sát vi kiến trúc CPU Pipeline G2 (IF, ID, EX, MEM, WB, Hazard Unit, Forwarding):
 gtkwave work/wave_pipeline.vcd sim/gtkwave_pipeline_view.gtkw
@@ -639,11 +642,11 @@ gtkwave work/wave_peripherals.vcd sim/gtkwave_peripherals.gtkw
 ```
 
 #### Bước 5: Tái Lập Toàn Bộ Benchmark, Tổng Hợp Yosys & 11 Biểu Đồ Tự Động (One-Command Reproducibility)
-Toàn bộ đồ thị hiệu năng CPI/Amdahl, tài nguyên FPGA tổng hợp bằng **Yosys 0.66**, dữ liệu thực nghiệm (`E1'`, `E2'`, `E3`, `E4'`), dạng sóng số trích xuất từ VCD (`tools/vcd_plot.py`) và ảnh 6 màn hình LED 7 đoạn từ mô phỏng RTL (`tools/screen.py`) đều được lưu mã nguồn công khai và tái lập hoàn toàn bằng một dòng lệnh:
+Toàn bộ bộ công cụ benchmark được tách khỏi nhóm chạy/kiểm thử lõi trong `tools/` và module hóa gọn nhẹ theo từng nhóm thí nghiệm tại [`tools/benchmarks/`](tools/benchmarks/) (`common.py`, `bench_cpi_amdahl.py`, `bench_dse_yosys.py`, `bench_e1_e2.py`, `bench_e3.py`, `bench_e4.py`, `bench_visuals.py`). Mọi đồ thị hiệu năng CPI/Amdahl, tài nguyên FPGA tổng hợp bằng **Yosys 0.66**, dữ liệu thực nghiệm (`E1'`, `E2'`, `E3`, `E4'`), dạng sóng số trích xuất từ VCD (`tools/benchmarks/vcd_plot.py`) và ảnh 6 màn hình LED 7 đoạn từ mô phỏng RTL (`tools/screen.py`) đều được tái lập hoàn toàn bằng một dòng lệnh:
 
 ```bash
 # Chạy trọn 7 nhóm benchmark (CPI G1/G2, DSE & Yosys 0.66, E1'/E2', E3 n=60, E4', VCD Waves, System Screen)
-python tools/run_benchmarks_and_plots.py --all
+python tools/benchmarks/run_all.py --all
 ```
 
 * **Dữ liệu đo thô (JSON/CSV):** Xuất tự động vào [`results/data/`](results/data/) (`cpi_benchmark.json`, `dse_fmt.json`, `yosys_dse.json`, `exp_e1_e2.json`, `exp_e3.json`, `exp_e4.json`, `screen_showcase.json`).
@@ -651,7 +654,7 @@ python tools/run_benchmarks_and_plots.py --all
   * `fig_cpi_g1_vs_g2.png`, `fig_g2_cpi_breakdown.png`, `fig_amdahl_real.png` (Iron Law & Amdahl từ trace RTL G1/G2).
   * `fig_dse_fmt.png`, `fig_yosys_resources.png` (DSE định dạng 8 chữ số & tổng hợp LUT/FF/BRAM/DSP bằng Yosys 0.66 `synth_xilinx`).
   * `fig_exp_e1_e2_cal.png`, `fig_exp_e3_latency.png`, `fig_exp_e4_ghosting.png` (Thực nghiệm bù ppm CAL, 360 ca bấm E3 0 ns, và triệt tiêu bóng ma LED 0,000%).
-  * `fig_wave_pipeline_hazard.png`, `fig_wave_e3_capture.png`, `fig_sim_screen_modes.png` (Dạng sóng VCD thật qua `tools/vcd_plot.py` & LED 7 đoạn từ `system_tb`).
+  * `fig_wave_pipeline_hazard.png`, `fig_wave_e3_capture.png`, `fig_sim_screen_modes.png` (Dạng sóng VCD thật qua `tools/benchmarks/vcd_plot.py` & LED 7 đoạn từ `system_tb`).
 
 ---
 
@@ -706,8 +709,8 @@ Dự án được triển khai theo quy trình phân công chuyên môn hóa cao
 
 | Thành Viên | Vai Trò Kỹ Thuật | Nhiệm Vụ Chính Đảm Trách | Sản Phẩm & Bằng Chứng Mã Nguồn |
 | :---: | :--- | :--- | :--- |
-| **TV1** | **Kỹ sư Số học Phần cứng, DSE & Phân tích Hiệu năng** | • Thiết kế khối số học ALU 32-bit (`alu.v`), chia khôi phục 33 chu kỳ (`muldiv.v`) và Double-Dabble (`bcd_unit.v`)<br>• Khảo sát DSE `fmt.s` 4 phương án ở 32,768 kHz<br>• Phân tích Iron Law (CPI G1 vs G2), Định luật Amdahl & tổng hợp Yosys 0.66 | `src/alu.v`<br>`src/muldiv.v`<br>`src/bcd_unit.v`<br>`tools/dse_report.py`<br>`tools/cpi.py` |
-| **TV2** | **Nhóm trưởng / ISA, Công cụ, Firmware 5 Chế độ & Demo** | • Chuẩn hóa tập lệnh MIPS32/ABI (28 lệnh) & công cụ (`asm.py`, `iss.py`, `cosim_iss.py`, `screen.py`)<br>• Phát triển toàn bộ firmware hợp ngữ 5 chế độ (`fw/*.s`, 2.039/2.048 word)<br>• Xây dựng kịch bản tích hợp `system_tb.v` (634/634 PASS), pipeline benchmark & `demo_clock.html` | `fw/*.s`, `fw/*.inc`<br>`tools/*.py`<br>`tb/system_tb.v`<br>`demo_clock.html`<br>`README.md` |
+| **TV1** | **Kỹ sư Số học Phần cứng, DSE & Phân tích Hiệu năng** | • Thiết kế khối số học ALU 32-bit (`alu.v`), chia khôi phục 33 chu kỳ (`muldiv.v`) và Double-Dabble (`bcd_unit.v`)<br>• Khảo sát DSE `fmt.s` 4 phương án ở 32,768 kHz<br>• Phân tích Iron Law (CPI G1 vs G2), Định luật Amdahl & tổng hợp Yosys 0.66 | `src/alu.v`<br>`src/muldiv.v`<br>`src/bcd_unit.v`<br>`tools/benchmarks/dse_report.py`<br>`tools/benchmarks/cpi.py` |
+| **TV2** | **Nhóm trưởng / ISA, Công cụ, Firmware 5 Chế độ & Demo** | • Chuẩn hóa tập lệnh MIPS32/ABI (28 lệnh) & công cụ lõi (`asm.py`, `iss.py`, `cosim_iss.py`, `screen.py`)<br>• Phát triển toàn bộ firmware hợp ngữ 5 chế độ (`fw/*.s`, 2.039/2.048 word)<br>• Xây dựng kịch bản tích hợp `system_tb.v` (634/634 PASS), bộ benchmark module hóa `tools/benchmarks/` & `demo_clock.html` | `fw/*.s`, `fw/*.inc`<br>`tools/*.py`<br>`tools/benchmarks/*.py`<br>`tb/system_tb.v`<br>`demo_clock.html`<br>`README.md` |
 | **TV3** | **Kỹ sư Vi kiến trúc CPU G1 & Đường ống Pipeline G2** | • Thiết kế CPU Đơn chu kỳ 2 pha BRAM `cpu_g1.v`<br>• Thiết kế CPU Pipeline 5 tầng `cpu_pipe.v` (4 thanh ghi tầng IF/ID, ID/EX, EX/MEM, MEM/WB)<br>• Hiện thực bộ giải mã (`control.v`), tập thanh ghi (`regfile.v`) và khối xử lý xung đột (`hazard.v`) | `src/cpu_g1.v`<br>`src/cpu_pipe.v`<br>`src/hazard.v`<br>`src/regfile.v`<br>`src/control.v`<br>`tb/hazard_tb.v` |
 | **TV4** | **Kỹ sư Hiển thị LED 7 đoạn, Âm thanh PWM, UART & Kiểm thử 3 lớp** | • Thiết kế mạch quét 8 LED chống bóng ma 0,000% (`seg7_scan.v`, `char_rom.v`, `display_ctrl.v`)<br>• Thiết kế khối giải mã MMIO (`soc_top.v`, `soc_regs.v`), còi PWM (`beeper.v`) & UART 115200 8N1 (`uart.v`)<br>• Thực nghiệm E4' & kiểm thử hồi quy 3 lớp (Unit, Co-sim, SoC) | `src/seg7_scan.v`<br>`src/char_rom.v`<br>`src/display_ctrl.v`<br>`src/beeper.v`<br>`src/uart.v`<br>`tb/exp_e4_tb.v` |
 | **TV5** | **Kỹ sư Logic Số, Định thời Thực, Ngắt CP0 & HW Capture 0 ns** | • Quy chuẩn Edge-Triggered, 2-FF chống Metastability & ngắt chính xác CP0 (`irq_ctrl.v`)<br>• Thiết kế bộ tích lũy pha bù ppm `timebase.v` (E1'/E2'), `rtc_core.v` (`DAY_SHADOW`)<br>• Thiết kế lọc rung phím 10 ms (`buttons.v`), `stopwatch_core.v` (E3 Capture 0 ns), `cdtimer`, `alarm` | `src/timebase.v`<br>`src/rtc_core.v`<br>`src/buttons.v`<br>`src/stopwatch_core.v`<br>`src/irq_ctrl.v`<br>`tb/exp_cal_tb.v`, `tb/exp_e3_tb.v` |
