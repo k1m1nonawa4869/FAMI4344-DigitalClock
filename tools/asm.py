@@ -245,9 +245,9 @@ def _expand_includes(text, base_dir, visited=None):
             inc_name = m.group(1).strip()
             candidates = [
                 os.path.normpath(os.path.join(base_dir, inc_name)),
-                os.path.normpath(os.path.join(base_dir, "..", "fw", inc_name)),
+                os.path.normpath(os.path.join(base_dir, "..", "firmware", inc_name)),
                 os.path.normpath(os.path.join(os.getcwd(), inc_name)),
-                os.path.normpath(os.path.join(os.getcwd(), "fw", inc_name)),
+                os.path.normpath(os.path.join(os.getcwd(), "firmware", inc_name)),
             ]
             found = None
             for c in candidates:
