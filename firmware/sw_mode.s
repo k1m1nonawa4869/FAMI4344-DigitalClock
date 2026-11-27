@@ -1,19 +1,20 @@
 # ============================================================================
 # HỌC PHẦN:       MI4344 / IT3283 – Kiến trúc Máy tính (HUST - SAMI/SoICT)
-# TỆP NGUỒN:      fw/sw_mode.s — Xử Lý Chế Độ Bấm Giờ Thể Thao (STOPWATCH Mode)
+# TỆP NGUỒN:      firmware/sw_mode.s — Xử Lý Chế Độ Bấm Giờ Thể Thao (STOPWATCH Mode)
 # VAI TRÒ:        Xử lý sự kiện nút bấm và hiển thị chế độ STOPWATCH:
-#                 Đồng bộ phần cứng chụp Lap với độ trễ 0 ns, lưu trữ mảng
-#                 8 Lap trong DMEM và duyệt xem lại từng vòng bấm giờ.
+#                 Đồng bộ phần cứng chụp Lap với độ trễ 0 ns, lưu cửa sổ trượt
+#                 9 Lap (09L @ 1 ms) hoặc 99 Lap (99L @ 10 ms) gần nhất trong DMEM.
 # ============================================================================
 # 1. KIẾN THỨC HÀN LÂM & GIÁO TRÌNH (ACADEMIC FOUNDATIONS):
 #    - Đo Lường Thời Gian Thực Tế Không Trễ (Zero-Latency Hardware Capture):
 #      Khi ở chế độ STOPWATCH, cờ SRC = 1 kết nối nút A và B trực tiếp vào
 #      khối stopwatch_core ở tầng phần cứng RTL. Thời điểm bấm giờ được chốt
-#      ngay tại sườn xung clock đầu tiên, triệt tiêu hoàn toàn độ trễ trễ quét (polling latency)
+#      ngay tại sườn xung clock đầu tiên, triệt tiêu hoàn toàn độ trễ quét (polling)
 #      và độ trễ phục vụ ngắt của phần mềm.
-#    - Hàng Đợi Vòng Tròn 8 Phần Tử (8-Entry Circular FIFO Buffer):
-#      Phần cứng tự động lưu các giá trị Lap vào FIFO. Phần mềm đọc cạn FIFO
-#      bằng cách kiểm tra bit dấu (MSB) của thanh ghi REG_SW_LAP.
+#    - Cửa Sổ Trượt 9 / 99 Vòng Gần Nhất (9/99-Entry Sliding Window):
+#      Phần cứng lưu tối đa 8 sự kiện tức thời trong FIFO; firmware rút cạn FIFO
+#      qua bit dấu REG_SW_LAP và duy trì danh sách 9 (09L) hoặc 99 (99L) vòng gần
+#      nhất kèm V_LAP_BASE để tính chênh lệch GAP chính xác ngay cả sau khi trượt.
 # ============================================================================
 
 # ----------------------------------------------------------------------------
@@ -32,6 +33,7 @@ sw_b:   lw    $t0, REG_SW_CTRL($zero)
         sw    $t0, REG_SW_CTRL($zero)
         sw    $zero, V_LAPN($zero)      # Đặt lại số Lap đã lưu về 0
         sw    $zero, V_LAPI($zero)
+        sw    $zero, V_LAP_BASE($zero)  # Xóa mốc nền GAP khi reset đồng hồ
 sw_r:   jr    $ra
 sw_c:   lw    $t1, V_LAPN($zero)
         bne   $t1, $zero, sw_c_browse   # Nếu đã có Lap: Duyệt xem lại các vòng Lap
@@ -53,31 +55,37 @@ sw_c1:  sw    $t0, V_LAPI($zero)
 # ----------------------------------------------------------------------------
 # 2. XỬ LÝ VẼ MÀN HÌNH CHẾ ĐỘ STOPWATCH
 # ----------------------------------------------------------------------------
-dr_sw:  lw    $t0, REG_SW_LAP($zero)    # Rút hết các giá trị Lap từ FIFO phần cứng (tối đa 8 Lap)
+dr_sw:  lw    $t0, REG_SW_LAP($zero)    # Rút hết các giá trị Lap từ FIFO phần cứng 8 tầng
         slt   $t1, $t0, $zero           # Bit 31 (VALID) = 1 nếu FIFO có dữ liệu hợp lệ
         beq   $t1, $zero, ds2           # FIFO rỗng: Chuyển sang vẽ màn hình
+        lw    $t9, V_SW_MODE($zero)     # 0 -> 9 Laps (09L), 1 -> 99 Laps (99L)
+        addiu $t8, $zero, 9
+        beq   $t9, $zero, sw_max_ok
+        addiu $t8, $zero, 99
+sw_max_ok:
         lw    $t2, V_LAPN($zero)
-        slti  $t1, $t2, 8
-        bne   $t1, $zero, sw_save       # Chưa đầy 8 Lap: Lưu bình thường vào vị trí t2
-        # Đã đầy 8 Lap: Dịch trượt mảng sang trái để chốt ping mới nhất vào cuối (Sliding Window)
-        addiu $t5, $zero, 0x440
-        addiu $t6, $zero, 0x45c
+        slt   $t1, $t2, $t8             # Đã đạt ngưỡng max_laps (9 hoặc 99) chưa?
+        bne   $t1, $zero, sw_save       # Chưa đầy: Ghi thẳng vào vị trí V_LAPN
+        # Đã đầy 9 hoặc 99 Lap: lưu V_LAPV[0] -> V_LAP_BASE rồi dịch trượt cửa sổ sang trái
+        lw    $t7, V_LAPV($zero)
+        sw    $t7, V_LAP_BASE($zero)
+        addiu $t5, $zero, V_LAPV
+        addiu $t2, $t8, -1              # Chỉ số cuối = max_laps - 1 (8 hoặc 98)
+        sll   $t6, $t2, 2
+        addu  $t6, $t5, $t6             # Địa chỉ phần tử cuối (&V_LAPV[max_laps - 1])
 sw_shift:
         lw    $t7, 4($t5)
         sw    $t7, 0($t5)
         addiu $t5, $t5, 4
         bne   $t5, $t6, sw_shift
-        addiu $t2, $zero, 7             # Đặt vị trí ghi ở phần tử cuối cùng (0x45c)
 sw_save:
         lui   $t1, 0x1fff
         ori   $t1, $t1, 0xffff          # Mặt nạ 29-bit giá trị mili-giây
         and   $t0, $t0, $t1
         sll   $t3, $t2, 2
-        sw    $t0, V_LAPV($t3)          # Lưu giá trị Lap vào mảng V_LAPV
-        slti  $t1, $t2, 7
-        beq   $t1, $zero, dr_sw
-        addiu $t2, $t2, 1
-        sw    $t2, V_LAPN($zero)        # Tăng biến đếm số Lap đã lưu (tối đa 8)
+        sw    $t0, V_LAPV($t3)          # Lưu giá trị Lap vào mảng V_LAPV[0..98]
+        addiu $t2, $t2, 1               # Tăng bộ đếm: 1..9 (09L) hoặc 1..99 (99L)
+        sw    $t2, V_LAPN($zero)
         j     dr_sw
 ds2:    lw    $t4, V_LAPI($zero)
         bne   $t4, $zero, ds_lap_view
@@ -93,10 +101,12 @@ ds_lap_view:
         lw    $a0, V_LAPV($t3)          # Giá trị Lap t4: T_k
         lw    $t0, V_SW_GAP($zero)      # 0: SPLIT, 1: GAP
         beq   $t0, $zero, ds_val_ready
+        lw    $t2, V_LAP_BASE($zero)    # Mốc nền trước cửa sổ trượt (= 0 trước khi trượt)
         addiu $t1, $zero, 1
-        beq   $t4, $t1, ds_val_ready    # Lap 1: chênh lệch so với mốc 0 là chính T_1
+        beq   $t4, $t1, ds_sub_gap      # Lap 1 của cửa sổ: Delta = T_1 - V_LAP_BASE
         addiu $t3, $t3, -4
         lw    $t2, V_LAPV($t3)          # T_{k-1}
+ds_sub_gap:
         subu  $a0, $a0, $t2             # Delta = T_k - T_{k-1}
 
 ds_val_ready:

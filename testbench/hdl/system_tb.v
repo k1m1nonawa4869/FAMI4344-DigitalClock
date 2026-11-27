@@ -33,7 +33,7 @@ module system_tb;
 
     integer cyc, nchk, nerr_all, nerr, nbad, nal, i, k, fd, r;
     integer t_edge, ms_edge, c0, cz, cv, lapn, ring_ms, off_ms, nlap;
-    integer lapv [0:7];
+    integer lapv [0:31];
     integer v1, v2, v3, v4, v5;
     reg [63:0] fr, e1, e2, e3;
     reg [8*200:1] line;
@@ -81,7 +81,7 @@ module system_tb;
         if (cyc == 4000000) begin $display("FAIL system_tb: qua 4 000 000 chu ky"); $finish; end
         if (dut.alarm_ev) nal <= nal + 1;
         if (dut.u_sw.accept) begin
-            if (nlap < 8) lapv[nlap] = dut.u_sw.val;
+            if (nlap < 32) lapv[nlap] = dut.u_sw.val;
             nlap = nlap + 1;
         end
         run_q <= dut.u_tmr.run;
@@ -548,7 +548,29 @@ module system_tb;
         checkf(fr, fD(dut.u_sw.val), "C lan 4: ve gia tri dang dung");
         $display("  lap: %0d %0d %0d, dung o %0d ms", lapv[0], lapv[1], lapv[2], dut.u_sw.val);
 
-        // Kiểm tra SET STOPWATCH Option A (09L/99L) & Option B (SPLIT/GAP)
+        // Kiểm tra cửa sổ trượt 09L (11 lần bấm Lap -> giữ đúng 9 vòng mới nhất L1..L9)
+        press(B_B);                                      // Đang dừng -> reset về 0
+        nlap = 0;
+        press(B_A);                                      // Bắt đầu chạy lại
+        for (i = 0; i < 11; i = i + 1) begin
+            wait_ms(40);
+            press(B_B);
+        end
+        wait_ms(30);
+        press(B_A);                                      // Dừng
+        frame2;
+        check(nlap == 11 && dut.u_cpu.dmem[12'h430 >> 2] == 9, "09L truot 11 lap -> V_LAPN = 9 (vuot moc 7 cu)");
+        check(dut.u_cpu.dmem[12'h440 >> 2] == lapv[1], "V_LAP_BASE luu dung moc lapv[1] bi day ra");
+        for (i = 0; i < 9; i = i + 1) begin
+            press(B_C);
+            e2 = fD(lapv[i + 2]);
+            checkf(fr, {d8(i + 1), e2[55:0]}, "09L duyet du 9 lap (bao gom L8, L9)");
+        end
+        press(B_C);
+        checkf(fr, fD(dut.u_sw.val), "09L C lan 10: ve gia tri live");
+
+        // Kiểm tra SET STOPWATCH Option A (09L/99L) & Option B (SPLIT/GAP) + 99L > 9 lap
+        press(B_B);                                      // Reset stopwatch về 0
         press(B_MODE);                                   // -> Mode 3 (TIMER)
         press(B_MODE);                                   // -> Mode 4 (SET p0: RTC)
         press(B_MODE);                                   // -> SET p1 (ALARM)
@@ -567,14 +589,39 @@ module system_tb;
         check(dut.u_cpu.dmem[12'h400 >> 2] == 2, "Luu SET Stopwatch: ve STOPWATCH mode");
         check(dut.u_cpu.dmem[12'h7d0 >> 2] == 1, "V_SW_MODE = 1 (99 Laps)");
         check(dut.u_cpu.dmem[12'h790 >> 2] == 1, "V_SW_GAP = 1 (GAP mode)");
-        // Đặt lại về 09L & SPLIT trước khi sang sys_4
+
+        // Bấm 12 lap ở chế độ 99L (GAP): phải lưu đủ 12 lap và duyệt qua L08..L12
+        nlap = 0;
+        press(B_A);
+        for (i = 0; i < 12; i = i + 1) begin
+            wait_ms(40);
+            press(B_B);
+        end
+        wait_ms(30);
+        press(B_A);
+        frame2;
+        check(nlap == 12 && dut.u_cpu.dmem[12'h430 >> 2] == 12, "99L ghi nhan du 12 lap (vuot 7 va 9)");
+        for (i = 0; i < 12; i = i + 1) begin
+            press(B_C);
+            check(fr[63:48] == {d8((i + 1) / 10), d8((i + 1) % 10)}, "99L duyet dung so lap 01..12");
+        end
+        press(B_C);
+        checkf(fr, fD(dut.u_sw.val), "99L C lan 13: ve gia tri live");
+
+        // Chuyển 99L -> 09L & GAP -> SPL khi đang có 12 lap: phải cắt giữ 9 lap mới nhất (lapv[3..11])
         press(B_MODE); press(B_MODE); press(B_MODE); press(B_MODE); // -> SET p2
         press(B_A);                                      // 99L -> 09L
         press(B_B);                                      // GAP -> SPL
         press(B_C);                                      // Lưu và về lại STOPWATCH
         frame2;
         check(dut.u_cpu.dmem[12'h7d0 >> 2] == 0 && dut.u_cpu.dmem[12'h790 >> 2] == 0, "Tra ve 09L & SPLIT");
-        done(3, "lap x3 dung thu tu");
+        check(dut.u_cpu.dmem[12'h430 >> 2] == 9, "Cat 12 -> 9 lap khi chuyen 99L -> 09L");
+        check(dut.u_cpu.dmem[12'h440 >> 2] == lapv[2], "V_LAP_BASE cap nhat thanh lapv[2]");
+        press(B_C);
+        e2 = fD(lapv[3]);
+        checkf(fr, {d8(1), e2[55:0]}, "Lap 1 sau khi cat la lapv[3]");
+        press(B_B);                                      // Reset sạch trước sys_4
+        done(3, "lap x3 va cua so truot 09L/99L dung thu tu");
 
         // ---- sys_4: timer 00:02.000 → về 0 đúng ms, chuông, −00:00.500 ở 2,5 s
         press(B_MODE);

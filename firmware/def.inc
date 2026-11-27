@@ -1,6 +1,6 @@
 # ============================================================================
 # HỌC PHẦN:       MI4344 / IT3283 – Kiến trúc Máy tính (HUST - SAMI/SoICT)
-# TỆP ĐẦU VÀO:    fw/def.inc — Bảng Định Nghĩa Cấu Trúc Dữ Liệu Bộ Nhớ (DMEM)
+# TỆP ĐẦU VÀO:    firmware/def.inc — Bảng Định Nghĩa Cấu Trúc Dữ Liệu Bộ Nhớ (DMEM)
 # VAI TRÒ:        Quy hoạch vùng nhớ dữ liệu DMEM (Data Memory) cho máy trạng
 #                 thái FSM đồng hồ số, bộ đệm hiển thị, hàng đợi nhận UART,
 #                 và các biến lưu trữ thời gian/cấu hình hệ thống.
@@ -12,11 +12,13 @@
 #      4096 byte (1024 từ 32-bit), truy xuất từ địa chỉ 0x00000000 .. 0x00000FFF.
 #    - Bố Cục Vùng Nhớ Dữ Liệu (DMEM Memory Layout Map):
 #        + 0x000 .. 0x3FC: Vùng ngăn xếp Stack (tăng trưởng từ 0x3FC lùi về 0)
-#        + 0x400 .. 0x47F: Các biến trạng thái FSM, cờ cấu hình và mảng Lap
+#        + 0x400 .. 0x47F: Các biến trạng thái FSM, cờ cấu hình và V_LAP_BASE
 #        + 0x480 .. 0x49F: Bộ đệm bóng hiển thị LED 7 đoạn (Display RAM Shadow)
-#        + 0x4A0 .. 0x53F: Bộ đệm xử lý gói tin đồng bộ thời gian UART (NTP sync)
+#        + 0x4A0 .. 0x53F: Bộ đệm xử lý bản tin đồng bộ UART cục bộ ($Q/$R/$T/$Z)
 #        + 0x540 .. 0x54F: Vùng lưu ngữ cảnh ngắt phần mềm (ISR Context Save)
 #        + 0x550 .. 0x5DF: Hàng đợi vòng nhận ký tự UART trong ngắt (RX FIFO)
+#        + 0x5E0 .. 0x76B: Cửa sổ trượt 99 vòng Lap bấm giờ (V_LAPV: 99 từ 32-bit)
+#        + 0x770 .. 0x7DF: Cấu hình cờ vua kép, fail-safe Timer, màu LED & còi
 #        + 0x7E0 .. 0x7FF: Khối cấu hình kiểm thử khởi động (Bootloader Config)
 # ============================================================================
 
@@ -52,15 +54,16 @@
         .eqv  V_RINGT           0x424           # Thời điểm bắt đầu đổ chuông (ms trong ngày, tự tắt sau 60s)
         .eqv  V_SNZ             0x428           # Mốc thời gian kích hoạt lại chuông tạm hoãn (Snooze +5 phút)
         .eqv  V_SNZON           0x42c           # Cờ báo tính năng tạm hoãn chuông (Snooze) đang bật
-        .eqv  V_LAPN            0x430           # Số lượng Lap đã ghi nhận trong bộ nhớ đệm (tối đa 8)
-        .eqv  V_LAPI            0x434           # Lap đang chọn để hiển thị: 0: Giờ chạy thực, 1..8: Xem lại Lap
+        .eqv  V_LAPN            0x430           # Số lượng Lap đã ghi nhận (tối đa 9 ở 09L, 99 ở 99L)
+        .eqv  V_LAPI            0x434           # Lap đang chọn để hiển thị: 0: Live, 1..99: Xem lại Lap
         .eqv  V_SF              0x438           # Trường đang chỉnh trong SET: 0..5 (Giờ, Phút, Giây, Ngày, Tháng, Năm)
         .eqv  V_AED             0x43c           # Trường đang sửa trong ALARM: 0: Không sửa, 1: Giờ, 2: Phút
 
 # ----------------------------------------------------------------------------
-# 4. MẢNG LƯU TRỮ 8 LAP BẤM GIỜ (0x440 .. 0x45F)
+# 4. MỐC NỀN GAP & CỬA SỔ TRƯỢT TỐI ĐA 99 LAP BẤM GIỜ (0x440 & 0x5E0..0x76B)
 # ----------------------------------------------------------------------------
-        .eqv  V_LAPV            0x440           # 8 từ nhớ 32-bit liên tiếp lưu trữ thời gian của 8 Lap (0x440..0x45C)
+        .eqv  V_LAP_BASE        0x440           # Mốc thời gian T_evicted ngay trước V_LAPV[0] (tính GAP chuẩn cho Lap 1)
+        .eqv  V_LAPV            0x5e0           # 99 từ nhớ 32-bit lưu 9/99 Lap gần nhất (0x5E0..0x76B < V_TMR_STP0 0x770)
 
 # ----------------------------------------------------------------------------
 # 5. CÁC BIẾN TẠM CHỈNH GIỜ SET & BÁO THỨC (0x460 .. 0x47F)

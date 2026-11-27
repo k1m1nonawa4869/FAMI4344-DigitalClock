@@ -1,12 +1,12 @@
 # ============================================================================
 # HỌC PHẦN:       MI4344 / IT3283 – Kiến trúc Máy tính (HUST - SAMI/SoICT)
-# TỆP NGUỒN:      fw/uart_sync.s — Giao Thức Đồng Bộ Thời Gian & Bù Trôi CAL (UART NTP)
-# VAI TRÒ:        Tiếp nhận và giải mã khung bản tin đồng bộ thời gian từ máy tính
-#                 qua cổng nối tiếp UART 115200 8N1, tính toán kiểm tra checksum,
-#                 tự động điều chỉnh hệ số bù trôi thạch anh CAL (ppm).
+# TỆP NGUỒN:      firmware/uart_sync.s — Giao Thức Bản Tin UART Cục Bộ & Bù Trôi CAL
+# VAI TRÒ:        Tiếp nhận và giải mã khung bản tin ASCII cục bộ qua cổng UART
+#                 115200 8N1 để hỏi giờ / hiệu chuẩn sai số thạch anh CAL (ppm)
+#                 (đồng hồ chỉnh giờ thủ công qua 5 trang SET, không dùng NTP).
 # ============================================================================
 # 1. KIẾN THỨC HÀN LÂM & GIÁO TRÌNH (ACADEMIC FOUNDATIONS):
-#    - Giao Thức Khung Bản Tin NMEA/NTP ($Q, $R, $T, $Z):
+#    - Giao Thức Khung Bản Tin ASCII Cục Bộ ($Q, $R, $T, $Z):
 #        + "$Q*51\n": Máy tính hỏi thời gian hiện tại -> SoC phản hồi "$R,<ms>,<day>*CS\n".
 #        + "$T,<ms>,<day>*CS\n": Máy tính gửi mốc thời gian chuẩn để nạp giờ và tính CAL.
 #        + "$Z,<ms>,<day>*CS\n": SoC tự động gửi thông báo khi đếm lùi về 0.

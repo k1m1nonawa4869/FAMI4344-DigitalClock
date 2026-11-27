@@ -210,6 +210,23 @@ def selftest():
     _, _, _, sw3 = frame(400)
     _, _, _, sw4 = frame(800)
     check(sw3 == sw4, "STOPWATCH + nút A lần 2: dừng chính xác", f"{sw3!r} == {sw4!r}")
+
+    # Kiểm tra cửa sổ 9-Lap vượt mốc 7 (ghi 10 vòng, duyệt L1..L9 bằng nút C)
+    press("b")  # đang dừng -> reset
+    press("a", ms_after=80)
+    for _ in range(10):
+        press("b", ms_after=100)
+    press("a", ms_after=150)
+    laps_seen = []
+    for _ in range(9):
+        press("c", ms_after=150)
+        _, _, _, lx = frame(100)
+        laps_seen.append(lx.split(":")[0] if ":" in lx else "?")
+    check(
+        laps_seen == [str(i) for i in range(1, 10)],
+        "STOPWATCH 09L: lưu & duyệt đủ 9 vòng mới nhất (qua L7 -> L8, L9)",
+        laps_seen,
+    )
     chip.close()
 
     print("TẤT CẢ PASS" if not fails else f"CÓ {len(fails)} LỖI: {fails}")

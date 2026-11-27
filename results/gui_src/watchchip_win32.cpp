@@ -833,6 +833,12 @@ static int run_selftest(const std::string& root, const std::string& report_path)
     press(1, 200); // A -> START stopwatch
     g_rtl.step(0, 470, st);
     uint64_t f_sw1 = pack_segs(st);
+    for (int lap = 0; lap < 10; ++lap) press(2, 120); // B x10: vượt 7 lên cửa sổ trượt 9 Lap
+    press(1, 200); // A -> STOP stopwatch
+    for (int idx = 0; idx < 8; ++idx) press(3, 180);  // C x8 -> xem Lap 8 (D7 = 0x7F = '8')
+    uint8_t lap8_d7 = st.segs[0] & 0x7F;
+    press(3, 180);                                     // C x9 -> xem Lap 9 (D7 = 0x6F = '9')
+    uint8_t lap9_d7 = st.segs[0] & 0x7F;
 
     // Kiểm tra hàm vẽ GDI BMP trên RAM không lỗi
     std::string tmp_bmp = root + "\\work\\exe_gdicheck.bmp";
@@ -842,16 +848,17 @@ static int run_selftest(const std::string& root, const std::string& report_path)
     g_rtl.close();
 
     bool ok = (f0 != 0ULL) && (f1 != f0) && (c1 == ((c0 + 1) & 3)) &&
-              (f_alm != f1) && (f_sw0 != f_alm) && (f_sw1 != f_sw0) && bmp_ok;
+              (f_alm != f1) && (f_sw0 != f_alm) && (f_sw1 != f_sw0) &&
+              (lap8_d7 == 0x7F) && (lap9_d7 == 0x6F) && bmp_ok;
 
     if (!report_path.empty()) {
         FILE* fp = std::fopen(report_path.c_str(), "w");
         if (fp) {
-            std::fprintf(fp, "%s f0=%llx f1=%llx color=%d->%d alm=%llx sw=%llx->%llx bmp=%d\n",
+            std::fprintf(fp, "%s f0=%llx f1=%llx color=%d->%d alm=%llx sw=%llx->%llx lap8=%02x lap9=%02x bmp=%d\n",
                          ok ? "PASS" : "FAIL",
                          (unsigned long long)f0, (unsigned long long)f1, c0, c1,
                          (unsigned long long)f_alm, (unsigned long long)f_sw0,
-                         (unsigned long long)f_sw1, bmp_ok ? 1 : 0);
+                         (unsigned long long)f_sw1, lap8_d7, lap9_d7, bmp_ok ? 1 : 0);
             std::fclose(fp);
         }
     }

@@ -125,7 +125,7 @@ def run_cpu(src, vvp):
 def tb_pokes(tb):
     """`dut.u_cpu.dmem[i] = biểu thức;` trong tb → [(địa chỉ, giá trị)] (biểu thức số nguyên đơn giản)."""
     out = []
-    for m in re.finditer(r"dut\.u_cpu\.dmem\[(\d+)\]\s*=\s*([^;]+);", open(tb, encoding="utf-8").read()):
+    for m in re.finditer(r"dut\.u_cpu\.dmem\[(\d+)\]\s*=(?!=)\s*([^;]+);", open(tb, encoding="utf-8").read()):
         expr = m.group(2)
         if not re.fullmatch(r"[\d\s()<>|&+\-*]+", expr):
             raise RuntimeError("khong doc duoc gia tri DMEM tb ghi: " + m.group(0))
@@ -134,7 +134,7 @@ def tb_pokes(tb):
 
 
 def run_soc(t):
-    tb = os.path.join(ROOT, "tb", t + "_tb.v")
+    tb = os.path.join(ROOT, "testbench", "hdl", t + "_tb.v")
     fw = re.search(r"\(fw:\s*([^)]+)\)", open(tb, encoding="utf-8").readline()).group(1).strip()
     vvp = os.path.join(OUT, t + ("_g2" if G2["on"] else "") + "_tb.vvp")
     helpers = [os.path.join("testbench", "hdl", f) for f in os.listdir(os.path.join(ROOT, "testbench", "hdl"))

@@ -225,20 +225,25 @@ st_m:   sw    $t0, REG_BLINK_MASK($zero) # Nạp mặt nạ nhấp nháy vào ph
 st_sv:  jal   ymd2d                     # Nút C: Tính tổng số ngày từ 01/01/2000
         addu  $a1, $v0, $zero
         lw    $t0, V_SH($zero)
-        addiu $t1, $zero, 60
-        mul   $t0, $t0, $t1
         lw    $t2, V_SM($zero)
-        addu  $t0, $t0, $t2
-        mul   $t0, $t0, $t1
-        lw    $t2, V_SS($zero)
-        addu  $t0, $t0, $t2
-        ori   $t1, $zero, 1000
-        mul   $a0, $t0, $t1             # Quy đổi toàn bộ Giờ:Phút:Giây sang mili-giây
+        lw    $t3, V_SS($zero)
+        jal   st_hms_ms                 # Quy đổi toàn bộ Giờ:Phút:Giây sang mili-giây
+        addu  $a0, $t0, $zero
         jal   rtcset                    # Nạp giờ và ngày mới vào phần cứng RTC
         sw    $zero, V_T1OK($zero)      # Đặt giờ thủ công: Hủy mốc đồng bộ trước đó để tránh lệch CAL
-        sw    $zero, V_MODE($zero)      # Trở về chế độ TIME
-        sw    $zero, REG_BLINK_MASK($zero) # Tắt nhấp nháy LED
-        jr    $s7
+        addu  $t0, $zero, $zero         # Trở về MODE_TIME (0) qua đuôi dùng chung
+        j     st_exit_mode
+
+# st_hms_ms: Đổi ($t0=H, $t2=M, $t3=S) -> $t0 = ((H*60 + M)*60 + S)*1000 ms (hàm lá)
+st_hms_ms:
+        addiu $t1, $zero, 60
+        mul   $t0, $t0, $t1
+        addu  $t0, $t0, $t2
+        mul   $t0, $t0, $t1
+        addu  $t0, $t0, $t3
+        ori   $t1, $zero, 1000
+        mul   $t0, $t0, $t1
+        jr    $ra
 
 # inc_var: Helper dùng chung tăng trường modulo $t1 cho biến tại $a2
 inc_var:
@@ -315,15 +320,9 @@ st_tm_sv: # Nút C: Lưu cấu hình và thoát
 
         # Tính toán preset mili-giây: ((Giờ * 60 + Phút) * 60 + Giây) * 1000
         lw    $t0, V_TPH($zero)
-        addiu $t1, $zero, 60
-        mul   $t0, $t0, $t1
         lw    $t2, V_TPM($zero)
-        addu  $t0, $t0, $t2
-        mul   $t0, $t0, $t1
-        lw    $t2, V_TPS($zero)
-        addu  $t0, $t0, $t2
-        ori   $t1, $zero, 1000
-        mul   $t0, $t0, $t1             # $t0 = preset ms
+        lw    $t3, V_TPS($zero)
+        jal   st_hms_ms                 # $t0 = preset ms
 
         bne   $t5, $zero, st_tm_sv_chess # Nếu là Chess Clock (t2)
 
@@ -348,11 +347,8 @@ st_tm_sv_chess:
         sw    $t2, REG_TMR_CTRL($zero)
 
 st_tm_sv_done:
-        sw    $zero, REG_BLINK_MASK($zero)
-        sw    $zero, V_TPAGE($zero)
         addiu $t0, $zero, MODE_TIMER
-        sw    $t0, V_MODE($zero)
-        jr    $s7
+        j     st_exit_mode
 
 st_btn_chess_r:
         lw    $t4, V_SF($zero)          # 0: Phút, 1: Giây
@@ -384,20 +380,14 @@ st_cr_b_mask:
         jr    $s7
 
 st_cr_sv: # Nút C: Lưu cấu hình s2 của Đấu thủ Phải và thoát về TIMER
-        lw    $t0, V_TPR_M($zero)
-        addiu $t1, $zero, 60
-        mul   $t0, $t0, $t1
-        lw    $t2, V_TPR_S($zero)
-        addu  $t0, $t0, $t2
-        ori   $t1, $zero, 1000
-        mul   $t0, $t0, $t1             # $t0 = preset s2 (ms)
+        addu  $t0, $zero, $zero
+        lw    $t2, V_TPR_M($zero)
+        lw    $t3, V_TPR_S($zero)
+        jal   st_hms_ms                 # $t0 = preset s2 (ms)
         sw    $t0, V_CHESS_R_INIT($zero) # Lưu mốc xuất phát s2
         sw    $t0, V_CHESS_R($zero)     # Nạp lại thời gian Đấu thủ Phải
-        sw    $zero, REG_BLINK_MASK($zero)
-        sw    $zero, V_TPAGE($zero)
         addiu $t0, $zero, MODE_TIMER
-        sw    $t0, V_MODE($zero)
-        jr    $s7
+        j     st_exit_mode
 
 st_btn_alm:
         lw    $t4, V_SF($zero)          # Trường đang chỉnh: 0: Kênh, 1: Giờ, 2: Phút
@@ -484,11 +474,8 @@ st_alm_sv:
         or    $t0, $t0, $t2
         sw    $t0, 0($t6)               # Ghi lại thanh ghi phần cứng
 st_alm_sv_done:
-        sw    $zero, REG_BLINK_MASK($zero)
-        sw    $zero, V_TPAGE($zero)
         addiu $t0, $zero, MODE_ALARM
-        sw    $t0, V_MODE($zero)
-        jr    $s7
+        j     st_exit_mode
 
 st_btn_sw:
         addiu $t1, $zero, 3
@@ -514,11 +501,35 @@ st_sw_btn_b:
 st_sw_sv: # Nút C: Lưu cấu hình Stopwatch và thoát về STOPWATCH
         lw    $t0, V_TPSW_MODE($zero)
         sw    $t0, V_SW_MODE($zero)
-        lw    $t0, V_TPSW_GAP($zero)
-        sw    $t0, V_SW_GAP($zero)
+        lw    $t1, V_TPSW_GAP($zero)
+        sw    $t1, V_SW_GAP($zero)
+        # Nếu chuyển về 09L khi đang giữ > 9 Lap: cắt cửa sổ về 9 Lap gần nhất & cập nhật V_LAP_BASE
+        bne   $t0, $zero, st_sw_exit
+        lw    $t2, V_LAPN($zero)
+        slti  $t3, $t2, 10
+        bne   $t3, $zero, st_sw_exit
+        addiu $t3, $t2, -10             # Chỉ số V_LAPV[N-10] -> mốc nền GAP mới
+        sll   $t3, $t3, 2
+        lw    $t4, V_LAPV($t3)
+        sw    $t4, V_LAP_BASE($zero)
+        addiu $t5, $zero, V_LAPV
+        addiu $t6, $t5, 36              # 9 từ = 36 byte
+st_sw_trim:
+        addiu $t3, $t3, 4
+        lw    $t4, V_LAPV($t3)
+        sw    $t4, 0($t5)
+        addiu $t5, $t5, 4
+        bne   $t5, $t6, st_sw_trim
+        addiu $t2, $zero, 9
+        sw    $t2, V_LAPN($zero)
+        sw    $zero, V_LAPI($zero)
+st_sw_exit:
+        addiu $t0, $zero, 4
+        sw    $t0, REG_SW_CTRL($zero)   # Khôi phục SRC=1 khi thoát thẳng SET về STOPWATCH
+        addiu $t0, $zero, MODE_STOPWATCH
+st_exit_mode:
         sw    $zero, REG_BLINK_MASK($zero)
         sw    $zero, V_TPAGE($zero)
-        addiu $t0, $zero, MODE_STOPWATCH
         sw    $t0, V_MODE($zero)
         jr    $s7
 
@@ -678,15 +689,10 @@ dr_st_rtc:
         slti  $t1, $t0, 3               # Các trường 0, 1, 2 (Giờ, Phút, Giây)
         beq   $t1, $zero, dst_d
         lw    $t0, V_SH($zero)          # Hiển thị theo bố cục 24h: HH.MM.SS
-        addiu $t1, $zero, 60
-        mul   $t0, $t0, $t1
         lw    $t2, V_SM($zero)
-        addu  $t0, $t0, $t2
-        mul   $t0, $t0, $t1
-        lw    $t2, V_SS($zero)
-        addu  $t0, $t0, $t2
-        ori   $t1, $zero, 1000
-        mul   $a0, $t0, $t1
+        lw    $t3, V_SS($zero)
+        jal   st_hms_ms
+        addu  $a0, $t0, $zero
         addu  $a1, $zero, $zero
         jal   fmtB
         j     dr_out

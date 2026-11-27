@@ -22,7 +22,7 @@ for t in "$@"; do
     if ! iverilog -g2005 -Wall -Wno-timescale -o "work/${t}_tb.vvp" "testbench/hdl/${t}_tb.v" source/*.v $(ls testbench/hdl/*.v | grep -v '_tb\.v$'); then
         echo "FAIL ${t}_tb (bien dich)"; fail=1; continue
     fi
-    fw=$(head -n 1 "tb/${t}_tb.v" | sed -n 's/.*(fw: *\([^)]*\)).*/\1/p')
+    fw=$(head -n 1 "testbench/hdl/${t}_tb.v" | sed -n 's/.*(fw: *\([^)]*\)).*/\1/p')
     fwarg=""
     if [ -n "$fw" ]; then
         if ! python testbench/sim_tools/fw_build.py "$fw" "work/${t}.hex" > /dev/null; then

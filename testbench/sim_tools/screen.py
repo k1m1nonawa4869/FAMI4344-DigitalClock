@@ -39,7 +39,7 @@ def seg_table():
     if _SEG_TAB_CACHE is not None:
         return _SEG_TAB_CACHE
     t = {}
-    with open(os.path.join(ROOT, "tb", "vectors", "seg7.txt"), encoding="utf-8") as f:
+    with open(os.path.join(ROOT, "testbench", "vectors", "seg7.txt"), encoding="utf-8") as f:
         for ln in f:
             if ln.startswith("#") or not ln.strip():
                 continue
