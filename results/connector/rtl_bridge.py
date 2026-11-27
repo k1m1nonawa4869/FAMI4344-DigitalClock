@@ -88,6 +88,8 @@ class Chip:
 
     def __init__(self):
         # Dùng đường dẫn tương đối + cwd=REPO_ROOT để khớp bộ đệm +imem= trong live_soc_tb.v
+        self.last_mode = 0
+        self.last_chess = False
         self.p = subprocess.Popen(
             ["vvp", "-n", "work/live_soc_tb.vvp", "+imem=work/main.hex"],
             stdin=subprocess.PIPE,
@@ -116,7 +118,10 @@ class Chip:
                 t_ms = int(f[1])
                 shown = int(f[2], 16)
                 lit = int(f[3], 16)
-                color_idx = int(f[4], 16) & 0x3
+                meta = int(f[4], 16)
+                color_idx = meta & 0x3
+                self.last_mode = (meta >> 2) & 0x7
+                self.last_chess = bool((meta >> 5) & 0x1)
                 beep = f[5] == "1"
                 # Tách 8 byte {dp, gfedcba} từ S7 (trái) tới S0 (phải)
                 segs = [

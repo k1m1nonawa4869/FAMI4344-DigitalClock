@@ -47,17 +47,22 @@ TAB = None
 # ----------------------------------------------------------------------------
 # 2. DỰNG KHUNG TERMINAL ANSI (KHÔNG CHỚP) & ĐỌC PHÍM KHÔNG CHẶN ĐA NỀN TẢNG
 # ----------------------------------------------------------------------------
-def render(t_ms, segs, color_idx, beep, held, speed):
+def render(t_ms, segs, color_idx, beep, held, speed, chess=False, mode=0):
     """Vẽ khung đồng hồ LED 7 đoạn bằng ANSI tại chỗ (chỉ dùng \\x1b[H và \\x1b[K)."""
-    big = "\n".join(ln + "\x1b[K" for ln in seg7_codec.big(segs, TAB).splitlines())
-    line = seg7_codec.text(segs, TAB)
+    big = "\n".join(ln + "\x1b[K" for ln in seg7_codec.big(segs, TAB, chess=chess, mode=mode).splitlines())
+    line = seg7_codec.text(segs, TAB, chess=chess, mode=mode)
     ansi_col = LED_ANSI[color_idx & 0x3]
     col_name = LED_NAMES[color_idx & 0x3]
     sim_s = t_ms / 1000.0
+    chess_hint = ""
+    if chess:
+        l_unit = "SEC.CC" if ((segs[1] & 0x80) and (segs[3] & 0x80)) else "MIN:SEC"
+        r_unit = "SEC.CC" if ((segs[5] & 0x80) and (segs[7] & 0x80)) else "MIN:SEC"
+        chess_hint = f"   CHESS: Left[{l_unit}] | Right[{r_unit}]"
     return (
         f"\x1b[H\x1b[96m WatchChip SoC — Terminal Clock (Backend Verilog: source/*.v + firmware/main.s)\x1b[K\x1b[0m\n\n"
         f"{ansi_col}{big}\x1b[0m\n\n"
-        f"  [{line}]   Màu LED: {ansi_col}{col_name:<8}\x1b[0m   "
+        f"  [{line}]{chess_hint}   Màu LED: {ansi_col}{col_name:<8}\x1b[0m   "
         f"{'\x1b[93m♪ BEEP\x1b[0m' if beep else '      '}\x1b[K\n"
         f"  Chip chạy: {sim_s:8.2f} s   Tốc độ: x{speed:g}   Nút đang giữ: {held or '-':<5}\x1b[K\n\n"
         f"  Phím: [M] MODE   [A]   [B]   [C]   [1/2/4] Tốc độ   [Q] Thoát\x1b[K\n"
@@ -122,7 +127,7 @@ def run_interactive(speed):
                 )
 
             t_ms, segs, color_idx, beep = chip.step(cur_mask, rtl_bridge.STEP_MS)
-            sys.stdout.write(render(t_ms, segs, color_idx, beep, held, speed))
+            sys.stdout.write(render(t_ms, segs, color_idx, beep, held, speed, chip.last_chess, chip.last_mode))
             sys.stdout.flush()
 
             wall += rtl_bridge.STEP_MS / 1000.0 / speed
@@ -151,7 +156,7 @@ def selftest():
 
     def frame(ms=200):
         t_ms, s, col, _ = chip.step(0, ms)
-        return t_ms, s, col, seg7_codec.text(s, TAB).strip()
+        return t_ms, s, col, seg7_codec.text(s, TAB, chess=chip.last_chess, mode=chip.last_mode).strip()
 
     def press(key, ms_after=300):
         for _ in range(rtl_bridge.PRESS_STEPS):

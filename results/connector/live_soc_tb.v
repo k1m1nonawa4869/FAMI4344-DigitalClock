@@ -87,8 +87,14 @@ module live_soc_tb;
         end
     end
 
-    // Tín hiệu màu LED (V_COLOR tại địa chỉ byte 0x788 = word 482 trong DMEM) do firmware quản lý
-    wire [7:0] led_color = {6'd0, dut.u_cpu.dmem[482][1:0]};
+    // Xuất siêu dữ liệu firmware (giữ [1:0] = V_COLOR để tương thích ngược):
+    //   bit[1:0] = V_COLOR (DMEM 0x788 = word 482)
+    //   bit[4:2] = V_MODE  (DMEM 0x400 = word 256)
+    //   bit[5]   = is_chess (MODE_TIMER && V_TMR_SUBMODE[0] tại DMEM 0x7B0 = word 492)
+    wire [2:0] fw_mode  = dut.u_cpu.dmem[256][2:0];
+    wire       fw_chess = (fw_mode == 3'd3) && (dut.u_cpu.dmem[492][0] == 1'b1);
+    wire [1:0] fw_color = dut.u_cpu.dmem[482][1:0];
+    wire [7:0] led_meta = {2'd0, fw_chess, fw_mode, fw_color};
 
     // ------------------------------------------------------------------------
     // 4. GIAO THỨC ỐNG NỐI STDIN / STDOUT CHO CẢ TERMINAL VÀ WATCHCHIP.EXE
@@ -117,7 +123,7 @@ module live_soc_tb;
             end
             btn = mask[3:0];                    // Đưa 4 bit nút bấm trực tiếp vào chân vật lý btn[3:0]
             for (k = 0; k < n_ms * G_N; k = k + 1) @(posedge clk);
-            $display("F %0d %016h %02h %02h %b", t_ms, shown, lit_shown, led_color, beep);
+            $display("F %0d %016h %02h %02h %b", t_ms, shown, lit_shown, led_meta, beep);
             $fflush();
         end
     end

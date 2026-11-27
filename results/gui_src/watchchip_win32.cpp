@@ -69,6 +69,8 @@ struct FrameState {
     int      t_ms     = 0;
     uint8_t  segs[8]  = {0};
     int      color    = 0;
+    int      mode     = 0;
+    bool     is_chess = false;
     bool     beep     = false;
     uint8_t  btn_down = 0;      // Bitmask nút đang ấn (hiển thị hiệu ứng lún nút)
     double   speed    = 1.0;
@@ -260,9 +262,11 @@ public:
                 unsigned int lit = 0U, col = 0U;
                 if (std::sscanf(line.c_str(), "F %d %llx %x %x %d",
                                 &t_ms, &shown, &lit, &col, &beep_i) >= 5) {
-                    out.t_ms  = t_ms;
-                    out.color = static_cast<int>(col & 0x3U);
-                    out.beep  = (beep_i != 0);
+                    out.t_ms     = t_ms;
+                    out.color    = static_cast<int>(col & 0x3U);
+                    out.mode     = static_cast<int>((col >> 2) & 0x7U);
+                    out.is_chess = ((col >> 5) & 1U) != 0U;
+                    out.beep     = (beep_i != 0);
                     for (int idx = 0; idx < 8; ++idx) {
                         int bit_pos = 7 - idx;
                         if ((lit >> bit_pos) & 1U) {
@@ -324,16 +328,87 @@ static DWORD WINAPI beep_worker(LPVOID) {
 // ----------------------------------------------------------------------------
 // 4. BỘ VẼ GDI DOUBLE-BUFFER: 8 LED 7 ĐOẠN VÁT CẠNH & 4 NÚT TRÒN (M, A, B, C)
 // ----------------------------------------------------------------------------
-static bool is_chess_display(const uint8_t s[8]) {
-    // Phát hiện khi cả nửa trái lẫn nửa phải có dấu chấm/hai chấm đặc trưng đồng hồ cờ vua 4+4
-    bool dp0 = (s[0] & 0x80) != 0, dp1 = (s[1] & 0x80) != 0;
-    bool dp2 = (s[2] & 0x80) != 0, dp3 = (s[3] & 0x80) != 0;
-    bool dp4 = (s[4] & 0x80) != 0, dp5 = (s[5] & 0x80) != 0;
-    bool dp7 = (s[7] & 0x80) != 0;
+enum SepStyle {
+    SEP_DIM_DOT = 0,   // Không bật dấu phân cách (vẫn vẽ chấm mờ ẩn trên bezel)
+    SEP_DOT     = 1,   // Một chấm thập phân ở đáy (SS.cc, DD.MM.YYYY, .mmm)
+    SEP_COLON   = 2,   // Hai chấm dọc sáng (MM:SS, HH:MM:SS) phân biệt rõ với SS.cc
+};
+
+static bool is_chess_display(const FrameState& st) {
+    const uint8_t* s = st.segs;
+    auto is_half_valid = [&](int base) {
+        uint8_t c0 = s[base] & 0x7F;
+        uint8_t c1 = s[base + 1] & 0x7F;
+        return (c0 != 0) && (c1 != 0); // Loại SET0 (S7, S6 tắt trắng)
+    };
+    if (st.is_chess && is_half_valid(0) && is_half_valid(4)) return true;
+    if (st.mode != 0 && st.mode != 3) return false;
+    bool dp1 = (s[1] & 0x80) != 0, dp2 = (s[2] & 0x80) != 0, dp3 = (s[3] & 0x80) != 0;
+    bool dp4 = (s[4] & 0x80) != 0, dp5 = (s[5] & 0x80) != 0, dp7 = (s[7] & 0x80) != 0;
     bool is_ampm  = ((s[0] & 0x7F) == 0x77 || (s[0] & 0x7F) == 0x73) && (s[1] & 0x7F) == 0x37;
     bool is_24hms = dp1 && dp3 && dp5 && !dp7;
     bool is_sw    = dp2 && dp4;
-    return !is_ampm && !is_24hms && !is_sw && !dp3 && (dp0 || dp1) && (dp4 || dp5);
+    return !is_ampm && !is_24hms && !is_sw && !dp3 && (dp1) && (dp5 || dp7) && is_half_valid(0) && is_half_valid(4);
+}
+
+static void classify_separators(const FrameState& st, bool chess, SepStyle sep_out[8],
+                                const char*& left_tag, const char*& right_tag) {
+    const uint8_t* s = st.segs;
+    left_tag  = nullptr;
+    right_tag = nullptr;
+    for (int i = 0; i < 8; ++i) {
+        sep_out[i] = (s[i] & 0x80) ? SEP_DOT : SEP_DIM_DOT;
+    }
+    if (chess) {
+        // Nửa Trái [0..3]: d1=1, d3=0 -> MM:SS (hai chấm ':'); d1=1, d3=1 -> SS.cc hoặc -S.cc (một chấm '.', ẩn chấm d3)
+        if ((s[1] & 0x80) && !(s[3] & 0x80)) {
+            sep_out[1] = SEP_COLON;
+            sep_out[3] = SEP_DIM_DOT;
+            left_tag   = "MIN : SEC";
+        } else if ((s[1] & 0x80) && (s[3] & 0x80)) {
+            sep_out[1] = SEP_DOT;
+            sep_out[3] = SEP_DIM_DOT;
+            left_tag   = "SEC . 1/100";
+        }
+        // Nửa Phải [4..7]: tương tự trên d5 và d7
+        if ((s[5] & 0x80) && !(s[7] & 0x80)) {
+            sep_out[5] = SEP_COLON;
+            sep_out[7] = SEP_DIM_DOT;
+            right_tag  = "MIN : SEC";
+        } else if ((s[5] & 0x80) && (s[7] & 0x80)) {
+            sep_out[5] = SEP_DOT;
+            sep_out[7] = SEP_DIM_DOT;
+            right_tag  = "SEC . 1/100";
+        }
+        return;
+    }
+
+    bool dp[8]{};
+    for (int i = 0; i < 8; ++i) dp[i] = (s[i] & 0x80) != 0;
+    bool is_ampm = (((s[0] & 0x7F) == 0x77 || (s[0] & 0x7F) == 0x73) && (s[1] & 0x7F) == 0x37) ||
+                   ((s[0] & 0x7F) == 0x00 && ((s[1] & 0x7F) == 0x77 || (s[1] & 0x7F) == 0x73));
+
+    if (is_ampm) {
+        if (dp[3]) sep_out[3] = SEP_COLON;
+        if (dp[5]) sep_out[5] = SEP_COLON;
+    } else if (st.mode == 1) {
+        // ALARM: ALkoHH:MM (dp5)
+        if (dp[5] && !dp[1] && !dp[3]) sep_out[5] = SEP_COLON;
+    } else if (dp[2] && dp[4] && !dp[1] && !dp[3] && !dp[5]) {
+        // STOPWATCH / TIMER live H:MM:SS.mmm hoặc SET HH:MM:SS
+        if (dp[0]) sep_out[0] = SEP_COLON;
+        sep_out[2] = SEP_COLON;
+        sep_out[4] = SEP_DOT;
+    } else if (dp[1] && dp[3] && dp[5] && !dp[7]) {
+        // TIME 24h+cs: HH:MM:SS.cc
+        sep_out[1] = SEP_COLON;
+        sep_out[3] = SEP_COLON;
+        sep_out[5] = SEP_DOT;
+    } else if (dp[3] && dp[5] && !dp[0] && !dp[1] && !dp[7]) {
+        // STOPWATCH 99L lap: LL MM:SS.cc hoặc SET page
+        sep_out[3] = SEP_COLON;
+        sep_out[5] = SEP_DOT;
+    }
 }
 
 static void draw_h_seg(HDC dc, int x, int y, int w, int t, COLORREF col) {
@@ -378,7 +453,8 @@ static void draw_v_seg(HDC dc, int x, int y, int h, int t, COLORREF col) {
     DeleteObject(pn);
 }
 
-static void draw_digit(HDC dc, int x, int y, int w, int h, uint8_t pat, COLORREF lit_c, COLORREF dim_c) {
+static void draw_digit(HDC dc, int x, int y, int w, int h, uint8_t pat, SepStyle sep,
+                       COLORREF lit_c, COLORREF dim_c) {
     const int t   = 9;
     const int gap = 3;
     int mid_y = y + h / 2;
@@ -394,17 +470,26 @@ static void draw_digit(HDC dc, int x, int y, int w, int h, uint8_t pat, COLORREF
     draw_v_seg(dc, x,       y + gap,   seg_h, t, (pat & 0x20) ? lit_c : dim_c); // f
     draw_h_seg(dc, x + gap, mid_y,     seg_w, t, (pat & 0x40) ? lit_c : dim_c); // g
 
-    // Dấu chấm thập phân dp (bit 7) bên phải chân chữ số
-    COLORREF dpc = (pat & 0x80) ? lit_c : dim_c;
-    HBRUSH br = CreateSolidBrush(dpc);
-    HPEN   pn = CreatePen(PS_SOLID, 1, dpc);
-    HGDIOBJ ob = SelectObject(dc, br);
-    HGDIOBJ op = SelectObject(dc, pn);
-    Ellipse(dc, x + w + 7, y + h - 6, x + w + 16, y + h + 3);
-    SelectObject(dc, ob);
-    SelectObject(dc, op);
-    DeleteObject(br);
-    DeleteObject(pn);
+    // Dấu phân cách bên phải chân chữ số: hai chấm dọc (:) hoặc dấu chấm thập phân (.)
+    auto fill_dot = [&](int cx, int cy, COLORREF c) {
+        HBRUSH br = CreateSolidBrush(c);
+        HPEN   pn = CreatePen(PS_SOLID, 1, c);
+        HGDIOBJ ob = SelectObject(dc, br);
+        HGDIOBJ op = SelectObject(dc, pn);
+        Ellipse(dc, cx - 4, cy - 4, cx + 5, cy + 5);
+        SelectObject(dc, ob);
+        SelectObject(dc, op);
+        DeleteObject(br);
+        DeleteObject(pn);
+    };
+    int dot_cx = x + w + 13;
+    if (sep == SEP_COLON) {
+        fill_dot(dot_cx, y + (h * 32) / 100, lit_c);
+        fill_dot(dot_cx, y + (h * 68) / 100, lit_c);
+        fill_dot(dot_cx, y + h - 2, dim_c);
+    } else {
+        fill_dot(dot_cx, y + h - 2, (sep == SEP_DOT) ? lit_c : dim_c);
+    }
 }
 
 static void render_watch(HDC dc, int w, int h, const FrameState& st) {
@@ -454,7 +539,12 @@ static void render_watch(HDC dc, int w, int h, const FrameState& st) {
 
     const COLORREF lit_c = LED_LIT_COLS[st.color & 3];
     const COLORREF dim_c = LED_DIM_COLS[st.color & 3];
-    const bool chess = is_chess_display(st.segs);
+    const bool chess = is_chess_display(st);
+    SepStyle seps[8]{};
+    const char* left_tag  = nullptr;
+    const char* right_tag = nullptr;
+    classify_separators(st, chess, seps, left_tag, right_tag);
+
     const int dig_w  = 52;
     const int dig_h  = 118;
     const int step_x = 84;
@@ -464,15 +554,31 @@ static void render_watch(HDC dc, int w, int h, const FrameState& st) {
     for (int i = 0; i < 8; ++i) {
         int extra_shift = (chess && i >= 4) ? 10 : ((chess && i < 4) ? -8 : 0);
         draw_digit(dc, start_x + i * step_x + extra_shift, start_y, dig_w, dig_h,
-                   st.segs[i], lit_c, dim_c);
+                   st.segs[i], seps[i], lit_c, dim_c);
     }
     if (chess) {
         HPEN sep = CreatePen(PS_SOLID, 2, RGB(58, 70, 88));
         HGDIOBJ os = SelectObject(dc, sep);
-        MoveToEx(dc, start_x + 4 * step_x - 12, 60, nullptr);
-        LineTo(dc, start_x + 4 * step_x - 12, 204);
+        MoveToEx(dc, start_x + 4 * step_x - 10, 56, nullptr);
+        LineTo(dc, start_x + 4 * step_x - 10, 206);
         SelectObject(dc, os);
         DeleteObject(sep);
+
+        HFONT f_unit = CreateFontA(13, 0, 0, 0, FW_SEMIBOLD, FALSE, FALSE, FALSE,
+                                   DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
+                                   CLEARTYPE_QUALITY, FIXED_PITCH | FF_MODERN, "Consolas");
+        HGDIOBJ ofu = SelectObject(dc, f_unit);
+        SetTextColor(dc, RGB(150, 175, 205));
+        if (left_tag) {
+            RECT lr{40, 48, start_x + 4 * step_x - 18, 65};
+            DrawTextA(dc, left_tag, -1, &lr, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+        }
+        if (right_tag) {
+            RECT rr{start_x + 4 * step_x - 2, 48, w - 40, 65};
+            DrawTextA(dc, right_tag, -1, &rr, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+        }
+        SelectObject(dc, ofu);
+        DeleteObject(f_unit);
     }
 
     // 4. Đường phân cách ngang giữa màn LED và hàng nút bấm (theo phác thảo)
